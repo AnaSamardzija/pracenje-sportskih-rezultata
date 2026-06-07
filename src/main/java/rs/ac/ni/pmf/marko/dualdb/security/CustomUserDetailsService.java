@@ -1,0 +1,30 @@
+package rs.ac.ni.pmf.marko.dualdb.security;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
+import rs.ac.ni.pmf.marko.dualdb.model.User;
+import rs.ac.ni.pmf.marko.dualdb.storage.DataStorage;
+import rs.ac.ni.pmf.marko.dualdb.storage.StorageResolver;
+
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements StorageSelectionUserDetailsService
+{
+	private final StorageResolver _storageResolver;
+
+	@Override
+	@Transactional
+	public UserDetails loadUserByUsername(final String username, final StorageType storageType)
+	{
+		final DataStorage<User> storage = _storageResolver.resolve(storageType, User.class)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid storage type: " + storageType));
+
+		final User user = storage.findByUsername(username)
+				.orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+		return new CustomUserDetails(user, storageType);
+	}
+}

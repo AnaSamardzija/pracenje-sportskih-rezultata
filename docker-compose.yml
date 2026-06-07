@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mariadb:11.4
+    ports:
+      - "3306:3306"
+    container_name: dual-db-maria-db-container
+    environment:
+      MYSQL_ROOT_PASSWORD: root.123
+      MYSQL_DATABASE: dual-db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin.123
+    restart: unless-stopped
+    volumes:
+      - dual-db-mariadb-volume:/var/lib/mysql
+
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - "27017:27017"
+    container_name: dual-db-mongodb-container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root.123
+      MONGO_INITDB_DATABASE: dual-db
+    restart: unless-stopped
+    volumes:
+      - dual-db-mongodb-volume:/data/db
+
+volumes:
+  dual-db-mariadb-volume:
+  dual-db-mongodb-volume:
+
