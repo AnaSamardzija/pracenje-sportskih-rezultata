@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.model.User;
-import rs.ac.ni.pmf.marko.dualdb.storage.DataStorage;
 import rs.ac.ni.pmf.marko.dualdb.storage.StorageResolver;
+import rs.ac.ni.pmf.marko.dualdb.storage.user.UserStorage;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements StorageSelectionUserDetailsServ
 	@Transactional
 	public UserDetails loadUserByUsername(final String username, final StorageType storageType)
 	{
-		final DataStorage<User> storage = _storageResolver.resolve(storageType, User.class)
+		final UserStorage storage = (UserStorage) _storageResolver.resolve(storageType, User.class)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid storage type: " + storageType));
 
 		final User user = storage.findByUsername(username)

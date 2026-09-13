@@ -1,4 +1,4 @@
-package rs.ac.ni.pmf.marko.dualdb.dto;
+package rs.ac.ni.pmf.marko.dualdb.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
