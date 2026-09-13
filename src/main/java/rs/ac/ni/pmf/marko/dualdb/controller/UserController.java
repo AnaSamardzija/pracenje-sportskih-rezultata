@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import rs.ac.ni.pmf.marko.dualdb.dto.UserDto;
+import rs.ac.ni.pmf.marko.dualdb.dto.user.UserDto;
 import rs.ac.ni.pmf.marko.dualdb.dto.mapper.UserMapper;
 import rs.ac.ni.pmf.marko.dualdb.service.UserService;
 

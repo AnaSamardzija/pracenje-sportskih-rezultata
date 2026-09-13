@@ -18,6 +18,4 @@ public interface DataStorage<T>
 	T save(T entity);
 
 	void deleteById(String id);
-
-	Optional<T> findByUsername(String username);
 }
