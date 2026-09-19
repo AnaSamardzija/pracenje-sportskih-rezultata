@@ -78,6 +78,7 @@ public class MariaDbUserStorage extends UserStorage
 		userEntity.setFirstName(user.getFirstName());
 		userEntity.setLastName(user.getLastName());
 		userEntity.setEmail(user.getEmail());
+		userEntity.setPassword(user.getPassword());
 
 		final Set<RoleEntity> roles = user.getRoles().stream()
 				.map(String::toLowerCase)
@@ -99,8 +100,23 @@ public class MariaDbUserStorage extends UserStorage
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<User> findByUsername(final String username)
 	{
 		return _userRepository.findByUsername(username).map(_userMapper::toUser);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean existsByUsername(final String username)
+	{
+		return _userRepository.existsByUsername(username);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean existsByEmail(final String email)
+	{
+		return _userRepository.existsByEmail(email);
 	}
 }

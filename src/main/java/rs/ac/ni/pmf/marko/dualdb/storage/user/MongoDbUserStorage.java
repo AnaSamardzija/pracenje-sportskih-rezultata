@@ -56,4 +56,16 @@ public class MongoDbUserStorage extends UserStorage
 	{
 		return _userRepository.findByUsername(username).map(_userMapper::toUser);
 	}
+
+	@Override
+	public boolean existsByUsername(final String username)
+	{
+		return _userRepository.existsByUsername(username);
+	}
+
+	@Override
+	public boolean existsByEmail(final String email)
+	{
+		return _userRepository.existsByEmail(email);
+	}
 }

@@ -9,5 +9,7 @@ public interface MariaDbUserRepository extends JpaRepository<UserEntity, Long>
 {
 	Optional<UserEntity> findByUsername(String username);
 
-	boolean existsByUsername(String admin);
+	boolean existsByUsername(String username);
+
+	boolean existsByEmail(String email);
 }

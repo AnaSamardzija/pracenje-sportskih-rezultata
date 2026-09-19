@@ -14,4 +14,8 @@ public abstract class UserStorage implements DataStorage<User>
 	}
 
 	public abstract Optional<User> findByUsername(String username);
+
+	public abstract boolean existsByUsername(String username);
+
+	public abstract boolean existsByEmail(String email);
 }
