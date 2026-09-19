@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.marko.dualdb.controller;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -40,6 +41,16 @@ public class ErrorHandler
 	@ExceptionHandler(InvalidOperationException.class)
 	@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
 	public ErrorDto handleInvalidOperationException(final InvalidOperationException ex)
+	{
+		return ErrorDto.builder()
+				.timestamp(OffsetDateTime.now())
+				.message(ex.getMessage())
+				.build();
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public ErrorDto handleAccessDeniedException(final AccessDeniedException ex)
 	{
 		return ErrorDto.builder()
 				.timestamp(OffsetDateTime.now())

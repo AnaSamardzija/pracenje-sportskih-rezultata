@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupResponse;
+import rs.ac.ni.pmf.marko.dualdb.dto.group.MemberResponse;
 import rs.ac.ni.pmf.marko.dualdb.dto.mapper.GroupMapper;
 import rs.ac.ni.pmf.marko.dualdb.security.CustomUserDetails;
 import rs.ac.ni.pmf.marko.dualdb.service.GroupService;
+import rs.ac.ni.pmf.marko.dualdb.service.MembershipService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class GroupController
 {
 	private final GroupService _groupService;
+	private final MembershipService _membershipService;
 	private final GroupMapper _groupMapper;
 
 	@GetMapping
@@ -66,5 +69,36 @@ public class GroupController
 	public void delete(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{
 		_groupService.delete(id, principal.getUser().getId());
+	}
+
+	@GetMapping("/{id}/members")
+	public List<MemberResponse> getMembers(@PathVariable final String id)
+	{
+		return _membershipService.listMembers(id).stream()
+				.map(_groupMapper::toMemberResponse)
+				.collect(Collectors.toList());
+	}
+
+	@PostMapping("/{id}/members")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void join(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
+	{
+		_membershipService.join(id, principal.getUser().getId());
+	}
+
+	@DeleteMapping("/{id}/members/me")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void leave(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
+	{
+		_membershipService.leave(id, principal.getUser().getId());
+	}
+
+	@DeleteMapping("/{id}/members/{userId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void kick(@AuthenticationPrincipal final CustomUserDetails principal,
+	                 @PathVariable final String id,
+	                 @PathVariable final String userId)
+	{
+		_membershipService.kick(id, userId, principal.getUser().getId());
 	}
 }

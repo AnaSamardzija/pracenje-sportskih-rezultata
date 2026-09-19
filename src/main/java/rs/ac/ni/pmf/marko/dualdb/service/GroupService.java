@@ -1,8 +1,8 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
@@ -19,6 +19,7 @@ public class GroupService
 {
 	private final StorageResolver _storageResolver;
 	private final CurrentStorageTypeProvider _storageTypeProvider;
+	private final MembershipService _membershipService;
 
 	public List<Group> findAll(final String search)
 	{
@@ -41,16 +42,21 @@ public class GroupService
 				.orElseThrow(() -> new ResourceNotFoundException("Group with id " + id + " not found"));
 	}
 
+	@Transactional
 	public Group create(final Group group, final String currentUserId)
 	{
 		group.setCreatedBy(currentUserId);
-		return storage().save(group);
+		final Group saved = storage().save(group);
+
+		_membershipService.createAdminMembership(saved.getId(), currentUserId);
+
+		return saved;
 	}
 
 	public Group update(final String id, final Group group, final String currentUserId)
 	{
 		final Group existing = findById(id);
-		requireCreator(existing, currentUserId);
+		_membershipService.requireGroupAdmin(id, currentUserId);
 
 		existing.setName(group.getName());
 		existing.setDescription(group.getDescription());
@@ -58,20 +64,14 @@ public class GroupService
 		return storage().save(existing);
 	}
 
+	@Transactional
 	public void delete(final String id, final String currentUserId)
 	{
-		final Group existing = findById(id);
-		requireCreator(existing, currentUserId);
+		findById(id);
+		_membershipService.requireGroupAdmin(id, currentUserId);
 
+		_membershipService.removeAllForGroup(id);
 		storage().deleteById(id);
-	}
-
-	private void requireCreator(final Group group, final String currentUserId)
-	{
-		if (!currentUserId.equals(group.getCreatedBy()))
-		{
-			throw new AccessDeniedException("Only the group creator can perform this action");
-		}
 	}
 
 	private DataStorage<Group> storage()
