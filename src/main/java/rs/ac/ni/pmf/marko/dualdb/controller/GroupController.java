@@ -35,17 +35,19 @@ public class GroupController
 	private final GroupMapper _groupMapper;
 
 	@GetMapping
-	public List<GroupResponse> getAll(@RequestParam(required = false) final String search)
+	public List<GroupResponse> getAll(@AuthenticationPrincipal final CustomUserDetails principal,
+	                                  @RequestParam(required = false, defaultValue = "false") final boolean mine,
+	                                  @RequestParam(required = false) final String search)
 	{
-		return _groupService.findAll(search).stream()
+		return _groupService.findAll(mine, search, principal.getUser().getId()).stream()
 				.map(_groupMapper::toResponse)
 				.collect(Collectors.toList());
 	}
 
 	@GetMapping("/{id}")
-	public GroupResponse getById(@PathVariable final String id)
+	public GroupResponse getById(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{
-		return _groupMapper.toResponse(_groupService.findById(id));
+		return _groupMapper.toResponse(_groupService.findById(id, principal.getUser().getId()));
 	}
 
 	@PostMapping

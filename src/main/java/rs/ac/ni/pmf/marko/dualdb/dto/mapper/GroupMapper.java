@@ -5,19 +5,23 @@ import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupResponse;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.MemberResponse;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
+import rs.ac.ni.pmf.marko.dualdb.model.GroupDetails;
 import rs.ac.ni.pmf.marko.dualdb.model.MemberView;
 
 @Component
 public class GroupMapper
 {
-	public GroupResponse toResponse(final Group group)
+	public GroupResponse toResponse(final GroupDetails details)
 	{
+		final Group group = details.getGroup();
 		return GroupResponse.builder()
 				.id(group.getId())
 				.name(group.getName())
 				.description(group.getDescription())
 				.createdBy(group.getCreatedBy())
 				.createdAt(group.getCreatedAt())
+				.memberCount(details.getMemberCount())
+				.myRole(details.getMyRole())
 				.build();
 	}
 

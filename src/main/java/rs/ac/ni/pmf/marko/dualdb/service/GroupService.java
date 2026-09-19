@@ -6,11 +6,14 @@ import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
+import rs.ac.ni.pmf.marko.dualdb.model.GroupDetails;
+import rs.ac.ni.pmf.marko.dualdb.model.GroupRole;
 import rs.ac.ni.pmf.marko.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.marko.dualdb.storage.DataStorage;
 import rs.ac.ni.pmf.marko.dualdb.storage.StorageResolver;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,57 +24,88 @@ public class GroupService
 	private final CurrentStorageTypeProvider _storageTypeProvider;
 	private final MembershipService _membershipService;
 
-	public List<Group> findAll(final String search)
+	public List<GroupDetails> findAll(final boolean mine, final String search, final String currentUserId)
 	{
-		final List<Group> groups = storage().findAll();
+		List<Group> groups = storage().findAll();
 
-		if (search == null || search.isBlank())
+		if (search != null && !search.isBlank())
 		{
-			return groups;
+			final String query = search.toLowerCase();
+			groups = groups.stream()
+					.filter(group -> group.getName() != null && group.getName().toLowerCase().contains(query))
+					.collect(Collectors.toList());
 		}
 
-		final String query = search.toLowerCase();
+		final Map<String, GroupRole> myRoles = _membershipService.rolesByUser(currentUserId);
+
+		if (mine)
+		{
+			groups = groups.stream()
+					.filter(group -> myRoles.containsKey(group.getId()))
+					.collect(Collectors.toList());
+		}
+
+		final Map<String, Long> counts = _membershipService.countByGroup();
+
 		return groups.stream()
-				.filter(group -> group.getName() != null && group.getName().toLowerCase().contains(query))
+				.map(group -> GroupDetails.builder()
+						.group(group)
+						.memberCount(counts.getOrDefault(group.getId(), 0L))
+						.myRole(myRoles.get(group.getId()))
+						.build())
 				.collect(Collectors.toList());
 	}
 
-	public Group findById(final String id)
+	public GroupDetails findById(final String id, final String currentUserId)
 	{
-		return storage().findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Group with id " + id + " not found"));
+		return toDetails(loadGroup(id), currentUserId);
 	}
 
 	@Transactional
-	public Group create(final Group group, final String currentUserId)
+	public GroupDetails create(final Group group, final String currentUserId)
 	{
 		group.setCreatedBy(currentUserId);
 		final Group saved = storage().save(group);
 
 		_membershipService.createAdminMembership(saved.getId(), currentUserId);
 
-		return saved;
+		return toDetails(saved, currentUserId);
 	}
 
-	public Group update(final String id, final Group group, final String currentUserId)
+	public GroupDetails update(final String id, final Group group, final String currentUserId)
 	{
-		final Group existing = findById(id);
+		final Group existing = loadGroup(id);
 		_membershipService.requireGroupAdmin(id, currentUserId);
 
 		existing.setName(group.getName());
 		existing.setDescription(group.getDescription());
 
-		return storage().save(existing);
+		return toDetails(storage().save(existing), currentUserId);
 	}
 
 	@Transactional
 	public void delete(final String id, final String currentUserId)
 	{
-		findById(id);
+		loadGroup(id);
 		_membershipService.requireGroupAdmin(id, currentUserId);
 
 		_membershipService.removeAllForGroup(id);
 		storage().deleteById(id);
+	}
+
+	private Group loadGroup(final String id)
+	{
+		return storage().findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Group with id " + id + " not found"));
+	}
+
+	private GroupDetails toDetails(final Group group, final String currentUserId)
+	{
+		return GroupDetails.builder()
+				.group(group)
+				.memberCount(_membershipService.countMembers(group.getId()))
+				.myRole(_membershipService.roleOf(group.getId(), currentUserId))
+				.build();
 	}
 
 	private DataStorage<Group> storage()

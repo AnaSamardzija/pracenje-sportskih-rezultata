@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import rs.ac.ni.pmf.marko.dualdb.model.GroupRole;
 
 import java.time.LocalDateTime;
 
@@ -18,4 +19,6 @@ public class GroupResponse
 	String description;
 	String createdBy;
 	LocalDateTime createdAt;
+	long memberCount;
+	GroupRole myRole;
 }
