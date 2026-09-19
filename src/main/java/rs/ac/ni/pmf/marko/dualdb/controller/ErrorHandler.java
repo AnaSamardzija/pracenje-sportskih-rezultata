@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import rs.ac.ni.pmf.marko.dualdb.dto.common.ErrorDto;
 import rs.ac.ni.pmf.marko.dualdb.exception.DuplicateResourceException;
+import rs.ac.ni.pmf.marko.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 
 import java.time.OffsetDateTime;
@@ -29,6 +30,16 @@ public class ErrorHandler
 	@ExceptionHandler(DuplicateResourceException.class)
 	@ResponseStatus(HttpStatus.CONFLICT)
 	public ErrorDto handleDuplicateResourceException(final DuplicateResourceException ex)
+	{
+		return ErrorDto.builder()
+				.timestamp(OffsetDateTime.now())
+				.message(ex.getMessage())
+				.build();
+	}
+
+	@ExceptionHandler(InvalidOperationException.class)
+	@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+	public ErrorDto handleInvalidOperationException(final InvalidOperationException ex)
 	{
 		return ErrorDto.builder()
 				.timestamp(OffsetDateTime.now())
