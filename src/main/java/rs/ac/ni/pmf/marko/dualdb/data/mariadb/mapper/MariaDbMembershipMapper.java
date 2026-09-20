@@ -27,6 +27,7 @@ public class MariaDbMembershipMapper
 				.user(user)
 				.group(group)
 				.roleInGroup(membership.getRoleInGroup())
+				.joinedAt(membership.getJoinedAt())
 				.build();
 	}
 }

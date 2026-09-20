@@ -26,6 +26,7 @@ public class MariaDbGroupMapper
 				.name(group.getName())
 				.description(group.getDescription())
 				.createdBy(createdBy)
+				.createdAt(group.getCreatedAt())
 				.build();
 	}
 }

@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.marko.dualdb.data.mariadb.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import rs.ac.ni.pmf.marko.dualdb.model.MatchOutcome;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class MatchSideEntity
 			joinColumns = @JoinColumn(name = "match_side_id"),
 			inverseJoinColumns = @JoinColumn(name = "user_id")
 	)
+	@BatchSize(size = 50)
 	@Builder.Default
 	private Set<UserEntity> players = new HashSet<>();
 
@@ -52,6 +54,7 @@ public class MatchSideEntity
 	)
 	@OrderColumn(name = "set_index")
 	@Column(name = "score")
+	@BatchSize(size = 50)
 	@Builder.Default
 	private List<Integer> setScores = new ArrayList<>();
 }

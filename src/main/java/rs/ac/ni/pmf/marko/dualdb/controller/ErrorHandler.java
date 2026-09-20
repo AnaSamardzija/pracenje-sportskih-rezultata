@@ -68,6 +68,16 @@ public class ErrorHandler
 				.build();
 	}
 
+	@ExceptionHandler(NumberFormatException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorDto handleNumberFormatException()
+	{
+		return ErrorDto.builder()
+				.timestamp(OffsetDateTime.now())
+				.message("Invalid id: a numeric value is required")
+				.build();
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorDto handleMethodArgumentNotValidException(final MethodArgumentNotValidException ex)
