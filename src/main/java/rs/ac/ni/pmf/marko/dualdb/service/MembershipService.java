@@ -19,6 +19,7 @@ import rs.ac.ni.pmf.marko.dualdb.storage.user.UserStorage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,6 +102,13 @@ public class MembershipService
 		return membershipStorage().findByUserIdAndGroupId(userId, groupId)
 				.map(Membership::getRoleInGroup)
 				.orElse(null);
+	}
+
+	public Set<String> memberIds(final String groupId)
+	{
+		return membershipStorage().findByGroupId(groupId).stream()
+				.map(Membership::getUserId)
+				.collect(Collectors.toSet());
 	}
 
 	public long countMembers(final String groupId)
