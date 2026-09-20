@@ -9,13 +9,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import rs.ac.ni.pmf.marko.dualdb.dto.mapper.RankingMapper;
+import rs.ac.ni.pmf.marko.dualdb.dto.ranking.PlayerStatsResponse;
 import rs.ac.ni.pmf.marko.dualdb.dto.user.ChangePasswordRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.user.UpdateProfileRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.user.UserDto;
 import rs.ac.ni.pmf.marko.dualdb.dto.mapper.UserMapper;
 import rs.ac.ni.pmf.marko.dualdb.security.CustomUserDetails;
+import rs.ac.ni.pmf.marko.dualdb.service.RankingService;
 import rs.ac.ni.pmf.marko.dualdb.service.UserService;
 
 import java.util.List;
@@ -28,6 +32,8 @@ public class UserController
 {
 	private final UserMapper _userMapper;
 	private final UserService _userService;
+	private final RankingMapper _rankingMapper;
+	private final RankingService _rankingService;
 
 	@GetMapping("/me")
 	public UserDto getCurrentUser(@AuthenticationPrincipal final CustomUserDetails principal)
@@ -50,10 +56,24 @@ public class UserController
 		_userService.changePassword(principal.getUsername(), request);
 	}
 
+	@GetMapping("/me/stats")
+	public PlayerStatsResponse getCurrentUserStats(@AuthenticationPrincipal final CustomUserDetails principal,
+	                                               @RequestParam(required = false) final String sportId)
+	{
+		return _rankingMapper.toResponse(_rankingService.playerStats(principal.getUser().getId(), sportId));
+	}
+
 	@GetMapping("/{id}")
 	public UserDto getUserById(@PathVariable final String id)
 	{
 		return _userMapper.toDto(_userService.findById(id));
+	}
+
+	@GetMapping("/{id}/stats")
+	public PlayerStatsResponse getUserStats(@PathVariable final String id,
+	                                        @RequestParam(required = false) final String sportId)
+	{
+		return _rankingMapper.toResponse(_rankingService.playerStats(id, sportId));
 	}
 
 	@GetMapping
