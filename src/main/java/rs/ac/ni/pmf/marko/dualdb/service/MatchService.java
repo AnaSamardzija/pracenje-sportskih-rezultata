@@ -38,9 +38,9 @@ public class MatchService
 	private final MembershipService _membershipService;
 	private final MatchResultResolver _resultResolver;
 
-	public List<MatchDetails> findAll()
+	public List<MatchDetails> findAll(final String groupId, final String sportId, final String playerId)
 	{
-		return toDetails(matchStorage().findAll());
+		return toDetails(matchStorage().findAll(groupId, sportId, playerId));
 	}
 
 	public MatchDetails findById(final String id)

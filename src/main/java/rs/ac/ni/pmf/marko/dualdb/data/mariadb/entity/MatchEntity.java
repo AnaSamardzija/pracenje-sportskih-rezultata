@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.marko.dualdb.data.mariadb.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class MatchEntity
 	private UserEntity recordedBy;
 
 	@OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
+	@BatchSize(size = 50)
 	@Builder.Default
 	private List<MatchSideEntity> sides = new ArrayList<>();
 }

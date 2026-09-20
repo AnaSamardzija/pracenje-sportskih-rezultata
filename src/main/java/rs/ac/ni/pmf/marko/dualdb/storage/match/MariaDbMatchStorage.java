@@ -48,6 +48,15 @@ public class MariaDbMatchStorage extends MatchStorage
 
 	@Override
 	@Transactional(readOnly = true)
+	public List<Match> findAll(final String groupId, final String sportId, final String playerId)
+	{
+		return _matchRepository.search(toId(groupId), toId(sportId), toId(playerId)).stream()
+				.map(_matchMapper::toModel)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public Optional<Match> findById(final String id)
 	{
 		return _matchRepository.findById(Long.parseLong(id)).map(_matchMapper::toModel);
@@ -82,6 +91,11 @@ public class MariaDbMatchStorage extends MatchStorage
 	public void deleteById(final String id)
 	{
 		_matchRepository.deleteById(Long.parseLong(id));
+	}
+
+	private Long toId(final String id)
+	{
+		return id == null || id.isBlank() ? null : Long.parseLong(id);
 	}
 
 	private MatchEntity loadOrCreate(final String id)
