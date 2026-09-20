@@ -49,25 +49,9 @@ public class MariaDbGroupStorage extends GroupStorage
 	@Transactional
 	public Group save(final Group group)
 	{
-		final GroupEntity entity = group.getId() == null ? createNew(group) : update(group);
-		return _groupMapper.toModel(_groupRepository.save(entity));
-	}
-
-	private GroupEntity createNew(final Group group)
-	{
 		final UserEntity createdBy = _userRepository.getReferenceById(Long.parseLong(group.getCreatedBy()));
-		return _groupMapper.toEntity(group, createdBy);
-	}
-
-	private GroupEntity update(final Group group)
-	{
-		final GroupEntity existing = _groupRepository.findById(Long.parseLong(group.getId()))
-				.orElseThrow(() -> new IllegalArgumentException("Group with id " + group.getId() + " not found"));
-
-		existing.setName(group.getName());
-		existing.setDescription(group.getDescription());
-
-		return existing;
+		final GroupEntity saved = _groupRepository.save(_groupMapper.toEntity(group, createdBy));
+		return _groupMapper.toModel(saved);
 	}
 
 	@Override

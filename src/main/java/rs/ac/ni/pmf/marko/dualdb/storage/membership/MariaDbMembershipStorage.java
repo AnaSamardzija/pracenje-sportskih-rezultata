@@ -52,25 +52,10 @@ public class MariaDbMembershipStorage extends MembershipStorage
 	@Transactional
 	public Membership save(final Membership membership)
 	{
-		final MembershipEntity entity = membership.getId() == null ? createNew(membership) : update(membership);
-		return _membershipMapper.toModel(_membershipRepository.save(entity));
-	}
-
-	private MembershipEntity createNew(final Membership membership)
-	{
 		final UserEntity user = _userRepository.getReferenceById(Long.parseLong(membership.getUserId()));
 		final GroupEntity group = _groupRepository.getReferenceById(Long.parseLong(membership.getGroupId()));
-		return _membershipMapper.toEntity(membership, user, group);
-	}
-
-	private MembershipEntity update(final Membership membership)
-	{
-		final MembershipEntity existing = _membershipRepository.findById(Long.parseLong(membership.getId()))
-				.orElseThrow(() -> new IllegalArgumentException("Membership with id " + membership.getId() + " not found"));
-
-		existing.setRoleInGroup(membership.getRoleInGroup());
-
-		return existing;
+		final MembershipEntity saved = _membershipRepository.save(_membershipMapper.toEntity(membership, user, group));
+		return _membershipMapper.toModel(saved);
 	}
 
 	@Override

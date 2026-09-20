@@ -6,8 +6,8 @@ import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Sport;
 import rs.ac.ni.pmf.marko.dualdb.storage.CurrentStorageTypeProvider;
-import rs.ac.ni.pmf.marko.dualdb.storage.DataStorage;
 import rs.ac.ni.pmf.marko.dualdb.storage.StorageResolver;
+import rs.ac.ni.pmf.marko.dualdb.storage.sport.SportStorage;
 
 import java.util.List;
 
@@ -20,12 +20,13 @@ public class SportService
 
 	public List<Sport> findAll()
 	{
-		return storage().findAll();
+		return storage().findAllActive();
 	}
 
 	public Sport findById(final String id)
 	{
 		return storage().findById(id)
+				.filter(Sport::isActive)
 				.orElseThrow(() -> new ResourceNotFoundException("Sport sa id " + id + " ne postoji"));
 	}
 
@@ -53,10 +54,10 @@ public class SportService
 		storage().save(existing);
 	}
 
-	private DataStorage<Sport> storage()
+	private SportStorage storage()
 	{
 		final StorageType storageType = _storageTypeProvider.getCurrentStorageType();
-		return _storageResolver.resolve(storageType, Sport.class)
+		return (SportStorage) _storageResolver.resolve(storageType, Sport.class)
 				.orElseThrow(() -> new IllegalStateException("No storage resolver found for type: " + storageType));
 	}
 }
