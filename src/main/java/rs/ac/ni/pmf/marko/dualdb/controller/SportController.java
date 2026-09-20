@@ -45,14 +45,14 @@ public class SportController
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
 	public SportResponse create(@RequestBody @Valid final SportRequest request)
 	{
 		return _sportMapper.toResponse(_sportService.create(_sportMapper.toModel(request)));
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
 	public SportResponse update(@PathVariable final String id, @RequestBody @Valid final SportRequest request)
 	{
 		return _sportMapper.toResponse(_sportService.update(id, _sportMapper.toModel(request)));
@@ -60,7 +60,7 @@ public class SportController
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
 	public void delete(@PathVariable final String id)
 	{
 		_sportService.delete(id);
