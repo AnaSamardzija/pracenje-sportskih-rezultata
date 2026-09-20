@@ -8,6 +8,7 @@ import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
+import rs.ac.ni.pmf.marko.dualdb.model.GroupRole;
 import rs.ac.ni.pmf.marko.dualdb.model.Match;
 import rs.ac.ni.pmf.marko.dualdb.model.MatchDetails;
 import rs.ac.ni.pmf.marko.dualdb.model.MatchSide;
@@ -66,6 +67,50 @@ public class MatchService
 		match.setRecordedBy(currentUserId);
 
 		return toDetails(List.of(matchStorage().save(match))).get(0);
+	}
+
+	@Transactional
+	public MatchDetails update(final String id, final Match match, final String currentUserId)
+	{
+		final Match existing = loadMatch(id);
+		requireParticipantOrGroupAdmin(existing, currentUserId);
+
+		if (!existing.getGroupId().equals(match.getGroupId()))
+		{
+			throw new InvalidOperationException("A match cannot be moved to another group");
+		}
+
+		final Sport sport = loadActiveSport(match.getSportId());
+
+		validateSides(sport, match, _membershipService.memberIds(existing.getGroupId()));
+		_resultResolver.applyResult(sport, match);
+
+		existing.setSportId(match.getSportId());
+		existing.setPlayedAt(match.getPlayedAt());
+		existing.setSides(match.getSides());
+
+		return toDetails(List.of(matchStorage().save(existing))).get(0);
+	}
+
+	@Transactional
+	public void delete(final String id, final String currentUserId)
+	{
+		final Match existing = loadMatch(id);
+		requireParticipantOrGroupAdmin(existing, currentUserId);
+
+		matchStorage().deleteById(id);
+	}
+
+	private void requireParticipantOrGroupAdmin(final Match match, final String currentUserId)
+	{
+		final boolean participant = match.getSides().stream()
+				.flatMap(side -> side.getPlayerIds().stream())
+				.anyMatch(currentUserId::equals);
+
+		if (!participant && _membershipService.roleOf(match.getGroupId(), currentUserId) != GroupRole.GROUP_ADMIN)
+		{
+			throw new AccessDeniedException("Only a participant of the match or a group admin can change it");
+		}
 	}
 
 	private void validateSides(final Sport sport, final Match match, final Set<String> memberIds)
