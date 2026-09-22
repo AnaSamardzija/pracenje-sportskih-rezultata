@@ -18,6 +18,7 @@ public class MongoUserMapper
 				.username(userDocument.getUsername())
 				.password(userDocument.getPassword())
 				.email(userDocument.getEmail())
+				.createdAt(userDocument.getCreatedAt())
 				.roles(userDocument.getRoles())
 				.permissions(userDocument.getPermissions())
 				.build();
@@ -34,7 +35,7 @@ public class MongoUserMapper
 				.email(user.getEmail())
 				.roles(user.getRoles())
 				.permissions(user.getPermissions())
-				.createdAt(LocalDateTime.now())
+				.createdAt(user.getCreatedAt() == null ? LocalDateTime.now() : user.getCreatedAt())
 				.build();
 	}
 }

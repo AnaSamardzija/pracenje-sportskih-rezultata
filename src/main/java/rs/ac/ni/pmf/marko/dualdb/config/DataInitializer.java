@@ -16,6 +16,7 @@ import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.UserDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoUserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -144,6 +145,7 @@ public class DataInitializer implements CommandLineRunner
 					.email("ana.samardzija@pmf.edu.rs")
 					.roles(rolePermissions.keySet())
 					.permissions(allPermissions())
+					.createdAt(LocalDateTime.now())
 					.build();
 			_mongoUserRepository.save(userDocument);
 

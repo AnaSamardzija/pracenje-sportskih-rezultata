@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -35,9 +36,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
 		{
-			// Istekao ili pokvaren token (JwtException) i token za korisnika koji više ne postoji
-			// (IllegalArgumentException) ne smeju da obore zahtev sa 500: zahtev samo nastavlja kao
-			// neprijavljen, pa ga Spring odbije kroz RestAuthenticationEntryPoint sa 401.
+			// Istekao ili pokvaren token (JwtException), token za korisnika koji više ne postoji
+			// (UsernameNotFoundException) i nepoznata baza (IllegalArgumentException) ne smeju da obore
+			// zahtev sa 500: zahtev samo nastavlja kao neprijavljen, pa ga Spring odbije kroz
+			// RestAuthenticationEntryPoint sa 401.
 			try
 			{
 				final String jwt = authorizationHeader.substring(7);
@@ -57,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 					}
 				}
 			}
-			catch (final JwtException | IllegalArgumentException ex)
+			catch (final JwtException | AuthenticationException | IllegalArgumentException ex)
 			{
 				log.debug("Rejected JWT: {}", ex.getMessage());
 				SecurityContextHolder.clearContext();

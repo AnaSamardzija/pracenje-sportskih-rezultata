@@ -46,6 +46,13 @@ public class MariaDbSportStorage extends SportStorage
 
 	@Override
 	@Transactional(readOnly = true)
+	public Optional<Sport> findByName(final String name)
+	{
+		return _sportRepository.findByNameIgnoreCase(name).map(_sportMapper::toModel);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public Optional<Sport> findById(final String id)
 	{
 		return _sportRepository.findById(Long.parseLong(id)).map(_sportMapper::toModel);
