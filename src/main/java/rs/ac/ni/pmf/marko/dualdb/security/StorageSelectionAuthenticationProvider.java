@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
@@ -31,7 +32,18 @@ public class StorageSelectionAuthenticationProvider implements AuthenticationPro
 		final String rawPassword = token.getCredentials().toString();
 		final StorageType storageType = token.getStorageType();
 
-		final UserDetails userDetails = _userDetailsService.loadUserByUsername(username, storageType);
+		// Nepostojeći korisnik dobija istu grešku kao pogrešna lozinka, da odgovor ne bi otkrio
+		// koja korisnička imena postoje.
+		final UserDetails userDetails;
+
+		try
+		{
+			userDetails = _userDetailsService.loadUserByUsername(username, storageType);
+		}
+		catch (final UsernameNotFoundException ex)
+		{
+			throw new BadCredentialsException("Invalid username or password");
+		}
 
 		if (!_passwordEncoder.matches(rawPassword, userDetails.getPassword()))
 		{

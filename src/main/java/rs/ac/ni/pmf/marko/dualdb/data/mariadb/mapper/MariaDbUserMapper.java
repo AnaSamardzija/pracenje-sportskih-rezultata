@@ -30,6 +30,7 @@ public class MariaDbUserMapper
 				.firstName(userEntity.getFirstName())
 				.lastName(userEntity.getLastName())
 				.email(userEntity.getEmail())
+				.createdAt(userEntity.getCreatedAt())
 				.roles(roles)
 				.permissions(permissions)
 				.build();

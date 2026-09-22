@@ -16,6 +16,7 @@ import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.UserDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoUserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -41,19 +42,12 @@ public class DataInitializer implements CommandLineRunner
 			"user.delete"
 	);
 
-	private final Set<String> managerPermissions = Set.of(
-			"content.read",
-			"content.update",
-			"content.delete"
-	);
-
 	private final Set<String> userPermissions = Set.of(
 			"content.read"
 	);
 
 	private final Map<String, Set<String>> rolePermissions = Map.of(
-			"ADMIN", adminPermissions,
-			"MANAGER", managerPermissions,
+			"SYSTEM_ADMIN", adminPermissions,
 			"USER", userPermissions
 	);
 
@@ -132,25 +126,56 @@ public class DataInitializer implements CommandLineRunner
 				.firstName("Marko")
 				.lastName("Milošević")
 				.email("marko.milosevic@pmf.edu.rs")
-				.roles(_mariaDbRoleRepository.findAllByNameIn(Set.of("ADMIN", "MANAGER", "USER")))
+				.roles(_mariaDbRoleRepository.findAllByNameIn(Set.of("SYSTEM_ADMIN", "USER")))
 				.build();
 	}
 
 	public void initializeMongoDb()
 	{
-		if (!_mongoUserRepository.existsByUsername("admin"))
+		final Optional<UserDocument> existingAdmin = _mongoUserRepository.findByUsername("admin");
+
+		if (existingAdmin.isEmpty())
 		{
 			log.info("Creating admin user in MongoDB");
 			final UserDocument userDocument = UserDocument.builder()
 					.username("admin")
 					.password(_passwordEncoder.encode("admin.123"))
-					.firstName("Marko")
-					.lastName("Milošević")
-					.email("marko.milosevic@pmf.edu.rs")
+					.firstName("Ana")
+					.lastName("Samardžija")
+					.email("ana.samardzija@pmf.edu.rs")
 					.roles(rolePermissions.keySet())
-					.permissions(rolePermissions.values().stream().flatMap(Set::stream).collect(Collectors.toSet()))
+					.permissions(allPermissions())
+					.createdAt(LocalDateTime.now())
 					.build();
 			_mongoUserRepository.save(userDocument);
+
+			return;
 		}
+
+		alignMongoAdminRoles(existingAdmin.get());
+	}
+
+	/**
+	 * MongoDB nema Flyway, pa ovde radimo ono što u MariaDB-u radi migracija: ako zatečeni
+	 * admin nosi stare uloge (ADMIN/MANAGER), prepiši ih na uloge iz dizajna.
+	 */
+	private void alignMongoAdminRoles(final UserDocument admin)
+	{
+		if (admin.getRoles().equals(rolePermissions.keySet()))
+		{
+			return;
+		}
+
+		log.info("Aligning admin roles in MongoDB: {} -> {}", admin.getRoles(), rolePermissions.keySet());
+
+		admin.setRoles(rolePermissions.keySet());
+		admin.setPermissions(allPermissions());
+
+		_mongoUserRepository.save(admin);
+	}
+
+	private Set<String> allPermissions()
+	{
+		return rolePermissions.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
 	}
 }

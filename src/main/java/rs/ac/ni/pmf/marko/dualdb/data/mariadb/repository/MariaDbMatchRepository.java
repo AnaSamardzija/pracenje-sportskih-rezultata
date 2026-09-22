@@ -21,4 +21,6 @@ public interface MariaDbMatchRepository extends JpaRepository<MatchEntity, Long>
 	List<MatchEntity> search(@Param("groupId") Long groupId,
 	                         @Param("sportId") Long sportId,
 	                         @Param("playerId") Long playerId);
+
+	boolean existsByGroup_Id(Long groupId);
 }

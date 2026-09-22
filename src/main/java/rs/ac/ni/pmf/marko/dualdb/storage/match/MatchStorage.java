@@ -14,4 +14,6 @@ public abstract class MatchStorage implements DataStorage<Match>
 	}
 
 	public abstract List<Match> findAll(String groupId, String sportId, String playerId);
+
+	public abstract boolean existsByGroupId(String groupId);
 }

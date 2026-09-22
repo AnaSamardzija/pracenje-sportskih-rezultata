@@ -20,5 +20,6 @@ public class AuthRequest
 	@NotNull(message = "Password cannot be null")
 	String password;
 
+	@NotNull(message = "storageType is required (MARIADB or MONGODB)")
 	StorageType storageType;
 }

@@ -3,6 +3,7 @@ package rs.ac.ni.pmf.marko.dualdb.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +19,8 @@ public class User implements DataModel
 	String email;
 
 	String password;
+
+	LocalDateTime createdAt;
 
 	@Builder.Default
 	Set<String> roles = new HashSet<>();

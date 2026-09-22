@@ -59,7 +59,6 @@ public class MariaDbUserStorage extends UserStorage
 	private UserEntity createNewUser(final User user)
 	{
 		final Set<RoleEntity> roles = user.getRoles().stream()
-				.map(String::toLowerCase)
 				.map(_roleRepository::findByName)
 				.filter(Optional::isPresent)
 				.map(Optional::get)
@@ -81,7 +80,6 @@ public class MariaDbUserStorage extends UserStorage
 		userEntity.setPassword(user.getPassword());
 
 		final Set<RoleEntity> roles = user.getRoles().stream()
-				.map(String::toLowerCase)
 				.map(_roleRepository::findByName)
 				.filter(Optional::isPresent)
 				.map(Optional::get)
