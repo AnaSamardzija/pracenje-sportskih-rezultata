@@ -36,12 +36,6 @@ public class UserService
 				.orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 	}
 
-	public User getByUsername(final String username)
-	{
-		return userStorage().findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-	}
-
 	@Transactional
 	public User updateProfile(final String username, final UpdateProfileRequest request)
 	{

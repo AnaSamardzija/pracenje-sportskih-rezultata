@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tools.jackson.databind.json.JsonMapper;
@@ -39,11 +40,18 @@ public class SecurityConfig
 	}
 
 	@Bean
+	public AuthenticationEntryPoint authenticationEntryPoint()
+	{
+		return new RestAuthenticationEntryPoint(_jsonMapper);
+	}
+
+	@Bean
 	public SecurityFilterChain filterChain(final HttpSecurity http)
 	{
 		http
 				.csrf(AbstractHttpConfigurer::disable)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint()))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/v1/auth/login").permitAll()
 						.requestMatchers("/api/v1/auth/register").permitAll()
