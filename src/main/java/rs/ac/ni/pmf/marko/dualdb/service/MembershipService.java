@@ -3,8 +3,10 @@ package rs.ac.ni.pmf.marko.dualdb.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.DuplicateResourceException;
+import rs.ac.ni.pmf.marko.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
 import rs.ac.ni.pmf.marko.dualdb.model.GroupRole;
@@ -17,6 +19,7 @@ import rs.ac.ni.pmf.marko.dualdb.storage.StorageResolver;
 import rs.ac.ni.pmf.marko.dualdb.storage.membership.MembershipStorage;
 import rs.ac.ni.pmf.marko.dualdb.storage.user.UserStorage;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,10 +61,16 @@ public class MembershipService
 		membershipStorage().save(membership);
 	}
 
+	@Transactional
 	public void leave(final String groupId, final String userId)
 	{
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(userId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("You are not a member of this group"));
+
+		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+		{
+			keepGroupAdmin(groupId, membership);
+		}
 
 		membershipStorage().deleteById(membership.getId());
 	}
@@ -84,6 +93,11 @@ public class MembershipService
 	public void kick(final String groupId, final String targetUserId, final String currentUserId)
 	{
 		requireGroupAdmin(groupId, currentUserId);
+
+		if (targetUserId.equals(currentUserId))
+		{
+			throw new InvalidOperationException("You cannot remove yourself from the group; use leave instead");
+		}
 
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
@@ -134,6 +148,34 @@ public class MembershipService
 		{
 			throw new AccessDeniedException("Only a group admin can perform this action");
 		}
+	}
+
+	/**
+	 * Grupa uvek ima GROUP_ADMIN-a dok ima članova. Kad poslednji admin odlazi, admin postaje
+	 * član koji je najduže u grupi; ako drugih članova nema, admin ne može da ode (briše grupu).
+	 */
+	private void keepGroupAdmin(final String groupId, final Membership leaving)
+	{
+		final List<Membership> others = membershipStorage().findByGroupId(groupId).stream()
+				.filter(other -> !other.getId().equals(leaving.getId()))
+				.toList();
+
+		if (others.isEmpty())
+		{
+			throw new InvalidOperationException("You are the only member of this group; delete the group instead");
+		}
+
+		if (others.stream().anyMatch(other -> other.getRoleInGroup() == GroupRole.GROUP_ADMIN))
+		{
+			return;
+		}
+
+		final Membership successor = others.stream()
+				.min(Comparator.comparing(Membership::getJoinedAt))
+				.orElseThrow();
+
+		successor.setRoleInGroup(GroupRole.GROUP_ADMIN);
+		membershipStorage().save(successor);
 	}
 
 	private void requireGroupExists(final String groupId)
