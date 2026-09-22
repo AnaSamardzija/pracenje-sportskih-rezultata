@@ -57,6 +57,13 @@ public class MariaDbMatchStorage extends MatchStorage
 
 	@Override
 	@Transactional(readOnly = true)
+	public boolean existsByGroupId(final String groupId)
+	{
+		return _matchRepository.existsByGroup_Id(Long.parseLong(groupId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public Optional<Match> findById(final String id)
 	{
 		return _matchRepository.findById(Long.parseLong(id)).map(_matchMapper::toModel);

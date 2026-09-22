@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
+import rs.ac.ni.pmf.marko.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.marko.dualdb.model.Group;
 import rs.ac.ni.pmf.marko.dualdb.model.GroupDetails;
@@ -23,6 +24,7 @@ public class GroupService
 	private final StorageResolver _storageResolver;
 	private final CurrentStorageTypeProvider _storageTypeProvider;
 	private final MembershipService _membershipService;
+	private final MatchService _matchService;
 
 	public List<GroupDetails> findAll(final boolean mine, final String search, final String currentUserId)
 	{
@@ -88,6 +90,11 @@ public class GroupService
 	{
 		loadGroup(id);
 		_membershipService.requireGroupAdmin(id, currentUserId);
+
+		if (_matchService.hasMatches(id))
+		{
+			throw new InvalidOperationException("Group with id " + id + " has recorded matches and cannot be deleted");
+		}
 
 		_membershipService.removeAllForGroup(id);
 		storage().deleteById(id);

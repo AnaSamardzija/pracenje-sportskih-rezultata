@@ -37,6 +37,7 @@ public class MatchEntity
 	private UserEntity recordedBy;
 
 	@OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("id")
 	@BatchSize(size = 50)
 	@Builder.Default
 	private List<MatchSideEntity> sides = new ArrayList<>();

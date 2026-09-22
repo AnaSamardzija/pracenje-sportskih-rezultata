@@ -40,12 +40,32 @@ public class MatchService
 
 	public List<MatchDetails> findAll(final String groupId, final String sportId, final String playerId)
 	{
+		if (groupId != null && !groupId.isBlank())
+		{
+			requireGroupExists(groupId);
+		}
+
+		if (sportId != null && !sportId.isBlank())
+		{
+			requireSportExists(sportId);
+		}
+
+		if (playerId != null && !playerId.isBlank())
+		{
+			requirePlayerExists(playerId);
+		}
+
 		return toDetails(matchStorage().findAll(groupId, sportId, playerId));
 	}
 
 	public MatchDetails findById(final String id)
 	{
 		return toDetails(List.of(loadMatch(id))).get(0);
+	}
+
+	public boolean hasMatches(final String groupId)
+	{
+		return matchStorage().existsByGroupId(groupId);
 	}
 
 	@Transactional
@@ -167,9 +187,27 @@ public class MatchService
 
 	private Sport loadActiveSport(final String id)
 	{
-		return sportStorage().findById(id)
-				.filter(Sport::isActive)
+		final Sport sport = sportStorage().findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Sport with id " + id + " not found"));
+
+		if (!sport.isActive())
+		{
+			throw new InvalidOperationException("Sport with id " + id + " is no longer active");
+		}
+
+		return sport;
+	}
+
+	private void requireSportExists(final String id)
+	{
+		sportStorage().findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Sport with id " + id + " not found"));
+	}
+
+	private void requirePlayerExists(final String id)
+	{
+		userStorage().findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 	}
 
 	private void requireGroupExists(final String id)

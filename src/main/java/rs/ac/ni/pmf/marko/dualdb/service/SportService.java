@@ -27,7 +27,7 @@ public class SportService
 	{
 		return storage().findById(id)
 				.filter(Sport::isActive)
-				.orElseThrow(() -> new ResourceNotFoundException("Sport sa id " + id + " ne postoji"));
+				.orElseThrow(() -> new ResourceNotFoundException("Sport with id " + id + " not found"));
 	}
 
 	public Sport create(final Sport sport)

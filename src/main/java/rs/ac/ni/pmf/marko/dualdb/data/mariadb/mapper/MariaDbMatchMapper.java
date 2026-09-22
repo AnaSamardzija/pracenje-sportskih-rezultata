@@ -43,8 +43,9 @@ public class MariaDbMatchMapper
 	private MatchSide toSide(final MatchSideEntity entity)
 	{
 		final List<String> playerIds = entity.getPlayers().stream()
-				.map(player -> String.valueOf(player.getId()))
+				.map(UserEntity::getId)
 				.sorted()
+				.map(String::valueOf)
 				.collect(Collectors.toList());
 
 		return MatchSide.builder()

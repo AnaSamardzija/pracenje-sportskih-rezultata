@@ -64,7 +64,7 @@ public class ErrorHandler
 	{
 		return ErrorDto.builder()
 				.timestamp(OffsetDateTime.now())
-				.message("Podatak narušava ograničenje baze (npr. duplikat).")
+				.message("The data violates a database constraint (e.g. a duplicate value)")
 				.build();
 	}
 
