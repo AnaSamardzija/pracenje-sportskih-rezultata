@@ -1,5 +1,6 @@
 package rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository;
 
+import org.springframework.data.mongodb.core.annotation.Collation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.SportDocument;
 
@@ -10,5 +11,6 @@ public interface MongoSportRepository extends MongoRepository<SportDocument, Str
 {
 	List<SportDocument> findByActiveTrue();
 
-	Optional<SportDocument> findByNameIgnoreCase(String name);
+	@Collation("{ 'locale': 'en', 'strength': 1 }")
+	Optional<SportDocument> findByName(String name);
 }
