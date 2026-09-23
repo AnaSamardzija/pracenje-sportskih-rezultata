@@ -43,7 +43,9 @@ public class MongoMatchMapper
 	private MatchSide toSide(final MatchSideDocument document)
 	{
 		return MatchSide.builder()
-				.playerIds(new ArrayList<>(document.getPlayerIds()))
+				.playerIds(document.getPlayerIds().stream()
+						.sorted()
+						.collect(Collectors.toList()))
 				.score(document.getScore())
 				.setScores(new ArrayList<>(document.getSetScores()))
 				.outcome(document.getOutcome())
