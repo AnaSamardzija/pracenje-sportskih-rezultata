@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.marko.dualdb.data.mongodb.document;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -21,8 +22,13 @@ public class UserDocument
 
 	private String firstName;
 	private String lastName;
+
+	@Indexed(name = "uk_users_username", unique = true, collation = "{ 'locale': 'en', 'strength': 1 }")
 	private String username;
+
 	private String password;
+
+	@Indexed(name = "uk_users_email", unique = true, collation = "{ 'locale': 'en', 'strength': 1 }")
 	private String email;
 
 	@Builder.Default
