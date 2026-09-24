@@ -1,0 +1,150 @@
+/* Zajednički izgled cele aplikacije: boje i sitne dorade Bootstrap-a. Komponente ne pišu svoj CSS. */
+
+:root {
+    --app-primary: #1E4FD8;
+    --app-primary-rgb: 30, 79, 216;
+    --app-primary-hover: #1941B3;
+    --app-dark: #0B1F3A;
+    --app-bg: #EAF2FF;
+
+    /* Bootstrap čita ove promenljive, pa text-primary, bg-primary, linkovi i fokus dobijaju našu plavu */
+    --bs-primary: var(--app-primary);
+    --bs-primary-rgb: var(--app-primary-rgb);
+    --bs-primary-bg-subtle: var(--app-bg);
+    --bs-primary-border-subtle: #BCD0F7;
+    --bs-primary-text-emphasis: var(--app-dark);
+    --bs-link-color: var(--app-primary);
+    --bs-link-color-rgb: var(--app-primary-rgb);
+    --bs-link-hover-color: var(--app-primary-hover);
+    --bs-focus-ring-color: rgba(var(--app-primary-rgb), 0.25);
+    --bs-body-color: var(--app-dark);
+    --bs-emphasis-color: var(--app-dark);
+    --bs-border-color: #D3DFF5;
+}
+
+/* Svetloplava samo za pozadinu stranice; --bs-body-bg ostaje beo jer ga Bootstrap koristi i za kartice, polja i tabele */
+body {
+    background-color: var(--app-bg);
+}
+
+/* Dugmad: Bootstrap 5.3 boje dugmeta drži u promenljivama na samoj klasi */
+.btn-primary {
+    --bs-btn-bg: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-bg: var(--app-primary-hover);
+    --bs-btn-hover-border-color: var(--app-primary-hover);
+    --bs-btn-active-bg: var(--app-primary-hover);
+    --bs-btn-active-border-color: var(--app-primary-hover);
+    --bs-btn-disabled-bg: var(--app-primary);
+    --bs-btn-disabled-border-color: var(--app-primary);
+    --bs-btn-focus-shadow-rgb: var(--app-primary-rgb);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--app-primary);
+    --bs-btn-hover-border-color: var(--app-primary);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--app-primary);
+    --bs-btn-active-border-color: var(--app-primary);
+    --bs-btn-focus-shadow-rgb: var(--app-primary-rgb);
+}
+
+/* Forme: fokus i izabrani radio/checkbox u našoj plavoj (Bootstrap ih ima „zapečene“ u CSS-u) */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: #8FA9EE;
+    box-shadow: 0 0 0 0.25rem rgba(var(--app-primary-rgb), 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
+}
+
+.input-group-text {
+    background-color: var(--app-bg);
+    color: var(--app-primary);
+}
+
+/* Navigacija */
+.navbar-app {
+    background-color: var(--app-dark);
+}
+
+.navbar-app .navbar-brand {
+    font-weight: 600;
+}
+
+/* Kartice: bez ivice, sa blagom senkom; card-hover se malo podigne pod mišem */
+.card {
+    --bs-card-border-width: 0;
+    box-shadow: 0 0.125rem 0.5rem rgba(11, 31, 58, 0.08);
+}
+
+.card-hover {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(11, 31, 58, 0.14);
+}
+
+.card-header {
+    background-color: #fff;
+    font-weight: 600;
+}
+
+/* Okrugla ikonica/avatar sa inicijalima */
+.icon-circle {
+    width: 3.5rem;
+    height: 3.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--app-primary);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Login i ostale stranice bez navigacije: sadržaj na sredini ekrana */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 1.5rem 0;
+}
+
+/* Blag ulazak stranice */
+.page-fade {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-fade {
+        animation: none;
+    }
+
+    .card-hover,
+    .card-hover:hover {
+        transition: none;
+        transform: none;
+    }
+}

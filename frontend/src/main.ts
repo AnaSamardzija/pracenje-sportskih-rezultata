@@ -1,4 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.min.css';
+// Posle Bootstrap-a, da bi naše boje pregazile njegove
+import './app.css';
 import {mount} from 'svelte';
 import App from './App.svelte';
 

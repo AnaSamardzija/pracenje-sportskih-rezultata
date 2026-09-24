@@ -3,7 +3,8 @@ import {push} from 'svelte-spa-router';
 import {authStore} from '../auth/auth.store';
 import {logout} from '../auth/auth.service';
 
-// Nemamo refresh token: na 401 (istekao/pokvaren token) korisnik se odjavljuje i vraća na login
+// Nemamo refresh token: na 401 (istekao/pokvaren token) korisnik se odjavljuje i vraća na login.
+// Odjava samo kad je token poslat, jer i login sa pogrešnom lozinkom vraća 401.
 export async function apiFetch(url: string, options: RequestInit = {}) {
     const {accessToken} = get(authStore);
 
@@ -16,10 +17,16 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
         }
     });
 
-    if (res.status === 401) {
+    if (res.status === 401 && accessToken) {
         logout();
         push('/login');
     }
 
     return res;
+}
+
+// Backend na grešku vraća ErrorDto {timestamp, message}; ako poruke nema, koristi se podrazumevana
+export async function errorMessage(res: Response, fallback: string): Promise<string> {
+    const body = await res.json().catch(() => null);
+    return body?.message ?? fallback;
 }

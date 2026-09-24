@@ -1,10 +1,10 @@
-import * as authApi from './auth.api';
+import * as authApi from '../api/auth.api';
 import {authStore} from './auth.store';
-import {clearAuth, saveAuth} from './auth.storage';
-import type {AuthState, StorageType} from './auth.types';
+import {clearAuth, saveAuth} from '../stores/auth.storage';
+import type {AuthState, StorageType} from '../types/auth.types';
 
 export async function login(username: string, password: string, storageType: StorageType) {
-    const {accessToken} = await authApi.login(username, password, storageType);
+    const {accessToken} = await authApi.login({username, password, storageType});
     const state: AuthState = {accessToken, storageType};
 
     authStore.set(state);

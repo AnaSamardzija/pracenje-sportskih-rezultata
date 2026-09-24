@@ -1,4 +1,4 @@
-import type {AuthState} from './auth.types';
+import type {AuthState} from '../types/auth.types';
 
 const AUTH_KEY = 'auth';
 
