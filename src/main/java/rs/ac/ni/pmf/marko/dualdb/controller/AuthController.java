@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import rs.ac.ni.pmf.marko.dualdb.dto.auth.AuthRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.auth.AuthResponse;
 import rs.ac.ni.pmf.marko.dualdb.dto.auth.RegisterRequest;
+import rs.ac.ni.pmf.marko.dualdb.dto.mapper.UserMapper;
 import rs.ac.ni.pmf.marko.dualdb.service.auth.AuthService;
 
 @RestController
@@ -19,6 +20,7 @@ import rs.ac.ni.pmf.marko.dualdb.service.auth.AuthService;
 public class AuthController
 {
 	private final AuthService _authService;
+	private final UserMapper _userMapper;
 
 	@PostMapping("/login")
 	public AuthResponse login(@RequestBody @Valid final AuthRequest authRequest)
@@ -33,6 +35,6 @@ public class AuthController
 	@ResponseStatus(HttpStatus.CREATED)
 	public AuthResponse register(@RequestBody @Valid final RegisterRequest registerRequest)
 	{
-		return _authService.register(registerRequest);
+		return _authService.register(_userMapper.toModel(registerRequest), registerRequest.getStorageType());
 	}
 }

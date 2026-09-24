@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.dto.auth.AuthResponse;
-import rs.ac.ni.pmf.marko.dualdb.dto.auth.RegisterRequest;
 import rs.ac.ni.pmf.marko.dualdb.exception.DuplicateResourceException;
 import rs.ac.ni.pmf.marko.dualdb.model.User;
 import rs.ac.ni.pmf.marko.dualdb.security.CustomUserDetails;
@@ -46,32 +45,25 @@ public class AuthService
 	}
 
 	@Transactional
-	public AuthResponse register(final RegisterRequest request)
+	public AuthResponse register(final User user, final StorageType storageType)
 	{
-		final StorageType storageType = request.getStorageType();
 		final UserStorage storage = (UserStorage) _storageResolver.resolve(storageType, User.class)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid storage type: " + storageType));
 
-		if (storage.existsByUsername(request.getUsername()))
+		if (storage.existsByUsername(user.getUsername()))
 		{
-			throw new DuplicateResourceException("Username already taken: " + request.getUsername());
+			throw new DuplicateResourceException("Username already taken: " + user.getUsername());
 		}
 
-		if (storage.existsByEmail(request.getEmail()))
+		if (storage.existsByEmail(user.getEmail()))
 		{
-			throw new DuplicateResourceException("Email already in use: " + request.getEmail());
+			throw new DuplicateResourceException("Email already in use: " + user.getEmail());
 		}
 
-		final User newUser = User.builder()
-				.username(request.getUsername())
-				.password(_passwordEncoder.encode(request.getPassword()))
-				.firstName(request.getFirstName())
-				.lastName(request.getLastName())
-				.email(request.getEmail())
-				.roles(Set.of("USER"))
-				.build();
+		user.setPassword(_passwordEncoder.encode(user.getPassword()));
+		user.setRoles(Set.of("USER"));
 
-		final User saved = storage.save(newUser);
+		final User saved = storage.save(user);
 
 		final CustomUserDetails userDetails = new CustomUserDetails(saved, storageType);
 		final String accessToken = _jwtUtil.generateToken(storageType, userDetails);

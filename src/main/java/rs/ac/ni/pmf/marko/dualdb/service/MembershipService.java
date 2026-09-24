@@ -92,6 +92,7 @@ public class MembershipService
 
 	public void kick(final String groupId, final String targetUserId, final String currentUserId)
 	{
+		requireGroupExists(groupId);
 		requireGroupAdmin(groupId, currentUserId);
 
 		if (targetUserId.equals(currentUserId))
