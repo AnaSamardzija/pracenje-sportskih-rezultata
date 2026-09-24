@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -31,11 +32,9 @@ public class UserDocument
 	@Indexed(name = "uk_users_email", unique = true, collation = "{ 'locale': 'en', 'strength': 1 }")
 	private String email;
 
+	@DocumentReference
 	@Builder.Default
-	private Set<String> roles = new HashSet<>();
-
-	@Builder.Default
-	private Set<String> permissions = new HashSet<>();
+	private Set<RoleDocument> roles = new HashSet<>();
 
 	private LocalDateTime createdAt;
 }
