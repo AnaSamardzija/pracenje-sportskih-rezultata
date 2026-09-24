@@ -13,7 +13,11 @@ import rs.ac.ni.pmf.marko.dualdb.data.mariadb.entity.UserEntity;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbPermissionRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbRoleRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbUserRepository;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.PermissionDocument;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.RoleDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.UserDocument;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoPermissionRepository;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoRoleRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoUserRepository;
 
 import java.time.LocalDateTime;
@@ -32,6 +36,9 @@ public class DataInitializer implements CommandLineRunner
 
 	private final MariaDbRoleRepository _mariaDbRoleRepository;
 	private final MariaDbPermissionRepository _mariaDbPermissionRepository;
+
+	private final MongoRoleRepository _mongoRoleRepository;
+	private final MongoPermissionRepository _mongoPermissionRepository;
 
 	private final PasswordEncoder _passwordEncoder;
 
@@ -132,6 +139,12 @@ public class DataInitializer implements CommandLineRunner
 
 	public void initializeMongoDb()
 	{
+		log.info("Checking and creating permissions in MongoDB, if needed.");
+		createMongoPermissions();
+
+		log.info("Checking and creating roles in MongoDB, if needed.");
+		createMongoRoles();
+
 		final Optional<UserDocument> existingAdmin = _mongoUserRepository.findByUsername("admin");
 
 		if (existingAdmin.isEmpty())
@@ -153,6 +166,48 @@ public class DataInitializer implements CommandLineRunner
 		}
 
 		alignMongoAdminRoles(existingAdmin.get());
+	}
+
+	private void createMongoPermissions()
+	{
+		rolePermissions.values().stream()
+				.flatMap(Set::stream)
+				.forEach(this::createMongoPermission);
+	}
+
+	private void createMongoPermission(final String permission)
+	{
+		if (!_mongoPermissionRepository.existsByName(permission))
+		{
+			log.info("Creating permission in MongoDB: {}", permission);
+
+			final PermissionDocument permissionDocument = PermissionDocument.builder().name(permission).build();
+			_mongoPermissionRepository.save(permissionDocument);
+		}
+	}
+
+	private void createMongoRoles()
+	{
+		rolePermissions.forEach(this::createMongoRole);
+	}
+
+	private void createMongoRole(final String role, final Set<String> permissions)
+	{
+		if (!_mongoRoleRepository.existsByName(role))
+		{
+			log.info("Creating role in MongoDB: {}", role);
+			final Set<PermissionDocument> rolePermissions = permissions.stream()
+					.map(_mongoPermissionRepository::findByName)
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(Collectors.toSet());
+			final RoleDocument roleDocument = RoleDocument.builder()
+					.name(role)
+					.permissions(rolePermissions)
+					.build();
+
+			_mongoRoleRepository.save(roleDocument);
+		}
 	}
 
 	/**
