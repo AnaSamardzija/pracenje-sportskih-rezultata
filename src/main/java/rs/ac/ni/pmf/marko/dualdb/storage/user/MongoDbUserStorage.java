@@ -3,19 +3,25 @@ package rs.ac.ni.pmf.marko.dualdb.storage.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.RoleDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.UserDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.mapper.MongoUserMapper;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoRoleRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoUserRepository;
 import rs.ac.ni.pmf.marko.dualdb.model.User;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
 public class MongoDbUserStorage extends UserStorage
 {
 	private final MongoUserRepository _userRepository;
+	private final MongoRoleRepository _roleRepository;
+
 	private final MongoUserMapper _userMapper;
 
 	@Override
@@ -39,8 +45,13 @@ public class MongoDbUserStorage extends UserStorage
 	@Override
 	public User save(final User user)
 	{
-		// Should figure out how to handle permissions
-		final UserDocument document = _userMapper.toDocument(user);
+		final Set<RoleDocument> roles = user.getRoles().stream()
+				.map(_roleRepository::findByName)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.collect(Collectors.toSet());
+
+		final UserDocument document = _userMapper.toDocument(user, roles);
 		final UserDocument saved = _userRepository.save(document);
 		return _userMapper.toUser(saved);
 	}

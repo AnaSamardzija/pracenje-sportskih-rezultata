@@ -5,8 +5,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
-import rs.ac.ni.pmf.marko.dualdb.dto.user.ChangePasswordRequest;
-import rs.ac.ni.pmf.marko.dualdb.dto.user.UpdateProfileRequest;
 import rs.ac.ni.pmf.marko.dualdb.exception.DuplicateResourceException;
 import rs.ac.ni.pmf.marko.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.marko.dualdb.exception.ResourceNotFoundException;
@@ -37,37 +35,37 @@ public class UserService
 	}
 
 	@Transactional
-	public User updateProfile(final String username, final UpdateProfileRequest request)
+	public User updateProfile(final String username, final User profile)
 	{
 		final UserStorage storage = userStorage();
 		final User user = storage.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
-		if (!request.getEmail().equalsIgnoreCase(user.getEmail()) && storage.existsByEmail(request.getEmail()))
+		if (!profile.getEmail().equalsIgnoreCase(user.getEmail()) && storage.existsByEmail(profile.getEmail()))
 		{
-			throw new DuplicateResourceException("Email already in use: " + request.getEmail());
+			throw new DuplicateResourceException("Email already in use: " + profile.getEmail());
 		}
 
-		user.setFirstName(request.getFirstName());
-		user.setLastName(request.getLastName());
-		user.setEmail(request.getEmail());
+		user.setFirstName(profile.getFirstName());
+		user.setLastName(profile.getLastName());
+		user.setEmail(profile.getEmail());
 
 		return storage.save(user);
 	}
 
 	@Transactional
-	public void changePassword(final String username, final ChangePasswordRequest request)
+	public void changePassword(final String username, final String oldPassword, final String newPassword)
 	{
 		final UserStorage storage = userStorage();
 		final User user = storage.findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
-		if (!_passwordEncoder.matches(request.getOldPassword(), user.getPassword()))
+		if (!_passwordEncoder.matches(oldPassword, user.getPassword()))
 		{
 			throw new InvalidOperationException("Old password is incorrect");
 		}
 
-		user.setPassword(_passwordEncoder.encode(request.getNewPassword()));
+		user.setPassword(_passwordEncoder.encode(newPassword));
 		storage.save(user);
 	}
 

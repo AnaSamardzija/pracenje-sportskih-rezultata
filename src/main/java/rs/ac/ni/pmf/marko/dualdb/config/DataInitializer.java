@@ -3,7 +3,14 @@ package rs.ac.ni.pmf.marko.dualdb.config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +20,15 @@ import rs.ac.ni.pmf.marko.dualdb.data.mariadb.entity.UserEntity;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbPermissionRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbRoleRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository.MariaDbUserRepository;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.PermissionDocument;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.RoleDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.UserDocument;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoPermissionRepository;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoRoleRepository;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoUserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +44,10 @@ public class DataInitializer implements CommandLineRunner
 
 	private final MariaDbRoleRepository _mariaDbRoleRepository;
 	private final MariaDbPermissionRepository _mariaDbPermissionRepository;
+
+	private final MongoRoleRepository _mongoRoleRepository;
+	private final MongoPermissionRepository _mongoPermissionRepository;
+	private final MongoTemplate _mongoTemplate;
 
 	private final PasswordEncoder _passwordEncoder;
 
@@ -132,6 +148,15 @@ public class DataInitializer implements CommandLineRunner
 
 	public void initializeMongoDb()
 	{
+		log.info("Checking and creating permissions in MongoDB, if needed.");
+		createMongoPermissions();
+
+		log.info("Checking and creating roles in MongoDB, if needed.");
+		createMongoRoles();
+
+		log.info("Checking and migrating MongoDB users to role references, if needed.");
+		migrateMongoUserRoles();
+
 		final Optional<UserDocument> existingAdmin = _mongoUserRepository.findByUsername("admin");
 
 		if (existingAdmin.isEmpty())
@@ -143,8 +168,7 @@ public class DataInitializer implements CommandLineRunner
 					.firstName("Ana")
 					.lastName("Samardžija")
 					.email("ana.samardzija@pmf.edu.rs")
-					.roles(rolePermissions.keySet())
-					.permissions(allPermissions())
+					.roles(_mongoRoleRepository.findAllByNameIn(rolePermissions.keySet()))
 					.createdAt(LocalDateTime.now())
 					.build();
 			_mongoUserRepository.save(userDocument);
@@ -155,27 +179,90 @@ public class DataInitializer implements CommandLineRunner
 		alignMongoAdminRoles(existingAdmin.get());
 	}
 
+	private void createMongoPermissions()
+	{
+		rolePermissions.values().stream()
+				.flatMap(Set::stream)
+				.forEach(this::createMongoPermission);
+	}
+
+	private void createMongoPermission(final String permission)
+	{
+		if (!_mongoPermissionRepository.existsByName(permission))
+		{
+			log.info("Creating permission in MongoDB: {}", permission);
+
+			final PermissionDocument permissionDocument = PermissionDocument.builder().name(permission).build();
+			_mongoPermissionRepository.save(permissionDocument);
+		}
+	}
+
+	private void createMongoRoles()
+	{
+		rolePermissions.forEach(this::createMongoRole);
+	}
+
+	private void createMongoRole(final String role, final Set<String> permissions)
+	{
+		if (!_mongoRoleRepository.existsByName(role))
+		{
+			log.info("Creating role in MongoDB: {}", role);
+			final Set<PermissionDocument> rolePermissions = permissions.stream()
+					.map(_mongoPermissionRepository::findByName)
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(Collectors.toSet());
+			final RoleDocument roleDocument = RoleDocument.builder()
+					.name(role)
+					.permissions(rolePermissions)
+					.build();
+
+			_mongoRoleRepository.save(roleDocument);
+		}
+	}
+
+	/**
+	 * Uloge u korisničkom dokumentu su ranije bile niz imena (npr. ["USER"]) uz prepisan niz
+	 * permisija. Sada su reference na kolekciju roles.
+	 */
+	private void migrateMongoUserRoles()
+	{
+		final Query oldFormat = Query.query(Criteria.where("roles").type(JsonSchemaObject.Type.STRING));
+
+		_mongoTemplate.find(oldFormat, Document.class, "users").forEach(user -> {
+			final List<String> roleNames = user.getList("roles", String.class);
+			final List<ObjectId> roleIds = roleNames.stream()
+					.map(_mongoRoleRepository::findByName)
+					.filter(Optional::isPresent)
+					.map(role -> new ObjectId(role.get().getId()))
+					.toList();
+
+			log.info("Migrating roles of MongoDB user {}: {}", user.getString("username"), roleNames);
+
+			final Update update = new Update().set("roles", roleIds).unset("permissions");
+			_mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(user.get("_id"))), update, "users");
+		});
+	}
+
 	/**
 	 * MongoDB nema Flyway, pa ovde radimo ono što u MariaDB-u radi migracija: ako zatečeni
 	 * admin nosi stare uloge (ADMIN/MANAGER), prepiši ih na uloge iz dizajna.
 	 */
 	private void alignMongoAdminRoles(final UserDocument admin)
 	{
-		if (admin.getRoles().equals(rolePermissions.keySet()))
+		final Set<String> adminRoles = admin.getRoles().stream()
+				.map(RoleDocument::getName)
+				.collect(Collectors.toSet());
+
+		if (adminRoles.equals(rolePermissions.keySet()))
 		{
 			return;
 		}
 
-		log.info("Aligning admin roles in MongoDB: {} -> {}", admin.getRoles(), rolePermissions.keySet());
+		log.info("Aligning admin roles in MongoDB: {} -> {}", adminRoles, rolePermissions.keySet());
 
-		admin.setRoles(rolePermissions.keySet());
-		admin.setPermissions(allPermissions());
+		admin.setRoles(_mongoRoleRepository.findAllByNameIn(rolePermissions.keySet()));
 
 		_mongoUserRepository.save(admin);
-	}
-
-	private Set<String> allPermissions()
-	{
-		return rolePermissions.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
 	}
 }

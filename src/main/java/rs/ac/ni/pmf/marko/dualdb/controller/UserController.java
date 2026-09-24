@@ -46,7 +46,7 @@ public class UserController
 	public UserDto updateCurrentUser(@AuthenticationPrincipal final CustomUserDetails principal,
 	                                 @RequestBody @Valid final UpdateProfileRequest request)
 	{
-		return _userMapper.toDto(_userService.updateProfile(principal.getUsername(), request));
+		return _userMapper.toDto(_userService.updateProfile(principal.getUsername(), _userMapper.toModel(request)));
 	}
 
 	@PutMapping("/me/password")
@@ -54,7 +54,7 @@ public class UserController
 	public void changePassword(@AuthenticationPrincipal final CustomUserDetails principal,
 	                           @RequestBody @Valid final ChangePasswordRequest request)
 	{
-		_userService.changePassword(principal.getUsername(), request);
+		_userService.changePassword(principal.getUsername(), request.getOldPassword(), request.getNewPassword());
 	}
 
 	@GetMapping("/me/stats")
