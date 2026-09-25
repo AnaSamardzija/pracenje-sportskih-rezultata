@@ -1,5 +1,6 @@
 package rs.ac.ni.pmf.marko.dualdb.dto.match;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,13 +21,16 @@ import java.util.List;
 public class MatchRequest
 {
 	@NotBlank(message = "sportId is required")
+	@Schema(example = "1")
 	String sportId;
 
 	@NotBlank(message = "groupId is required")
+	@Schema(example = "1")
 	String groupId;
 
 	@NotNull(message = "playedAt is required")
 	@PastOrPresent(message = "playedAt cannot be in the future")
+	@Schema(example = "2026-09-20T12:00:00")
 	LocalDateTime playedAt;
 
 	@NotNull(message = "sides are required")
