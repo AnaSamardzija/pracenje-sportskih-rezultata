@@ -1,5 +1,6 @@
 package rs.ac.ni.pmf.marko.dualdb.dto.match;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -16,9 +17,11 @@ import java.util.List;
 @AllArgsConstructor
 public class MatchResponse
 {
+	@Schema(example = "1")
 	String id;
 	SportSummaryDto sport;
 	GroupSummaryDto group;
+	@Schema(example = "2026-09-20T12:00:00")
 	LocalDateTime playedAt;
 	PlayerDto recordedBy;
 	List<MatchSideResponse> sides;

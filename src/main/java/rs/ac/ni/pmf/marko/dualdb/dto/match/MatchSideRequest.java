@@ -1,5 +1,6 @@
 package rs.ac.ni.pmf.marko.dualdb.dto.match;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,10 +17,12 @@ import java.util.List;
 public class MatchSideRequest
 {
 	@NotEmpty(message = "playerIds are required")
+	@Schema(example = "[\"2\"]")
 	List<String> playerIds;
 
 	Integer score;
 
+	@Schema(example = "[6, 4, 6]")
 	List<Integer> setScores;
 
 	MatchOutcome outcome;
