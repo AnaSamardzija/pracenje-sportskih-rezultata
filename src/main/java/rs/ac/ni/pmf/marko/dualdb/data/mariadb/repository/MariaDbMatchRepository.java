@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.marko.dualdb.data.mariadb.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import rs.ac.ni.pmf.marko.dualdb.data.mariadb.entity.MatchEntity;
 
@@ -23,4 +24,7 @@ public interface MariaDbMatchRepository extends JpaRepository<MatchEntity, Long>
 	                         @Param("playerId") Long playerId);
 
 	boolean existsByGroup_Id(Long groupId);
+
+	@Procedure(procedureName = "sp_longest_win_streak")
+	Integer longestWinStreak(Long userId, Long sportId);
 }

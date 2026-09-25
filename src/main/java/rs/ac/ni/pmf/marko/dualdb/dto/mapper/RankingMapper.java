@@ -36,6 +36,7 @@ public class RankingMapper
 				.total(stats.getTotal())
 				.points(stats.getPoints())
 				.winPercentage(stats.getWinPercentage())
+				.longestWinStreak(stats.getLongestWinStreak())
 				.build();
 	}
 }

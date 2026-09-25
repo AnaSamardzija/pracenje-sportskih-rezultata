@@ -4,8 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * Izvedena statistika jednog igrača (pobede/nerešeno/porazi, bodovi, procenat).
- * Nije entitet — računa se iz mečeva u RankingCalculator-u.
+ * Izvedena statistika jednog igrača (pobede/nerešeno/porazi, bodovi, procenat, najduži niz pobeda).
+ * Nije entitet — računa se iz mečeva u RankingCalculator-u, a najduži niz pobeda u bazi (MatchStorage).
  */
 @Data
 @Builder
@@ -21,4 +21,5 @@ public class PlayerStats
 	int points;
 
 	double winPercentage;
+	int longestWinStreak;
 }

@@ -4,6 +4,7 @@ services:
     ports:
       - "3306:3306"
     container_name: dual-db-maria-db-container
+    command: --event-scheduler=ON
     environment:
       MYSQL_ROOT_PASSWORD: root.123
       MYSQL_DATABASE: dual-db
