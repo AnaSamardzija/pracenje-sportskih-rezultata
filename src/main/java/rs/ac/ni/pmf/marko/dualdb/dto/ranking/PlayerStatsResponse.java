@@ -28,4 +28,6 @@ public class PlayerStatsResponse
 	int points;
 	@Schema(example = "20.0")
 	double winPercentage;
+	@Schema(example = "1")
+	int longestWinStreak;
 }

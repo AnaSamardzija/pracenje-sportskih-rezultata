@@ -92,8 +92,8 @@ public class UserController
 	@GetMapping("/me/stats")
 	@Tag(name = "Rang-liste i statistika")
 	@Operation(summary = "Moja statistika (prijavljen korisnik)",
-			description = "Pobede, nerešeni, porazi, bodovi i procenat pobeda iz svih mojih mečeva; "
-					+ "?sportId= ograničava statistiku na jedan sport.")
+			description = "Pobede, nerešeni, porazi, bodovi, procenat pobeda i najduži niz uzastopnih pobeda iz svih "
+					+ "mojih mečeva; ?sportId= ograničava statistiku na jedan sport.")
 	@ApiResponse(responseCode = "200", description = "Statistika prijavljenog korisnika")
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -126,8 +126,8 @@ public class UserController
 	@GetMapping("/{id}/stats")
 	@Tag(name = "Rang-liste i statistika")
 	@Operation(summary = "Statistika igrača (prijavljen korisnik)",
-			description = "Pobede, nerešeni, porazi, bodovi i procenat pobeda igrača; ?sportId= ograničava statistiku "
-					+ "na jedan sport. Igrač bez odigranih mečeva vraća sve nule.")
+			description = "Pobede, nerešeni, porazi, bodovi, procenat pobeda i najduži niz uzastopnih pobeda igrača; "
+					+ "?sportId= ograničava statistiku na jedan sport. Igrač bez odigranih mečeva vraća sve nule.")
 	@ApiResponse(responseCode = "200", description = "Statistika igrača")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

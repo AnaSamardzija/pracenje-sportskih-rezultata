@@ -61,6 +61,7 @@ public class RankingService
 				.orElseGet(() -> _calculator.empty(playerId));
 
 		stats.setUsername(player.getUsername());
+		stats.setLongestWinStreak(matchStorage().longestWinStreak(playerId, sportId));
 
 		return stats;
 	}

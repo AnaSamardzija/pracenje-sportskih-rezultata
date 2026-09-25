@@ -8,13 +8,17 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.MatchDocument;
+import rs.ac.ni.pmf.marko.dualdb.data.mongodb.document.MatchSideDocument;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.mapper.MongoMatchMapper;
 import rs.ac.ni.pmf.marko.dualdb.data.mongodb.repository.MongoMatchRepository;
 import rs.ac.ni.pmf.marko.dualdb.model.Match;
+import rs.ac.ni.pmf.marko.dualdb.model.MatchOutcome;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -72,6 +76,42 @@ public class MongoDbMatchStorage extends MatchStorage
 	}
 
 	@Override
+	public int longestWinStreak(final String playerId, final String sportId)
+	{
+		final Query query = new Query(Criteria.where("sides.playerIds").is(playerId));
+
+		if (isPresent(sportId))
+		{
+			query.addCriteria(Criteria.where("sportId").is(sportId));
+		}
+
+		query.with(Sort.by(Sort.Direction.ASC, "playedAt", "id"));
+
+		int longest = 0;
+		int current = 0;
+
+		try (final Stream<MatchDocument> matches = _mongoTemplate.stream(query, MatchDocument.class))
+		{
+			final Iterator<MatchDocument> cursor = matches.iterator();
+
+			while (cursor.hasNext())
+			{
+				if (outcomeOf(cursor.next(), playerId) == MatchOutcome.WIN)
+				{
+					current++;
+					longest = Math.max(longest, current);
+				}
+				else
+				{
+					current = 0;
+				}
+			}
+		}
+
+		return longest;
+	}
+
+	@Override
 	public Optional<Match> findById(final String id)
 	{
 		return _matchRepository.findById(id).map(_matchMapper::toModel);
@@ -88,6 +128,15 @@ public class MongoDbMatchStorage extends MatchStorage
 	public void deleteById(final String id)
 	{
 		_matchRepository.deleteById(id);
+	}
+
+	private MatchOutcome outcomeOf(final MatchDocument match, final String playerId)
+	{
+		return match.getSides().stream()
+				.filter(side -> side.getPlayerIds().contains(playerId))
+				.findFirst()
+				.map(MatchSideDocument::getOutcome)
+				.orElse(null);
 	}
 
 	private boolean isPresent(final String id)
