@@ -60,6 +60,23 @@ public class TestData
 					.build();
 		}
 
+		public static Sport newFudbal()
+		{
+			return Sport.builder()
+					.name("Fudbal")
+					.type(SportType.TEAM)
+					.scoringMode(ScoringMode.POINTS)
+					.rules(SportRules.builder()
+							       .allowDraw(true)
+							       .minPlayersPerSide(1)
+							       .maxPlayersPerSide(11)
+							       .pointsForWin(3)
+							       .pointsForDraw(1)
+							       .pointsForLoss(0)
+							       .build())
+					.build();
+		}
+
 		public static Sport sah()
 		{
 			return Sport.builder()

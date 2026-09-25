@@ -117,11 +117,12 @@ class SportControllerTest
 	@WithMockUser(roles = "SYSTEM_ADMIN")
 	void shouldReturn400WhenRequestIsInvalid() throws Exception
 	{
+		final SportRequest tenis = TestData.SPORTS.tenisRequest();
 		final SportRequest request = SportRequest.builder()
 				.name("")
-				.type(TestData.SPORTS.tenisRequest().getType())
-				.scoringMode(TestData.SPORTS.tenisRequest().getScoringMode())
-				.rules(TestData.SPORTS.tenisRequest().getRules())
+				.type(tenis.getType())
+				.scoringMode(tenis.getScoringMode())
+				.rules(tenis.getRules())
 				.build();
 
 		_mockMvc.perform(post("/api/v1/sports")

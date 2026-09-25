@@ -164,22 +164,35 @@ class SportServiceTest
 	}
 
 	@Test
-	void shouldUpdateSportAndKeepItsName()
+	void shouldUpdateSport()
 	{
 		final Sport existing = TestData.SPORTS.tenis();
-		final Sport input = TestData.SPORTS.newTenis();
-		input.getRules().setBestOf(5);
+		final Sport input = TestData.SPORTS.newFudbal();
 		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(existing));
-		// Ime „Tenis" već pripada upravo ovom sportu, pa to nije duplikat.
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.of(existing));
+		when(_sportStorage.findByName("Fudbal")).thenReturn(Optional.empty());
 		when(_sportStorage.save(existing)).thenReturn(existing);
 
 		final Sport updated = _sportService.update(TestData.SPORTS.TENIS_ID, input);
 
 		assertThat(updated.getId()).isEqualTo(TestData.SPORTS.TENIS_ID);
-		assertThat(updated.getName()).isEqualTo("Tenis");
-		assertThat(updated.getRules().getBestOf()).isEqualTo(5);
+		assertThat(updated.getName()).isEqualTo(input.getName());
+		assertThat(updated.getType()).isEqualTo(input.getType());
+		assertThat(updated.getScoringMode()).isEqualTo(input.getScoringMode());
+		assertThat(updated.getRules()).isEqualTo(input.getRules());
 		assertThat(updated.isActive()).isTrue();
+		verify(_sportStorage).save(existing);
+	}
+
+	@Test
+	void shouldAllowSportToKeepItsName()
+	{
+		final Sport existing = TestData.SPORTS.tenis();
+		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(existing));
+		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.of(existing));
+		when(_sportStorage.save(existing)).thenReturn(existing);
+
+		_sportService.update(TestData.SPORTS.TENIS_ID, TestData.SPORTS.newTenis());
+
 		verify(_sportStorage).save(existing);
 	}
 
