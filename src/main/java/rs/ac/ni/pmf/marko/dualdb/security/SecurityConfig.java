@@ -62,6 +62,9 @@ public class SecurityConfig
 								"/assets/**",
 								"/*.js",
 								"/*.css",
+								"/doc",
+								"/swagger-ui/**",
+								"/v3/api-docs/**",
 								"/favicon.ico"
 						).permitAll()
 						.anyRequest().permitAll()

@@ -22,6 +22,7 @@ aplikacija se ponaša identično bez obzira na izbor.
 | Nerelaciona baza  | MongoDB 8.0                |
 | Migracije šeme    | Flyway (MariaDB)           |
 | Autentifikacija   | Spring Security + JWT      |
+| Dokumentacija API | springdoc-openapi (Swagger)|
 | Kontejneri        | Docker + Docker Compose    |
 
 ---
@@ -96,6 +97,24 @@ permisije (u MariaDB) i podrazumevanog **admin** korisnika **u obe baze**:
 |----------|--------------|
 | username | `admin`      |
 | password | `admin.123`  |
+
+---
+
+## Dokumentacija API-ja (Swagger)
+
+Dok aplikacija radi, dokumentacija svih REST ruta dostupna je preko Swagger UI-ja na
+**http://localhost:8080/doc**. Rute su grupisane po resursima, a za svaku je naveden opis,
+ko sme da je pozove, statusi koje vraća i primer tela zahteva.
+
+Rute se mogu isprobati direktno iz Swagger UI-ja:
+
+1. U grupi **Auth** otvoriti `POST /api/v1/auth/login`, kliknuti **Try it out** i **Execute**
+   (primer je admin nad MariaDB; za MongoDB promeniti `storageType` u `MONGODB`).
+2. Kopirati `accessToken` iz odgovora, kliknuti dugme **Authorize** gore desno, uneti token
+   (bez reči `Bearer`) i potvrditi.
+3. Od tada se sve zaštićene rute pozivaju sa tim tokenom, nad bazom izabranom pri prijavi.
+
+OpenAPI opis u JSON obliku je na http://localhost:8080/v3/api-docs.
 
 ---
 

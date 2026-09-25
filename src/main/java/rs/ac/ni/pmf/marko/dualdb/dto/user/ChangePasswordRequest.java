@@ -1,5 +1,6 @@
 package rs.ac.ni.pmf.marko.dualdb.dto.user;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -14,9 +15,11 @@ import lombok.Value;
 public class ChangePasswordRequest
 {
 	@NotBlank(message = "oldPassword is required")
+	@Schema(example = "pera.123")
 	String oldPassword;
 
 	@NotBlank(message = "newPassword is required")
 	@Size(min = 4, message = "newPassword must be at least 4 characters")
+	@Schema(example = "novaSifra1")
 	String newPassword;
 }
