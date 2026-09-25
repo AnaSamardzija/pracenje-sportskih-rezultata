@@ -1,5 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb;
 
+import rs.ac.ni.pmf.marko.dualdb.dto.sport.SportRequest;
+import rs.ac.ni.pmf.marko.dualdb.dto.sport.SportRulesDto;
 import rs.ac.ni.pmf.marko.dualdb.model.ScoringMode;
 import rs.ac.ni.pmf.marko.dualdb.model.Sport;
 import rs.ac.ni.pmf.marko.dualdb.model.SportRules;
@@ -37,6 +39,25 @@ public class TestData
 			sport.setId(TENIS_ID);
 			sport.setActive(true);
 			return sport;
+		}
+
+		public static SportRequest tenisRequest()
+		{
+			return SportRequest.builder()
+					.name("Tenis")
+					.type(SportType.INDIVIDUAL)
+					.scoringMode(ScoringMode.SETS)
+					.rules(SportRulesDto.builder()
+							       .allowDraw(false)
+							       .minPlayersPerSide(1)
+							       .maxPlayersPerSide(1)
+							       .bestOf(3)
+							       .pointsToWinSet(6)
+							       .pointsForWin(3)
+							       .pointsForDraw(1)
+							       .pointsForLoss(0)
+							       .build())
+					.build();
 		}
 
 		public static Sport sah()
