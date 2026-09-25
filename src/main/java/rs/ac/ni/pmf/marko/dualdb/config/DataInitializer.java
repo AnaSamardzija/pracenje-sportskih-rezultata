@@ -139,9 +139,9 @@ public class DataInitializer implements CommandLineRunner
 		return UserEntity.builder()
 				.username("admin")
 				.password(_passwordEncoder.encode("admin.123"))
-				.firstName("Marko")
-				.lastName("Milošević")
-				.email("marko.milosevic@pmf.edu.rs")
+				.firstName("Ana")
+				.lastName("Samardžija")
+				.email("ana.samardzija@pmf.edu.rs")
 				.roles(_mariaDbRoleRepository.findAllByNameIn(Set.of("SYSTEM_ADMIN", "USER")))
 				.build();
 	}

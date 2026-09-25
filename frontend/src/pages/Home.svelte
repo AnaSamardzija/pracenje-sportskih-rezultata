@@ -1,0 +1,80 @@
+<script lang="ts">
+    import {onMount} from 'svelte';
+    import {getMe} from '../lib/api/users.api';
+    import {authStore} from '../lib/auth/auth.store';
+    import {STORAGE_LABELS} from '../lib/types/auth.types';
+    import type {UserDto} from '../lib/types/user.types';
+
+    let user = $state<UserDto | null>(null);
+    let loading = $state(true);
+    let error = $state<string | null>(null);
+
+    // Inicijali za avatar; ime i prezime nisu obavezni, pa je rezerva username
+    const initials = $derived(
+        user ? ((user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0]).toUpperCase() : ''
+    );
+
+    // Zaštićena ruta: dokaz da token radi i da backend čita iz baze izabrane pri prijavi
+    onMount(async () => {
+        try {
+            user = await getMe();
+        } catch (e) {
+            error = e instanceof Error ? e.message : 'Failed to load user';
+        } finally {
+            loading = false;
+        }
+    });
+</script>
+
+<div class="container py-4 page-fade">
+    {#if error}
+        <div class="alert alert-danger">{error}</div>
+    {/if}
+
+    {#if loading}
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    {:else if user}
+        <h2 class="mb-1">Welcome, {user.firstName || user.username}</h2>
+        <p class="text-muted mb-4">
+            You are signed in to <b>{$authStore.storageType ? STORAGE_LABELS[$authStore.storageType] : '—'}</b>.
+        </p>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-hover">
+                    <div class="card-header">
+                        <i class="bi bi-person-badge me-2 text-primary"></i>Account
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="icon-circle">{initials}</span>
+                            <div>
+                                <div class="fw-semibold">{user.firstName} {user.lastName}</div>
+                                <div class="text-muted small">@{user.username}</div>
+                            </div>
+                        </div>
+
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted fw-normal"><i class="bi bi-envelope me-2"></i>Email</th>
+                                <td>{user.email}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted fw-normal"><i class="bi bi-shield-check me-2"></i>Roles</th>
+                                <td>
+                                    {#each user.roles as role (role)}
+                                        <span class="badge text-bg-primary me-1">{role}</span>
+                                    {/each}
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+</div>
