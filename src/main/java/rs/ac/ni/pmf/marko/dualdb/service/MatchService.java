@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MatchService
 {
 	private final StorageResolver _storageResolver;
@@ -85,8 +87,10 @@ public class MatchService
 		_resultResolver.applyResult(sport, match);
 
 		match.setRecordedBy(currentUserId);
+		final Match saved = matchStorage().save(match);
 
-		return toDetails(List.of(matchStorage().save(match))).get(0);
+		log.info("Match {} created in group {}", saved.getId(), saved.getGroupId());
+		return toDetails(List.of(saved)).get(0);
 	}
 
 	@Transactional
@@ -108,8 +112,10 @@ public class MatchService
 		existing.setSportId(match.getSportId());
 		existing.setPlayedAt(match.getPlayedAt());
 		existing.setSides(match.getSides());
+		final Match saved = matchStorage().save(existing);
 
-		return toDetails(List.of(matchStorage().save(existing))).get(0);
+		log.info("Match {} updated", saved.getId());
+		return toDetails(List.of(saved)).get(0);
 	}
 
 	@Transactional
@@ -119,6 +125,8 @@ public class MatchService
 		requireParticipantOrGroupAdmin(existing, currentUserId);
 
 		matchStorage().deleteById(id);
+
+		log.info("Match {} deleted", id);
 	}
 
 	private void requireParticipantOrGroupAdmin(final Match match, final String currentUserId)

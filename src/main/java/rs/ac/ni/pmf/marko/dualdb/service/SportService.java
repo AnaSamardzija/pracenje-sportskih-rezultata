@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 import rs.ac.ni.pmf.marko.dualdb.exception.DuplicateResourceException;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SportService
 {
 	private final StorageResolver _storageResolver;
@@ -39,7 +41,10 @@ public class SportService
 		requireValidPlayerRange(sport.getRules());
 
 		sport.setActive(true);
-		return storage().save(sport);
+		final Sport saved = storage().save(sport);
+
+		log.info("Sport {} '{}' created", saved.getId(), saved.getName());
+		return saved;
 	}
 
 	public Sport update(final String id, final Sport sport)
@@ -53,8 +58,10 @@ public class SportService
 		existing.setType(sport.getType());
 		existing.setScoringMode(sport.getScoringMode());
 		existing.setRules(sport.getRules());
+		final Sport saved = storage().save(existing);
 
-		return storage().save(existing);
+		log.info("Sport {} '{}' updated", saved.getId(), saved.getName());
+		return saved;
 	}
 
 	public void delete(final String id)
@@ -62,6 +69,8 @@ public class SportService
 		final Sport existing = findById(id, false);
 		existing.setActive(false);
 		storage().save(existing);
+
+		log.info("Sport {} '{}' deactivated", existing.getId(), existing.getName());
 	}
 
 	public Sport restore(final String id)
@@ -74,7 +83,10 @@ public class SportService
 		}
 
 		existing.setActive(true);
-		return storage().save(existing);
+		final Sport saved = storage().save(existing);
+
+		log.info("Sport {} '{}' restored", saved.getId(), saved.getName());
+		return saved;
 	}
 
 	/**

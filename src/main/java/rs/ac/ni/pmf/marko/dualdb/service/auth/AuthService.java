@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service.auth;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService
 {
 	private final AuthenticationManager _authenticationManager;
@@ -36,6 +38,7 @@ public class AuthService
 		{
 			final String accessToken = _jwtUtil.generateToken(storageType, userDetails);
 
+			log.info("User '{}' logged in ({})", userDetails.getUsername(), storageType);
 			return AuthResponse.builder()
 					.accessToken(accessToken)
 					.build();
@@ -64,6 +67,7 @@ public class AuthService
 		user.setRoles(Set.of("USER"));
 
 		final User saved = storage.save(user);
+		log.info("User {} '{}' registered ({})", saved.getId(), saved.getUsername(), storageType);
 
 		final CustomUserDetails userDetails = new CustomUserDetails(saved, storageType);
 		final String accessToken = _jwtUtil.generateToken(storageType, userDetails);
