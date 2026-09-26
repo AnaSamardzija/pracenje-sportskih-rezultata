@@ -143,6 +143,7 @@ public class DataInitializer implements CommandLineRunner
 				.lastName("Samardžija")
 				.email("ana.samardzija@pmf.edu.rs")
 				.roles(_mariaDbRoleRepository.findAllByNameIn(Set.of("SYSTEM_ADMIN", "USER")))
+				.active(true)
 				.build();
 	}
 
@@ -157,6 +158,9 @@ public class DataInitializer implements CommandLineRunner
 		log.info("Checking and migrating MongoDB users to role references, if needed.");
 		migrateMongoUserRoles();
 
+		log.info("Checking and activating MongoDB users without the active field, if needed.");
+		migrateMongoUserActive();
+
 		final Optional<UserDocument> existingAdmin = _mongoUserRepository.findByUsername("admin");
 
 		if (existingAdmin.isEmpty())
@@ -170,6 +174,7 @@ public class DataInitializer implements CommandLineRunner
 					.email("ana.samardzija@pmf.edu.rs")
 					.roles(_mongoRoleRepository.findAllByNameIn(rolePermissions.keySet()))
 					.createdAt(LocalDateTime.now())
+					.active(true)
 					.build();
 			_mongoUserRepository.save(userDocument);
 
@@ -242,6 +247,16 @@ public class DataInitializer implements CommandLineRunner
 			final Update update = new Update().set("roles", roleIds).unset("permissions");
 			_mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(user.get("_id"))), update, "users");
 		});
+	}
+
+	/**
+	 * Pandan migracije V13: korisnici upisani pre uvođenja polja active postaju aktivni, kao
+	 * DEFAULT TRUE u MariaDB-u. Bez toga bi se pročitali kao neaktivni i ne bi mogli da se prijave.
+	 */
+	private void migrateMongoUserActive()
+	{
+		final Query withoutActive = Query.query(Criteria.where("active").exists(false));
+		_mongoTemplate.updateMulti(withoutActive, new Update().set("active", true), "users");
 	}
 
 	/**

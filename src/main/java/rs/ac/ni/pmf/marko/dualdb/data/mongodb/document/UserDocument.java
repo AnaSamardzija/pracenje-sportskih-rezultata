@@ -37,4 +37,6 @@ public class UserDocument
 	private Set<RoleDocument> roles = new HashSet<>();
 
 	private LocalDateTime createdAt;
+
+	private boolean active;
 }

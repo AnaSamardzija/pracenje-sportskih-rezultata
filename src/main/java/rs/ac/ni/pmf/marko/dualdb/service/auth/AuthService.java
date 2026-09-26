@@ -65,6 +65,7 @@ public class AuthService
 
 		user.setPassword(_passwordEncoder.encode(user.getPassword()));
 		user.setRoles(Set.of("USER"));
+		user.setActive(true);
 
 		final User saved = storage.save(user);
 		log.info("User {} '{}' registered ({})", saved.getId(), saved.getUsername(), storageType);

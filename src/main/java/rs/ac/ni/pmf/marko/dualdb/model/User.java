@@ -22,6 +22,8 @@ public class User implements DataModel
 
 	LocalDateTime createdAt;
 
+	boolean active;
+
 	@Builder.Default
 	Set<String> roles = new HashSet<>();
 	@Builder.Default
