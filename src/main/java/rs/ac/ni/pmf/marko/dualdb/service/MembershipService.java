@@ -65,6 +65,42 @@ public class MembershipService
 		log.info("User {} joined group {}", userId, groupId);
 	}
 
+	public MemberView addMember(final String groupId, final String username, final String currentUserId)
+	{
+		requireGroupExists(groupId);
+		requireGroupAdmin(groupId, currentUserId);
+
+		final User user = userStorage().findByUsername(username)
+				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
+
+		if (!user.isActive())
+		{
+			throw new InvalidOperationException("User '" + user.getUsername() + "' is deactivated");
+		}
+
+		if (membershipStorage().findByUserIdAndGroupId(user.getId(), groupId).isPresent())
+		{
+			throw new DuplicateResourceException("User '" + user.getUsername() + "' is already a member of this group");
+		}
+
+		final Membership membership = Membership.builder()
+				.userId(user.getId())
+				.groupId(groupId)
+				.roleInGroup(GroupRole.MEMBER)
+				.build();
+
+		final Membership saved = membershipStorage().save(membership);
+
+		log.info("User {} added to group {} by {}", user.getId(), groupId, currentUserId);
+
+		return MemberView.builder()
+				.userId(saved.getUserId())
+				.username(user.getUsername())
+				.roleInGroup(saved.getRoleInGroup())
+				.joinedAt(saved.getJoinedAt())
+				.build();
+	}
+
 	@Transactional
 	public void leave(final String groupId, final String userId)
 	{

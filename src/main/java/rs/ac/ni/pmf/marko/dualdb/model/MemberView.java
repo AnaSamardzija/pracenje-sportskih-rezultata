@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * Izvedeni prikaz člana grupe (članstvo + username korisnika).
- * Nije entitet — koristi se samo za listu članova.
+ * Nije entitet — koristi se za listu članova i za odgovor na dodavanje člana.
  */
 @Data
 @Builder

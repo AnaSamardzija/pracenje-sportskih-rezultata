@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import rs.ac.ni.pmf.marko.dualdb.dto.common.ErrorDto;
+import rs.ac.ni.pmf.marko.dualdb.dto.group.AddMemberRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupRequest;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.GroupResponse;
 import rs.ac.ni.pmf.marko.dualdb.dto.group.MemberResponse;
@@ -139,6 +140,31 @@ public class GroupController
 	}
 
 	@PostMapping("/{id}/members")
+	@ResponseStatus(HttpStatus.CREATED)
+	@Operation(summary = "Dodavanje člana u grupu (samo GROUP_ADMIN)",
+			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe.")
+	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "404", description = "Grupa ili korisnik ne postoji",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "409", description = "Korisnik je već član grupe",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "422", description = "Korisnik je deaktiviran",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	public MemberResponse addMember(@AuthenticationPrincipal final CustomUserDetails principal,
+	                                @PathVariable final String id,
+	                                @RequestBody @Valid final AddMemberRequest request)
+	{
+		return _groupMapper.toMemberResponse(
+				_membershipService.addMember(id, request.getUsername(), principal.getUser().getId()));
+	}
+
+	@PostMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Pridruživanje grupi (prijavljen korisnik)",
 			description = "Bez tela; korisnik postaje MEMBER grupe.")
