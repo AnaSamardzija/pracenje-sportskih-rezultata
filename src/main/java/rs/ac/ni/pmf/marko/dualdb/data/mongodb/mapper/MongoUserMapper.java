@@ -32,6 +32,7 @@ public class MongoUserMapper
 				.password(userDocument.getPassword())
 				.email(userDocument.getEmail())
 				.createdAt(userDocument.getCreatedAt())
+				.active(userDocument.isActive())
 				.roles(roles)
 				.permissions(permissions)
 				.build();
@@ -48,6 +49,7 @@ public class MongoUserMapper
 				.email(user.getEmail())
 				.roles(roles)
 				.createdAt(user.getCreatedAt() == null ? LocalDateTime.now() : user.getCreatedAt())
+				.active(user.isActive())
 				.build();
 	}
 }

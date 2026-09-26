@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 			// Istekao ili pokvaren token (JwtException), token za korisnika koji više ne postoji
 			// (UsernameNotFoundException) i nepoznata baza (IllegalArgumentException) ne smeju da obore
 			// zahtev sa 500: zahtev samo nastavlja kao neprijavljen, pa ga Spring odbije kroz
-			// RestAuthenticationEntryPoint sa 401.
+			// RestAuthenticationEntryPoint sa 401. Isto važi i za token deaktiviranog korisnika.
 			try
 			{
 				final String jwt = authorizationHeader.substring(7);
@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 					final StorageType storageType = _jwtUtil.extractStorageType(jwt);
 					final UserDetails userDetails = _userDetailsService.loadUserByUsername(username, storageType);
 
-					if (_jwtUtil.validateToken(jwt, storageType, userDetails))
+					if (userDetails.isEnabled() && _jwtUtil.validateToken(jwt, storageType, userDetails))
 					{
 						final UsernamePasswordAuthenticationToken authToken =
 								new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

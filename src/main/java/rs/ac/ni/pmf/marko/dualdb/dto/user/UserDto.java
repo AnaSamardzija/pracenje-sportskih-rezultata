@@ -35,4 +35,7 @@ public class UserDto
 	@Builder.Default
 	@Schema(example = "[\"USER\"]")
 	Set<String> roles = Collections.emptySet();
+
+	@Schema(example = "true")
+	boolean active;
 }

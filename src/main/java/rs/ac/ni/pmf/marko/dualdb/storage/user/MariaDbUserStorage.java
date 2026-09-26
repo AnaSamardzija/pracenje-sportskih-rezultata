@@ -78,6 +78,7 @@ public class MariaDbUserStorage extends UserStorage
 		userEntity.setLastName(user.getLastName());
 		userEntity.setEmail(user.getEmail());
 		userEntity.setPassword(user.getPassword());
+		userEntity.setActive(user.isActive());
 
 		final Set<RoleEntity> roles = user.getRoles().stream()
 				.map(_roleRepository::findByName)

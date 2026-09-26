@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -52,6 +53,13 @@ public class StorageSelectionAuthenticationProvider implements AuthenticationPro
 		{
 			log.warn("Failed login for '{}' ({}): wrong password", username, storageType);
 			throw new BadCredentialsException("Invalid username or password");
+		}
+
+		// Tek posle provere lozinke, da odgovor ne bi otkrio koji su nalozi deaktivirani.
+		if (!userDetails.isEnabled())
+		{
+			log.warn("Failed login for '{}' ({}): account is deactivated", username, storageType);
+			throw new DisabledException("Account is deactivated");
 		}
 
 		return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

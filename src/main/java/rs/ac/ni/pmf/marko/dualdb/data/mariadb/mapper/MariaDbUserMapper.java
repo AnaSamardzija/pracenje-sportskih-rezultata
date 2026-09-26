@@ -31,6 +31,7 @@ public class MariaDbUserMapper
 				.lastName(userEntity.getLastName())
 				.email(userEntity.getEmail())
 				.createdAt(userEntity.getCreatedAt())
+				.active(userEntity.isActive())
 				.roles(roles)
 				.permissions(permissions)
 				.build();
@@ -44,6 +45,7 @@ public class MariaDbUserMapper
 				.firstName(user.getFirstName())
 				.lastName(user.getLastName())
 				.email(user.getEmail())
+				.active(user.isActive())
 				.roles(roles)
 				.build();
 	}
