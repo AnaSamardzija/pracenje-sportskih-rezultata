@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MembershipService
 {
 	private final StorageResolver _storageResolver;
@@ -59,6 +61,8 @@ public class MembershipService
 				.build();
 
 		membershipStorage().save(membership);
+
+		log.info("User {} joined group {}", userId, groupId);
 	}
 
 	@Transactional
@@ -73,6 +77,8 @@ public class MembershipService
 		}
 
 		membershipStorage().deleteById(membership.getId());
+
+		log.info("User {} left group {}", userId, groupId);
 	}
 
 	public List<MemberView> listMembers(final String groupId)
@@ -104,6 +110,8 @@ public class MembershipService
 				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
 
 		membershipStorage().deleteById(membership.getId());
+
+		log.info("User {} removed from group {}", targetUserId, groupId);
 	}
 
 	public void removeAllForGroup(final String groupId)
@@ -177,6 +185,8 @@ public class MembershipService
 
 		successor.setRoleInGroup(GroupRole.GROUP_ADMIN);
 		membershipStorage().save(successor);
+
+		log.info("User {} is now group admin of group {}", successor.getUserId(), groupId);
 	}
 
 	private void requireGroupExists(final String groupId)

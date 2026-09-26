@@ -95,7 +95,8 @@ class SportControllerTest
 
 		_mockMvc.perform(get("/api/v1/sports/999"))
 				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.message").value("Sport with id 999 not found"));
+				.andExpect(jsonPath("$.message").value("Sport with id 999 not found"))
+				.andExpect(jsonPath("$.path").value("/api/v1/sports/999"));
 	}
 
 	@Test

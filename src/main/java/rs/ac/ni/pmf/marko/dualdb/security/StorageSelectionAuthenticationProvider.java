@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -17,6 +18,7 @@ import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
 @Component
 @RequiredArgsConstructor
 @NullMarked
+@Slf4j
 public class StorageSelectionAuthenticationProvider implements AuthenticationProvider
 {
 	private final StorageSelectionUserDetailsService _userDetailsService;
@@ -42,11 +44,13 @@ public class StorageSelectionAuthenticationProvider implements AuthenticationPro
 		}
 		catch (final UsernameNotFoundException ex)
 		{
+			log.warn("Failed login for '{}' ({}): user not found", username, storageType);
 			throw new BadCredentialsException("Invalid username or password");
 		}
 
 		if (!_passwordEncoder.matches(rawPassword, userDetails.getPassword()))
 		{
+			log.warn("Failed login for '{}' ({}): wrong password", username, storageType);
 			throw new BadCredentialsException("Invalid username or password");
 		}
 

@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService
 {
 	private final StorageResolver _storageResolver;
@@ -49,8 +51,10 @@ public class UserService
 		user.setFirstName(profile.getFirstName());
 		user.setLastName(profile.getLastName());
 		user.setEmail(profile.getEmail());
+		final User saved = storage.save(user);
 
-		return storage.save(user);
+		log.info("Profile of user {} updated", saved.getUsername());
+		return saved;
 	}
 
 	@Transactional
@@ -67,6 +71,8 @@ public class UserService
 
 		user.setPassword(_passwordEncoder.encode(newPassword));
 		storage.save(user);
+
+		log.info("Password of user {} changed", user.getUsername());
 	}
 
 	private UserStorage userStorage()

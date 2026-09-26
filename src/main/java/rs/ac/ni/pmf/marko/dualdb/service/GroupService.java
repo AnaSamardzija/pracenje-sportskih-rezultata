@@ -1,6 +1,7 @@
 package rs.ac.ni.pmf.marko.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rs.ac.ni.pmf.marko.dualdb.data.StorageType;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GroupService
 {
 	private final StorageResolver _storageResolver;
@@ -71,6 +73,7 @@ public class GroupService
 
 		_membershipService.createAdminMembership(saved.getId(), currentUserId);
 
+		log.info("Group {} '{}' created", saved.getId(), saved.getName());
 		return toDetails(saved, currentUserId);
 	}
 
@@ -81,14 +84,16 @@ public class GroupService
 
 		existing.setName(group.getName());
 		existing.setDescription(group.getDescription());
+		final Group saved = storage().save(existing);
 
-		return toDetails(storage().save(existing), currentUserId);
+		log.info("Group {} '{}' updated", saved.getId(), saved.getName());
+		return toDetails(saved, currentUserId);
 	}
 
 	@Transactional
 	public void delete(final String id, final String currentUserId)
 	{
-		loadGroup(id);
+		final Group existing = loadGroup(id);
 		_membershipService.requireGroupAdmin(id, currentUserId);
 
 		if (_matchService.hasMatches(id))
@@ -98,6 +103,8 @@ public class GroupService
 
 		_membershipService.removeAllForGroup(id);
 		storage().deleteById(id);
+
+		log.info("Group {} '{}' deleted", id, existing.getName());
 	}
 
 	private Group loadGroup(final String id)
