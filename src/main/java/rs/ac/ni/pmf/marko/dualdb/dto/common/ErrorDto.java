@@ -14,4 +14,6 @@ public class ErrorDto
 	OffsetDateTime timestamp;
 	@Schema(example = "Sport with id 999999 not found")
 	String message;
+	@Schema(example = "/api/v1/sports/999999")
+	String path;
 }

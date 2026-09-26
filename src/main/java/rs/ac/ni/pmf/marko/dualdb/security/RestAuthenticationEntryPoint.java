@@ -35,6 +35,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint
 		final ErrorDto error = ErrorDto.builder()
 				.timestamp(OffsetDateTime.now())
 				.message(authException.getMessage())
+				.path(request.getRequestURI())
 				.build();
 
 		_responseMapper.writeValue(response.getOutputStream(), error);

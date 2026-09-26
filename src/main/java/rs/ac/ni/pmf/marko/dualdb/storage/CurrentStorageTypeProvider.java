@@ -29,7 +29,7 @@ public class CurrentStorageTypeProvider
 			return userDetails.getStorageType();
 		}
 
-		log.error("Storage type not recognized from, using MARIADB.");
+		log.error("Storage type not recognized, using MARIADB.");
 		return StorageType.MARIADB;
 	}
 }

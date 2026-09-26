@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,6 +57,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 								new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 						authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 						SecurityContextHolder.getContext().setAuthentication(authToken);
+
+						MDC.put("username", userDetails.getUsername());
+						MDC.put("storageType", storageType.name());
 					}
 				}
 			}
@@ -66,6 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 			}
 		}
 
-		filterChain.doFilter(request, response);
+		try
+		{
+			filterChain.doFilter(request, response);
+		}
+		finally
+		{
+			MDC.remove("username");
+			MDC.remove("storageType");
+		}
 	}
 }
