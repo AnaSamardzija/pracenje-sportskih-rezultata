@@ -25,9 +25,11 @@ public class UserService
 	private final CurrentStorageTypeProvider _storageTypeProvider;
 	private final PasswordEncoder _passwordEncoder;
 
-	public List<User> findAll()
+	public List<User> findAllExcept(final String userId)
 	{
-		return userStorage().findAll();
+		return userStorage().findAll().stream()
+				.filter(user -> !user.getId().equals(userId))
+				.toList();
 	}
 
 	public User findById(final String id)
@@ -73,6 +75,70 @@ public class UserService
 		storage.save(user);
 
 		log.info("Password of user {} changed", user.getUsername());
+	}
+
+	@Transactional
+	public User update(final String id, final User changes, final String currentUserId)
+	{
+		final UserStorage storage = userStorage();
+		final User user = findById(id);
+
+		if (user.getId().equals(currentUserId) && !changes.getRoles().contains("SYSTEM_ADMIN"))
+		{
+			throw new InvalidOperationException("You cannot remove your own SYSTEM_ADMIN role");
+		}
+
+		if (!changes.getEmail().equalsIgnoreCase(user.getEmail()) && storage.existsByEmail(changes.getEmail()))
+		{
+			throw new DuplicateResourceException("Email already in use: " + changes.getEmail());
+		}
+
+		user.setFirstName(changes.getFirstName());
+		user.setLastName(changes.getLastName());
+		user.setEmail(changes.getEmail());
+		user.setRoles(changes.getRoles());
+		final User saved = storage.save(user);
+
+		log.info("User {} '{}' updated, roles {}", saved.getId(), saved.getUsername(), saved.getRoles());
+		return saved;
+	}
+
+	@Transactional
+	public void deactivate(final String id, final String currentUserId)
+	{
+		final User user = findById(id);
+
+		if (user.getId().equals(currentUserId))
+		{
+			throw new InvalidOperationException("You cannot deactivate your own account");
+		}
+
+		if (!user.isActive())
+		{
+			throw new InvalidOperationException("User with id " + id + " is already deactivated");
+		}
+
+		user.setActive(false);
+		userStorage().save(user);
+
+		log.info("User {} '{}' deactivated", user.getId(), user.getUsername());
+	}
+
+	@Transactional
+	public User restore(final String id)
+	{
+		final User user = findById(id);
+
+		if (user.isActive())
+		{
+			throw new InvalidOperationException("User with id " + id + " is already active");
+		}
+
+		user.setActive(true);
+		final User saved = userStorage().save(user);
+
+		log.info("User {} '{}' restored", saved.getId(), saved.getUsername());
+		return saved;
 	}
 
 	private UserStorage userStorage()
