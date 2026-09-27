@@ -24,6 +24,7 @@ public class UserService
 	private final StorageResolver _storageResolver;
 	private final CurrentStorageTypeProvider _storageTypeProvider;
 	private final PasswordEncoder _passwordEncoder;
+	private final MembershipService _membershipService;
 
 	public List<User> findAllExcept(final String userId)
 	{
@@ -120,6 +121,8 @@ public class UserService
 
 		user.setActive(false);
 		userStorage().save(user);
+
+		_membershipService.handOverGroupAdmin(user.getId());
 
 		log.info("User {} '{}' deactivated", user.getId(), user.getUsername());
 	}

@@ -32,7 +32,7 @@ public class RankingController
 			description = "?groupId= i ?sportId= nisu obavezni i kombinuju se; bez njih se računaju svi mečevi. Sortirano po bodovima, "
 					+ "pa pobedama, pa korisničkom imenu; izjednačeni dele mesto, a sledeće se preskače (1, 1, 3). "
 					+ "Bodovi se računaju po meču iz pravila tog sporta, a mečevi obrisanog sporta se i dalje računaju. "
-					+ "Ništa se ne čuva u bazi, sve se izvodi iz mečeva.")
+					+ "Računa se u aplikaciji iz mečeva, a ne iz tabele player_stats.")
 	@ApiResponse(responseCode = "200", description = "Rang-lista")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id u filteru (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

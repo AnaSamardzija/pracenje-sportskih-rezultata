@@ -93,6 +93,7 @@ public class MariaDbUserStorage extends UserStorage
 	}
 
 	@Override
+	@Transactional
 	public void deleteById(final String id)
 	{
 		_userRepository.deleteById(Long.parseLong(id));

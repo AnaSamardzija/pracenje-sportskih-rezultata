@@ -119,7 +119,7 @@ public class MatchController
 			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
 			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "201", description = "Meč je unet")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti)",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti) ili nenumerički id sporta ili grupe (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -127,7 +127,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse create(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @RequestBody @Valid final MatchRequest request)
@@ -144,7 +144,7 @@ public class MatchController
 			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
 			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Meč je izmenjen")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -152,7 +152,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse update(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @PathVariable final String id,
@@ -167,6 +167,8 @@ public class MatchController
 	@Operation(summary = "Brisanje meča (učesnik meča ili GROUP_ADMIN)",
 			description = "Učesnik može da obriše meč i ako je u međuvremenu napustio grupu.")
 	@ApiResponse(responseCode = "204", description = "Meč je obrisan")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije učesnik meča ni GROUP_ADMIN",

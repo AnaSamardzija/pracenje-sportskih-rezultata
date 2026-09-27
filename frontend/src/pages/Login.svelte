@@ -2,6 +2,7 @@
     import {onMount} from 'svelte';
     import {push} from 'svelte-spa-router';
     import {login} from '../lib/auth/auth.service';
+    import DatabasePicker from '../lib/components/DatabasePicker.svelte';
     import type {StorageType} from '../lib/types/auth.types';
 
     let username = $state('');
@@ -77,20 +78,7 @@
                                 </div>
                             </div>
 
-                            <!-- Vrednosti su tačno enum stringovi koje backend očekuje u AuthRequest.storageType -->
-                            <fieldset class="mb-4">
-                                <legend class="form-label fs-6">Database</legend>
-                                <div class="btn-group w-100">
-                                    <input id="db-maria" class="btn-check" type="radio" value="MARIADB" bind:group={storageType}/>
-                                    <label class="btn btn-outline-primary" for="db-maria">
-                                        <i class="bi bi-database me-1"></i>MariaDB
-                                    </label>
-                                    <input id="db-mongo" class="btn-check" type="radio" value="MONGODB" bind:group={storageType}/>
-                                    <label class="btn btn-outline-primary" for="db-mongo">
-                                        <i class="bi bi-database me-1"></i>MongoDB
-                                    </label>
-                                </div>
-                            </fieldset>
+                            <DatabasePicker bind:value={storageType}/>
 
                             <button type="submit" class="btn btn-primary w-100" disabled={loading}>
                                 {#if loading}
@@ -100,6 +88,10 @@
                                 {/if}
                             </button>
                         </form>
+
+                        <p class="text-center text-muted small mt-3 mb-0">
+                            Don't have an account? <a href="#/register">Create one</a>
+                        </p>
                     </div>
                 </div>
             </div>

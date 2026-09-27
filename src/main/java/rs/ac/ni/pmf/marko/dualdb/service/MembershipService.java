@@ -23,6 +23,7 @@ import rs.ac.ni.pmf.marko.dualdb.storage.user.UserStorage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,6 +97,7 @@ public class MembershipService
 		return MemberView.builder()
 				.userId(saved.getUserId())
 				.username(user.getUsername())
+				.active(user.isActive())
 				.roleInGroup(saved.getRoleInGroup())
 				.joinedAt(saved.getJoinedAt())
 				.build();
@@ -109,12 +111,44 @@ public class MembershipService
 
 		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
 		{
-			keepGroupAdmin(groupId, membership);
+			final List<Membership> others = activeOthers(membership);
+
+			if (others.isEmpty())
+			{
+				throw new InvalidOperationException("You are the only active member of this group; delete the group instead");
+			}
+
+			keepGroupAdmin(groupId, others);
 		}
 
 		membershipStorage().deleteById(membership.getId());
 
 		log.info("User {} left group {}", userId, groupId);
+	}
+
+	/**
+	 * Deaktiviran korisnik predaje ulogu GROUP_ADMIN u svakoj grupi u kojoj ima aktivnih članova i tamo
+	 * postaje MEMBER. U grupi bez drugih aktivnih članova ostaje admin, jer nema kome da je preda.
+	 */
+	@Transactional
+	public void handOverGroupAdmin(final String userId)
+	{
+		final List<Membership> adminMemberships = membershipStorage().findByUserId(userId).stream()
+				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+				.toList();
+
+		for (final Membership membership : adminMemberships)
+		{
+			final List<Membership> others = activeOthers(membership);
+
+			if (!others.isEmpty())
+			{
+				membership.setRoleInGroup(GroupRole.MEMBER);
+				membershipStorage().save(membership);
+
+				keepGroupAdmin(membership.getGroupId(), others);
+			}
+		}
 	}
 
 	public List<MemberView> listMembers(final String groupId)
@@ -123,12 +157,18 @@ public class MembershipService
 
 		final UserStorage users = userStorage();
 		return membershipStorage().findByGroupId(groupId).stream()
-				.map(membership -> MemberView.builder()
-						.userId(membership.getUserId())
-						.username(users.findById(membership.getUserId()).map(User::getUsername).orElse(null))
-						.roleInGroup(membership.getRoleInGroup())
-						.joinedAt(membership.getJoinedAt())
-						.build())
+				.map(membership ->
+				{
+					final Optional<User> user = users.findById(membership.getUserId());
+
+					return MemberView.builder()
+							.userId(membership.getUserId())
+							.username(user.map(User::getUsername).orElse(null))
+							.active(user.map(User::isActive).orElse(false))
+							.roleInGroup(membership.getRoleInGroup())
+							.joinedAt(membership.getJoinedAt())
+							.build();
+				})
 				.collect(Collectors.toList());
 	}
 
@@ -137,17 +177,17 @@ public class MembershipService
 		requireGroupExists(groupId);
 		requireGroupAdmin(groupId, currentUserId);
 
-		if (targetUserId.equals(currentUserId))
+		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
+				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
+
+		if (membership.getUserId().equals(currentUserId))
 		{
 			throw new InvalidOperationException("You cannot remove yourself from the group; use leave instead");
 		}
 
-		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
-				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
-
 		membershipStorage().deleteById(membership.getId());
 
-		log.info("User {} removed from group {}", targetUserId, groupId);
+		log.info("User {} removed from group {}", membership.getUserId(), groupId);
 	}
 
 	public void removeAllForGroup(final String groupId)
@@ -181,7 +221,7 @@ public class MembershipService
 				.collect(Collectors.groupingBy(Membership::getGroupId, Collectors.counting()));
 	}
 
- 	public Map<String, GroupRole> rolesByUser(final String userId)
+	public Map<String, GroupRole> rolesByUser(final String userId)
 	{
 		return membershipStorage().findByUserId(userId).stream()
 				.collect(Collectors.toMap(Membership::getGroupId, Membership::getRoleInGroup));
@@ -195,21 +235,20 @@ public class MembershipService
 		}
 	}
 
-	/**
-	 * Grupa uvek ima GROUP_ADMIN-a dok ima članova. Kad poslednji admin odlazi, admin postaje
-	 * član koji je najduže u grupi; ako drugih članova nema, admin ne može da ode (briše grupu).
-	 */
-	private void keepGroupAdmin(final String groupId, final Membership leaving)
+	private List<Membership> activeOthers(final Membership membership)
 	{
-		final List<Membership> others = membershipStorage().findByGroupId(groupId).stream()
-				.filter(other -> !other.getId().equals(leaving.getId()))
+		return membershipStorage().findByGroupId(membership.getGroupId()).stream()
+				.filter(other -> !other.getId().equals(membership.getId()))
+				.filter(other -> userStorage().findById(other.getUserId()).map(User::isActive).orElse(false))
 				.toList();
+	}
 
-		if (others.isEmpty())
-		{
-			throw new InvalidOperationException("You are the only member of this group; delete the group instead");
-		}
-
+	/**
+	 * Grupa uvek ima aktivnog GROUP_ADMIN-a dok ima aktivnih članova. Kad admin odlazi ili je deaktiviran,
+	 * a među ostalim aktivnim članovima nema admina, admin postaje onaj koji je najduže u grupi.
+	 */
+	private void keepGroupAdmin(final String groupId, final List<Membership> others)
+	{
 		if (others.stream().anyMatch(other -> other.getRoleInGroup() == GroupRole.GROUP_ADMIN))
 		{
 			return;

@@ -25,7 +25,7 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     return res;
 }
 
-// Backend na grešku vraća ErrorDto {timestamp, message}; ako poruke nema, koristi se podrazumevana
+// Backend na grešku vraća ErrorDto {timestamp, message, path}; ako poruke nema, koristi se podrazumevana
 export async function errorMessage(res: Response, fallback: string): Promise<string> {
     const body = await res.json().catch(() => null);
     return body?.message ?? fallback;

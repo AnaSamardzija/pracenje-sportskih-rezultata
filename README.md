@@ -6,24 +6,26 @@ nad **dve nezavisne baze podataka** — **MariaDB** (relaciona) i **MongoDB**
 (nerelaciona). Korisnik pri prijavi bira sa kojom bazom radi u tom trenutku, a
 aplikacija se ponaša identično bez obzira na izbor.
 
-> Opis funkcionalnosti, korisničkih uloga i planiranih endpointa nalazi se u
+> Opis funkcionalnosti, korisničkih uloga i REST endpointa nalazi se u
 > [`PROJECT.md`](./PROJECT.md).
 
 ---
 
 ## Tehnologije
 
-| Komponenta        | Verzija / alat             |
-|-------------------|----------------------------|
-| Jezik             | Java 21                    |
-| Framework         | Spring Boot 4.0.x          |
-| Build alat        | Maven                      |
-| Relaciona baza    | MariaDB 11.4               |
-| Nerelaciona baza  | MongoDB 8.0                |
-| Migracije šeme    | Flyway (MariaDB)           |
-| Autentifikacija   | Spring Security + JWT      |
-| Dokumentacija API | springdoc-openapi (Swagger)|
-| Kontejneri        | Docker + Docker Compose    |
+| Komponenta        | Verzija / alat                 |
+|-------------------|--------------------------------|
+| Jezik             | Java 21                        |
+| Framework         | Spring Boot 4.0.x              |
+| Build alat        | Maven                          |
+| Relaciona baza    | MariaDB 11.4                   |
+| Nerelaciona baza  | MongoDB 8.0                    |
+| Migracije šeme    | Flyway (MariaDB)               |
+| Autentifikacija   | Spring Security + JWT          |
+| Dokumentacija API | springdoc-openapi (Swagger)    |
+| Frontend          | Svelte 5 + TypeScript (Vite)   |
+| Izgled            | Bootstrap 5                    |
+| Kontejneri        | Docker + Docker Compose        |
 
 ---
 
@@ -43,6 +45,11 @@ Pre pokretanja je potrebno imati instalirano:
    docker compose version
    ```
 3. **Git** — za kloniranje repozitorijuma.
+4. **Node.js 24** (sa npm-om) — potreban samo za pokretanje frontenda u razvoju
+   (`npm run dev`).
+   ```bash
+   node -v   # treba da prikaže verziju 24
+   ```
 
 ---
 
@@ -91,12 +98,49 @@ klikom na dugme **Run** (▶) na glavnoj klasi `DualDatabaseAccessApplication`.
 Aplikacija se podiže na **http://localhost:8080**.
 
 Pri prvom pokretanju, klasa `DataInitializer` automatski kreira osnovne uloge i
-permisije (u MariaDB) i podrazumevanog **admin** korisnika **u obe baze**:
+permisije i podrazumevanog **admin** korisnika **u obe baze**:
 
 | Polje    | Vrednost     |
 |----------|--------------|
 | username | `admin`      |
 | password | `admin.123`  |
+
+---
+
+## Pokretanje frontenda
+
+Frontend se nalazi u folderu `frontend/` i može da se pokrene na dva načina.
+
+### U razvoju (port 5173)
+
+Dok backend radi (prethodni korak), u drugom terminalu:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+`npm install` je potreban samo prvi put i kada se promene paketi. Frontend se podiže na
+**http://localhost:5173**, a zahteve ka `/api` prosleđuje backend-u na portu `8080`
+(proxy u `vite.config.ts`). Izmene u kodu frontenda se odmah vide u browseru.
+
+### Zajedno sa backend-om (port 8080)
+
+Iz korena projekta:
+
+```bash
+./mvnw clean package -DskipTests
+java -jar target/dual-database-access-0.0.1-SNAPSHOT.jar
+```
+
+Maven sam preuzme Node.js, izgradi frontend i ubaci ga u jar, pa se cela aplikacija
+otvara na **http://localhost:8080**. Na Windows-u se umesto `./mvnw` kuca `.\mvnw`.
+Pokretanje dugmetom **Run** iz razvojnog okruženja ne gradi frontend, pa se posle izmena
+u frontendu ovaj korak ponavlja (ili se koristi `npm run dev`).
+
+Na stranici za prijavu se, pored korisničkog imena i lozinke, bira i baza (MariaDB ili
+MongoDB).
 
 ---
 
@@ -114,27 +158,42 @@ Rute se mogu isprobati direktno iz Swagger UI-ja:
    (bez reči `Bearer`) i potvrditi.
 3. Od tada se sve zaštićene rute pozivaju sa tim tokenom, nad bazom izabranom pri prijavi.
 
-OpenAPI opis u JSON obliku je na http://localhost:8080/v3/api-docs.
-
 ---
 
 ## Struktura projekta (ukratko)
 
 ```
 src/main/java/rs/ac/ni/pmf/marko/dualdb/
-├── controller/      # REST kontroleri (jedinstveni za obe baze)
+├── controller/      # REST kontroleri i ErrorHandler (jedinstveni za obe baze)
 ├── service/         # Poslovna logika (jedinstvena za obe baze)
-├── model/           # Model nezavisan od baze (User, ...)
-├── dto/             # DTO objekti i mapperi ka modelu
+├── model/           # Model nezavisan od baze (User, Sport, Group, Match, ...)
+├── dto/             # DTO objekti po resursima i mapperi ka modelu
+├── exception/       # Sopstveni izuzeci (404, 409, 422)
 ├── storage/         # Apstrakcija nad bazama
 │   ├── DataStorage, StorageResolver, CurrentStorageTypeProvider
-│   └── user/        # MariaDbUserStorage, MongoDbUserStorage
+│   └── user/, sport/, group/, membership/, match/
+│                    # za svaki resurs MariaDb...Storage i MongoDb...Storage
 ├── data/
 │   ├── StorageType.java          # enum: MARIADB / MONGODB
 │   ├── mariadb/ {entity,mapper,repository}
 │   └── mongodb/ {document,mapper,repository}
 ├── security/        # JWT, Spring Security, izbor baze pri autentifikaciji
-└── config/          # DataInitializer
+└── config/          # DataInitializer, SwaggerConfig
+
+src/main/resources/
+├── application.properties
+└── db/migration/    # Flyway migracije (šema, trigeri, procedure, funkcije, event)
+
+src/test/java/...    # Testovi (SportServiceTest, SportControllerTest, DualDatabaseAccessApplicationTests)
+
+mongo/               # Mongo skripte (agregacije i kursor), pandan SQL mehanizmima
+
+frontend/
+├── src/pages/       # Stranice
+├── src/lib/         # API pozivi, prijava, komponente, tipovi
+└── vite.config.ts   # Proxy /api ka backend-u na 8080
+
+docker-compose.yml   # MariaDB i MongoDB kontejneri
 ```
 
 Kontroleri i servisi su jedinstveni za obe baze, a razdvajanje po bazama nastupa tek

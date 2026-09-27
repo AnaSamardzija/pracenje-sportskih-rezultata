@@ -98,6 +98,8 @@ public class UserController
 			description = "Pobede, nerešeni, porazi, bodovi, procenat pobeda i najduži niz uzastopnih pobeda iz svih "
 					+ "mojih mečeva; ?sportId= ograničava statistiku na jedan sport.")
 	@ApiResponse(responseCode = "200", description = "Statistika prijavljenog korisnika")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id u filteru (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ne postoji",
@@ -169,7 +171,7 @@ public class UserController
 			description = "Menjaju se ime, prezime, email i uloge; izostavljeno ime ili prezime postaje null. "
 					+ "Korisničko ime se ne menja. Admin sebi ne može da skine ulogu SYSTEM_ADMIN.")
 	@ApiResponse(responseCode = "200", description = "Korisnik je izmenjen")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nepoznata uloga)",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nepoznata uloga) ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -194,8 +196,11 @@ public class UserController
 	@Tag(name = "Nalog i korisnici")
 	@Operation(summary = "Deaktivacija korisnika (samo SYSTEM_ADMIN)",
 			description = "Korisnik se ne briše iz baze, već postaje neaktivan: ne može da se prijavi, a token koji "
-					+ "već ima prestaje da važi. Ostaje u mečevima, rang-listama i grupama. Vraća se preko PATCH /restore.")
+					+ "već ima prestaje da važi. Ostaje u mečevima, rang-listama i grupama, a u grupama gde je bio GROUP_ADMIN "
+					+ "admin postaje najstariji aktivan član. Vraća se preko PATCH /restore.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je deaktiviran")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
@@ -215,6 +220,8 @@ public class UserController
 	@Tag(name = "Nalog i korisnici")
 	@Operation(summary = "Vraćanje deaktiviranog korisnika (samo SYSTEM_ADMIN)")
 	@ApiResponse(responseCode = "200", description = "Korisnik je ponovo aktivan")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
