@@ -114,8 +114,6 @@ Rute se mogu isprobati direktno iz Swagger UI-ja:
    (bez reči `Bearer`) i potvrditi.
 3. Od tada se sve zaštićene rute pozivaju sa tim tokenom, nad bazom izabranom pri prijavi.
 
-OpenAPI opis u JSON obliku je na http://localhost:8080/v3/api-docs.
-
 ---
 
 ## Struktura projekta (ukratko)

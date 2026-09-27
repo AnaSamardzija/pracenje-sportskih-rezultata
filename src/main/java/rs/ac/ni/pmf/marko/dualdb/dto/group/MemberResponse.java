@@ -20,6 +20,8 @@ public class MemberResponse
 	String userId;
 	@Schema(example = "pera")
 	String username;
+	@Schema(example = "true")
+	boolean active;
 	@Schema(example = "GROUP_ADMIN")
 	GroupRole roleInGroup;
 	@Schema(example = "2026-09-20T12:00:00")

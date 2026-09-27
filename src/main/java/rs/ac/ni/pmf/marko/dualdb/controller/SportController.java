@@ -179,6 +179,8 @@ public class SportController
 			description = "Sport se ne briše iz baze, već postaje neaktivan i nestaje iz spiska. Njegovi mečevi ostaju "
 					+ "i računaju se u rang-listama, ali novi ne mogu da se unose. Vraća se preko PATCH /restore.")
 	@ApiResponse(responseCode = "204", description = "Sport je obrisan (neaktivan)")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
@@ -194,6 +196,8 @@ public class SportController
 	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
 	@Operation(summary = "Vraćanje obrisanog sporta (samo SYSTEM_ADMIN)")
 	@ApiResponse(responseCode = "200", description = "Sport je ponovo aktivan")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",

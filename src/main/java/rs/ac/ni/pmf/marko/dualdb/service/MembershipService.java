@@ -23,6 +23,7 @@ import rs.ac.ni.pmf.marko.dualdb.storage.user.UserStorage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,6 +97,7 @@ public class MembershipService
 		return MemberView.builder()
 				.userId(saved.getUserId())
 				.username(user.getUsername())
+				.active(user.isActive())
 				.roleInGroup(saved.getRoleInGroup())
 				.joinedAt(saved.getJoinedAt())
 				.build();
@@ -155,12 +157,18 @@ public class MembershipService
 
 		final UserStorage users = userStorage();
 		return membershipStorage().findByGroupId(groupId).stream()
-				.map(membership -> MemberView.builder()
-						.userId(membership.getUserId())
-						.username(users.findById(membership.getUserId()).map(User::getUsername).orElse(null))
-						.roleInGroup(membership.getRoleInGroup())
-						.joinedAt(membership.getJoinedAt())
-						.build())
+				.map(membership ->
+				{
+					final Optional<User> user = users.findById(membership.getUserId());
+
+					return MemberView.builder()
+							.userId(membership.getUserId())
+							.username(user.map(User::getUsername).orElse(null))
+							.active(user.map(User::isActive).orElse(false))
+							.roleInGroup(membership.getRoleInGroup())
+							.joinedAt(membership.getJoinedAt())
+							.build();
+				})
 				.collect(Collectors.toList());
 	}
 

@@ -167,6 +167,8 @@ public class MatchController
 	@Operation(summary = "Brisanje meča (učesnik meča ili GROUP_ADMIN)",
 			description = "Učesnik može da obriše meč i ako je u međuvremenu napustio grupu.")
 	@ApiResponse(responseCode = "204", description = "Meč je obrisan")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije učesnik meča ni GROUP_ADMIN",

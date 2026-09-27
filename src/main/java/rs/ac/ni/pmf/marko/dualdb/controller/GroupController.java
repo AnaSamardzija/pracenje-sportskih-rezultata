@@ -112,6 +112,8 @@ public class GroupController
 	@Operation(summary = "Brisanje grupe (samo GROUP_ADMIN)",
 			description = "Brišu se i sva članstva. Grupa koja ima unete mečeve ne može da se obriše.")
 	@ApiResponse(responseCode = "204", description = "Grupa je obrisana")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
@@ -126,8 +128,11 @@ public class GroupController
 	}
 
 	@GetMapping("/{id}/members")
-	@Operation(summary = "Lista članova grupe (prijavljen korisnik)")
+	@Operation(summary = "Lista članova grupe (prijavljen korisnik)",
+			description = "Deaktivirani članovi ostaju na listi sa active=false; ne mogu da budu igrači u novom meču.")
 	@ApiResponse(responseCode = "200", description = "Članovi grupe sa ulogom u grupi")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji",
@@ -188,6 +193,8 @@ public class GroupController
 			description = "Kad ode poslednji GROUP_ADMIN, admin postaje aktivan član koji je najduže u grupi. Jedini aktivan član ne može da ode, "
 					+ "već briše grupu. Mečevi tog igrača ostaju.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je napustio grupu")
+	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik nije član grupe ili grupa ne postoji",

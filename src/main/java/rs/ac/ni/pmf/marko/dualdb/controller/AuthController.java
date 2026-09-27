@@ -38,7 +38,7 @@ public class AuthController
 	@ApiResponse(responseCode = "200", description = "Prijava je uspela, vraća token")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. bez storageType)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "401", description = "Pogrešno korisničko ime ili lozinka",
+	@ApiResponse(responseCode = "401", description = "Pogrešno korisničko ime ili lozinka, ili je nalog deaktiviran",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public AuthResponse login(@RequestBody @Valid final AuthRequest authRequest)
 	{

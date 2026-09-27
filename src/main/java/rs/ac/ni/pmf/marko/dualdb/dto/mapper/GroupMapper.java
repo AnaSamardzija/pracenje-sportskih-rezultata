@@ -38,6 +38,7 @@ public class GroupMapper
 		return MemberResponse.builder()
 				.userId(member.getUserId())
 				.username(member.getUsername())
+				.active(member.isActive())
 				.roleInGroup(member.getRoleInGroup())
 				.joinedAt(member.getJoinedAt())
 				.build();
