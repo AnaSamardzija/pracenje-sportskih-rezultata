@@ -183,6 +183,11 @@ public class MatchService
 				{
 					throw new InvalidOperationException("Player with id " + playerId + " is not a member of this group");
 				}
+
+				if (!userStorage().findById(playerId).map(User::isActive).orElse(false))
+				{
+					throw new InvalidOperationException("Player with id " + playerId + " is deactivated");
+				}
 			}
 		}
 	}

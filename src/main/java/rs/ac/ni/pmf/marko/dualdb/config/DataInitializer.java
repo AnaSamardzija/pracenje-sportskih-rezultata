@@ -161,9 +161,8 @@ public class DataInitializer implements CommandLineRunner
 		log.info("Checking and activating MongoDB users without the active field, if needed.");
 		migrateMongoUserActive();
 
-		final Optional<UserDocument> existingAdmin = _mongoUserRepository.findByUsername("admin");
-
-		if (existingAdmin.isEmpty())
+		log.info("Checking if the admin user exists in MongoDB.");
+		if (_mongoUserRepository.findByUsername("admin").isEmpty())
 		{
 			log.info("Creating admin user in MongoDB");
 			final UserDocument userDocument = UserDocument.builder()
@@ -177,11 +176,7 @@ public class DataInitializer implements CommandLineRunner
 					.active(true)
 					.build();
 			_mongoUserRepository.save(userDocument);
-
-			return;
 		}
-
-		alignMongoAdminRoles(existingAdmin.get());
 	}
 
 	private void createMongoPermissions()
@@ -257,27 +252,5 @@ public class DataInitializer implements CommandLineRunner
 	{
 		final Query withoutActive = Query.query(Criteria.where("active").exists(false));
 		_mongoTemplate.updateMulti(withoutActive, new Update().set("active", true), "users");
-	}
-
-	/**
-	 * MongoDB nema Flyway, pa ovde radimo ono što u MariaDB-u radi migracija: ako zatečeni
-	 * admin nosi stare uloge (ADMIN/MANAGER), prepiši ih na uloge iz dizajna.
-	 */
-	private void alignMongoAdminRoles(final UserDocument admin)
-	{
-		final Set<String> adminRoles = admin.getRoles().stream()
-				.map(RoleDocument::getName)
-				.collect(Collectors.toSet());
-
-		if (adminRoles.equals(rolePermissions.keySet()))
-		{
-			return;
-		}
-
-		log.info("Aligning admin roles in MongoDB: {} -> {}", adminRoles, rolePermissions.keySet());
-
-		admin.setRoles(_mongoRoleRepository.findAllByNameIn(rolePermissions.keySet()));
-
-		_mongoUserRepository.save(admin);
 	}
 }

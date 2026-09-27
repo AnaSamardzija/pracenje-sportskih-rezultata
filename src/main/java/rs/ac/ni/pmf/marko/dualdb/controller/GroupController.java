@@ -185,14 +185,14 @@ public class GroupController
 	@DeleteMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Napuštanje grupe (član grupe)",
-			description = "Kad ode poslednji GROUP_ADMIN, admin postaje član koji je najduže u grupi. Jedini član ne može da ode, "
+			description = "Kad ode poslednji GROUP_ADMIN, admin postaje aktivan član koji je najduže u grupi. Jedini aktivan član ne može da ode, "
 					+ "već briše grupu. Mečevi tog igrača ostaju.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je napustio grupu")
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik nije član grupe ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Korisnik je jedini član grupe",
+	@ApiResponse(responseCode = "422", description = "Korisnik je jedini aktivan član grupe",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public void leave(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{

@@ -127,7 +127,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse create(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @RequestBody @Valid final MatchRequest request)
@@ -152,7 +152,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse update(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @PathVariable final String id,
