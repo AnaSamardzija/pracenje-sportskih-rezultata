@@ -15,8 +15,18 @@
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="#/">
             <i class="bi bi-trophy-fill"></i>
-            Sports Results
+            <span class="d-none d-lg-inline">Sports Results</span>
         </a>
+
+        <!-- Link ostaje aktivan i na podstranicama (npr. /sports/new), zato regex umesto tačne putanje -->
+        <ul class="navbar-nav flex-row gap-3 me-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="#/sports" title="Sports" aria-label="Sports" use:active={/^\/sports/}>
+                    <i class="bi bi-bullseye"></i>
+                    <span class="d-none d-sm-inline ms-1">Sports</span>
+                </a>
+            </li>
+        </ul>
 
         <div class="d-flex align-items-center gap-2">
             {#if $authStore.storageType}

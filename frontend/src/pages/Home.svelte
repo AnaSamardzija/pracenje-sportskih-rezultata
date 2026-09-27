@@ -36,9 +36,9 @@
             You are signed in to <b>{$authStore.storageType ? STORAGE_LABELS[$authStore.storageType] : '—'}</b>.
         </p>
 
-        <div class="row">
+        <div class="row g-4">
             <div class="col-lg-6">
-                <div class="card card-hover">
+                <div class="card card-hover h-100">
                     <div class="card-header">
                         <i class="bi bi-person-badge me-2 text-primary"></i>Account
                     </div>
@@ -70,6 +70,20 @@
 
                         <a class="btn btn-outline-primary btn-sm mt-3" href="#/profile">
                             <i class="bi bi-pencil me-1"></i>Edit profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-hover h-100">
+                    <div class="card-header">
+                        <i class="bi bi-bullseye me-2 text-primary"></i>Sports
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="text-muted">Browse the sports you can record matches in and see how each one is scored.</p>
+                        <a class="btn btn-outline-primary btn-sm mt-auto align-self-start" href="#/sports">
+                            <i class="bi bi-arrow-right me-1"></i>View sports
                         </a>
                     </div>
                 </div>

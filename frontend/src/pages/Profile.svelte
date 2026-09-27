@@ -2,6 +2,7 @@
     import {onMount} from 'svelte';
     import {changePassword, getMe, updateMe} from '../lib/api/users.api';
     import {authStore} from '../lib/auth/auth.store';
+    import {setUser} from '../lib/auth/auth.service';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
     import {userInitials, type UserDto} from '../lib/types/user.types';
 
@@ -58,12 +59,13 @@
         saving = true;
 
         try {
-            // Odgovor je izmenjen korisnik, pa se pregled levo odmah osveži
+            // Odgovor je izmenjen korisnik, pa se pregled levo i korisnik u store-u odmah osveže
             user = await updateMe({
                 firstName: firstName.trim() || null,
                 lastName: lastName.trim() || null,
                 email: email.trim()
             });
+            setUser(user);
             fillForm(user);
             profileSuccess = 'Profile updated';
         } catch (err) {

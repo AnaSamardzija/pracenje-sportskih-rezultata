@@ -99,6 +99,20 @@ body {
     font-weight: 600;
 }
 
+/* Podnožje kartice (dugmad za izmenu) */
+.card-footer {
+    background-color: #fff;
+}
+
+/* Obrisan (neaktivan) sport u listi */
+.card-inactive {
+    opacity: 0.65;
+}
+
+.card-inactive.card-hover:hover {
+    transform: none;
+}
+
 /* Okrugla ikonica/avatar sa inicijalima */
 .icon-circle {
     width: 3.5rem;
@@ -118,6 +132,19 @@ body {
     width: 5.5rem;
     height: 5.5rem;
     font-size: 2.25rem;
+}
+
+/* Manja ikonica u karticama liste */
+.icon-circle-sm {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.25rem;
+}
+
+/* Modal za potvrdu: tamna providna pozadina i blag ulazak */
+.modal-app {
+    background-color: rgba(11, 31, 58, 0.5);
+    animation: fade-in-plain 0.15s ease-out;
 }
 
 /* Login i ostale stranice bez navigacije: sadržaj na sredini ekrana */
@@ -144,8 +171,18 @@ body {
     }
 }
 
+@keyframes fade-in-plain {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .page-fade {
+    .page-fade,
+    .modal-app {
         animation: none;
     }
 
