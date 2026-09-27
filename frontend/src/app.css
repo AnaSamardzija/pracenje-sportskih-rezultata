@@ -233,6 +233,20 @@ body {
     font-weight: 700;
 }
 
+/* Tabovi u zaglavlju kartice (npr. sve grupe / moje grupe) */
+.nav-pills-app {
+    --bs-nav-pills-link-active-bg: var(--app-primary);
+    --bs-nav-link-padding-y: 0.3rem;
+    font-weight: 400;
+}
+
+/* Polje za pretragu u zaglavlju kartice: puna širina na telefonu, uže na većem ekranu */
+@media (min-width: 576px) {
+    .search-box {
+        max-width: 16rem;
+    }
+}
+
 /* Liste u karticama: tekst u boji stranice, a pod mišem svetloplava umesto sive */
 .list-group-item-action {
     color: var(--bs-body-color);

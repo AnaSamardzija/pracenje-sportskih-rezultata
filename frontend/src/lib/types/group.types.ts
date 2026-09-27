@@ -12,6 +12,25 @@ export interface GroupResponse {
     myRole: GroupRole | null;
 }
 
+// Prazan opis se šalje kao null
+export interface GroupRequest {
+    name: string;
+    description: string | null;
+}
+
+// active = false znači da je nalog deaktiviran; takav član ostaje u listi, ali ne može u nove mečeve
+export interface MemberResponse {
+    userId: string;
+    username: string;
+    active: boolean;
+    roleInGroup: GroupRole;
+    joinedAt: string;
+}
+
+export interface AddMemberRequest {
+    username: string;
+}
+
 // Kratak prikaz grupe unutar drugog odgovora (npr. u meču)
 export interface GroupSummaryDto {
     id: string;

@@ -5,6 +5,9 @@ import Home from './pages/Home.svelte';
 import Profile from './pages/Profile.svelte';
 import SportList from './pages/sports/SportList.svelte';
 import SportForm from './pages/sports/SportForm.svelte';
+import GroupList from './pages/groups/GroupList.svelte';
+import GroupForm from './pages/groups/GroupForm.svelte';
+import GroupDetail from './pages/groups/GroupDetail.svelte';
 import NotFound from './pages/NotFound.svelte';
 import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
 
@@ -21,6 +24,11 @@ export const routes = {
     '/sports': guarded(SportList),
     '/sports/new': adminOnly(SportForm),
     '/sports/:id/edit': adminOnly(SportForm),
+
+    '/groups': guarded(GroupList),
+    '/groups/new': guarded(GroupForm),
+    '/groups/:id/edit': guarded(GroupForm),
+    '/groups/:id': guarded(GroupDetail),
 
     // Mora biti poslednja: sve ostale putanje
     '*': guarded(NotFound),

@@ -9,6 +9,7 @@
     import {GROUP_ROLE_LABELS, type GroupResponse} from '../lib/types/group.types';
     import {formatScore, type MatchOutcome, type MatchResponse} from '../lib/types/match.types';
     import type {PlayerStatsResponse} from '../lib/types/stats.types';
+    import {formatDate} from '../lib/utils/date';
 
     const RECENT_MATCHES = 5;
 
@@ -66,10 +67,6 @@
             opponents: others.flatMap(s => s.players.map(p => p.username)).join(', '),
             score: others.length === 1 ? formatScore(mine, others[0]) : ''
         };
-    }
-
-    function formatDate(value: string): string {
-        return new Date(value).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
     }
 </script>
 
