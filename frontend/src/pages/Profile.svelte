@@ -3,6 +3,7 @@
     import {changePassword, getMe, updateMe} from '../lib/api/users.api';
     import {authStore} from '../lib/auth/auth.store';
     import {setUser} from '../lib/auth/auth.service';
+    import PageHeader from '../lib/components/PageHeader.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
     import {userInitials, type UserDto} from '../lib/types/user.types';
 
@@ -102,8 +103,9 @@
     }
 </script>
 
+<PageHeader title="My profile" icon="bi-person-circle" subtitle="Your account details and password."/>
+
 <div class="container py-4 page-fade">
-    <h2 class="mb-4"><i class="bi bi-person-circle me-2 text-primary"></i>My profile</h2>
 
     {#if loadError}
         <div class="alert alert-danger">{loadError}</div>

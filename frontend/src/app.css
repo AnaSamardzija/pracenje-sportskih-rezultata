@@ -27,6 +27,19 @@ body {
     background-color: var(--app-bg);
 }
 
+/* Malo šira radna površina od Bootstrap-ove (1140/1320px), da na velikim ekranima ne ostaje mnogo praznog sa strane */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1200px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1440px;
+    }
+}
+
 /* Dugmad: Bootstrap 5.3 boje dugmeta drži u promenljivama na samoj klasi */
 .btn-primary {
     --bs-btn-bg: var(--app-primary);
@@ -70,13 +83,55 @@ body {
     color: var(--app-primary);
 }
 
-/* Navigacija */
+/* Navigacija: tamna traka koja se nastavlja u traku zaglavlja stranice */
 .navbar-app {
     background-color: var(--app-dark);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navbar-app .navbar-brand {
     font-weight: 600;
+}
+
+.navbar-app .nav-link {
+    border-radius: 0.375rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.navbar-app .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-app .dropdown-menu {
+    min-width: 14rem;
+}
+
+/* Traka zaglavlja stranice preko cele širine ekrana */
+.page-header {
+    background: linear-gradient(120deg, var(--app-dark) 0%, #133A86 55%, var(--app-primary) 100%);
+    color: #fff;
+    padding: 2rem 0;
+}
+
+.page-header-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.page-header-subtitle {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* Zaglavlje sa mestom dole, i sadržaj koji se podigne preko njega (kartice statistike na početnoj) */
+.page-header-overlap {
+    padding-bottom: 4.5rem;
+}
+
+.page-header-pull {
+    margin-top: -3rem;
+    position: relative;
 }
 
 /* Kartice: bez ivice, sa blagom senkom; card-hover se malo podigne pod mišem */
@@ -104,13 +159,88 @@ body {
     background-color: #fff;
 }
 
-/* Obrisan (neaktivan) sport u listi */
-.card-inactive {
-    opacity: 0.65;
+/* Obrisan (neaktivan) red u tabeli, npr. sport: izbledeo */
+.row-inactive > td {
+    opacity: 0.6;
 }
 
-.card-inactive.card-hover:hover {
-    transform: none;
+/* Kartice statistike na početnoj */
+.stat-label {
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--app-dark);
+}
+
+.stat-progress {
+    display: block;
+    width: 100%;
+    height: 0.4rem;
+    border: 0;
+    border-radius: 1rem;
+    background-color: var(--app-bg);
+    appearance: none;
+}
+
+.stat-progress::-webkit-progress-bar {
+    background-color: var(--app-bg);
+    border-radius: 1rem;
+}
+
+.stat-progress::-webkit-progress-value {
+    background-color: var(--app-primary);
+    border-radius: 1rem;
+}
+
+.stat-progress::-moz-progress-bar {
+    background-color: var(--app-primary);
+    border-radius: 1rem;
+}
+
+/* Ishod meča (W / D / L) u listi mečeva */
+.outcome-badge {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+/* Koraci za novog korisnika na početnoj */
+.step {
+    display: flex;
+    gap: 1rem;
+}
+
+.step-number {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--app-bg);
+    color: var(--app-primary);
+    font-weight: 700;
+}
+
+/* Liste u karticama: tekst u boji stranice, a pod mišem svetloplava umesto sive */
+.list-group-item-action {
+    color: var(--bs-body-color);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+    background-color: var(--app-bg);
 }
 
 /* Okrugla ikonica/avatar sa inicijalima */
@@ -134,11 +264,11 @@ body {
     font-size: 2.25rem;
 }
 
-/* Manja ikonica u karticama liste */
-.icon-circle-sm {
-    width: 2.75rem;
-    height: 2.75rem;
-    font-size: 1.25rem;
+/* Manja ikonica: avatar u navigaciji i slova grupa u listama */
+.icon-circle-xs {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.95rem;
 }
 
 /* Modal za potvrdu: tamna providna pozadina i blag ulazak */
@@ -186,6 +316,7 @@ body {
         animation: none;
     }
 
+    .page-header .page-fade,
     .card-hover,
     .card-hover:hover {
         transition: none;

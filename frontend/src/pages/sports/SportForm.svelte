@@ -2,10 +2,12 @@
     import {onMount} from 'svelte';
     import {push} from 'svelte-spa-router';
     import {createSport, getSport, updateSport} from '../../lib/api/sports.api';
+    import PageHeader from '../../lib/components/PageHeader.svelte';
     import {
         SCORING_MODE_HINTS,
         SCORING_MODE_ICONS,
         SCORING_MODE_LABELS,
+        SCORING_MODES,
         type ScoringMode,
         type SportRequest,
         type SportType
@@ -16,8 +18,6 @@
 
     const editId = $derived(params?.id ?? null);
     const isEdit = $derived(editId !== null);
-
-    const SCORING_MODES: ScoringMode[] = ['POINTS', 'SETS', 'OUTCOME'];
 
     let name = $state('');
     let type = $state<SportType>('INDIVIDUAL');
@@ -98,12 +98,13 @@
     }
 </script>
 
+<PageHeader title={isEdit ? 'Edit sport' : 'New sport'}
+            icon={isEdit ? 'bi-pencil-square' : 'bi-plus-circle'}
+            subtitle="Scoring mode and rules decide how results are entered and how ranking points are awarded."/>
+
 <div class="container py-4 page-fade">
     <div class="row justify-content-center">
         <div class="col-lg-9 col-xl-8">
-            <h2 class="mb-4">
-                <i class="bi {isEdit ? 'bi-pencil-square' : 'bi-plus-circle'} me-2 text-primary"></i>{isEdit ? 'Edit sport' : 'New sport'}
-            </h2>
 
             {#if error}
                 <div class="alert alert-danger d-flex align-items-center">

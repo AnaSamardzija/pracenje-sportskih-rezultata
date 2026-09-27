@@ -5,6 +5,7 @@ import Home from './pages/Home.svelte';
 import Profile from './pages/Profile.svelte';
 import SportList from './pages/sports/SportList.svelte';
 import SportForm from './pages/sports/SportForm.svelte';
+import NotFound from './pages/NotFound.svelte';
 import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
 
 const guarded = (component: any) => wrap({component, conditions: [requireAuth]});
@@ -20,4 +21,7 @@ export const routes = {
     '/sports': guarded(SportList),
     '/sports/new': adminOnly(SportForm),
     '/sports/:id/edit': adminOnly(SportForm),
+
+    // Mora biti poslednja: sve ostale putanje
+    '*': guarded(NotFound),
 };

@@ -30,6 +30,12 @@ export interface SportResponse {
     active: boolean;
 }
 
+// Kratak prikaz sporta unutar drugog odgovora (npr. u meču)
+export interface SportSummaryDto {
+    id: string;
+    name: string;
+}
+
 export const SPORT_TYPE_LABELS: Record<SportType, string> = {
     INDIVIDUAL: 'Individual',
     TEAM: 'Team'
@@ -40,6 +46,8 @@ export const SCORING_MODE_LABELS: Record<ScoringMode, string> = {
     SETS: 'Sets',
     OUTCOME: 'Outcome'
 };
+
+export const SCORING_MODES: ScoringMode[] = ['POINTS', 'SETS', 'OUTCOME'];
 
 export const SCORING_MODE_HINTS: Record<ScoringMode, string> = {
     POINTS: 'Each side gets a final score, e.g. 3 : 1.',
