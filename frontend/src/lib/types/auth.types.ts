@@ -7,6 +7,16 @@ export interface AuthRequest {
     storageType: StorageType;
 }
 
+// Ime i prezime nisu obavezni; prazno polje se šalje kao null
+export interface RegisterRequest {
+    username: string;
+    password: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    storageType: StorageType;
+}
+
 export interface AuthResponse {
     accessToken: string;
 }
