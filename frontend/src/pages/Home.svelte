@@ -3,16 +3,11 @@
     import {getMe} from '../lib/api/users.api';
     import {authStore} from '../lib/auth/auth.store';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
-    import type {UserDto} from '../lib/types/user.types';
+    import {userInitials, type UserDto} from '../lib/types/user.types';
 
     let user = $state<UserDto | null>(null);
     let loading = $state(true);
     let error = $state<string | null>(null);
-
-    // Inicijali za avatar; ime i prezime nisu obavezni, pa je rezerva username
-    const initials = $derived(
-        user ? ((user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0]).toUpperCase() : ''
-    );
 
     // Zaštićena ruta: dokaz da token radi i da backend čita iz baze izabrane pri prijavi
     onMount(async () => {
@@ -49,7 +44,7 @@
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <span class="icon-circle">{initials}</span>
+                            <span class="icon-circle">{userInitials(user)}</span>
                             <div>
                                 <div class="fw-semibold">{user.firstName} {user.lastName}</div>
                                 <div class="text-muted small">@{user.username}</div>
@@ -72,6 +67,10 @@
                             </tr>
                             </tbody>
                         </table>
+
+                        <a class="btn btn-outline-primary btn-sm mt-3" href="#/profile">
+                            <i class="bi bi-pencil me-1"></i>Edit profile
+                        </a>
                     </div>
                 </div>
             </div>

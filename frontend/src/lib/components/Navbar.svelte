@@ -1,5 +1,6 @@
 <script lang="ts">
     import {push} from 'svelte-spa-router';
+    import active from 'svelte-spa-router/active';
     import {authStore} from '../auth/auth.store';
     import {logout} from '../auth/auth.service';
     import {STORAGE_LABELS} from '../types/auth.types';
@@ -23,6 +24,11 @@
                     <i class="bi bi-database me-1"></i>{STORAGE_LABELS[$authStore.storageType]}
                 </span>
             {/if}
+            <!-- use:active dodaje klasu active kad je otvorena stranica profila -->
+            <a class="btn btn-outline-light btn-sm" href="#/profile" title="My profile" aria-label="My profile" use:active>
+                <i class="bi bi-person-circle"></i>
+                <span class="d-none d-sm-inline ms-1">Profile</span>
+            </a>
             <button class="btn btn-outline-light btn-sm" title="Sign out" aria-label="Sign out" onclick={handleLogout}>
                 <i class="bi bi-box-arrow-right"></i>
                 <span class="d-none d-sm-inline ms-1">Sign out</span>
