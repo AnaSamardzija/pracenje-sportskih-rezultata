@@ -27,7 +27,7 @@ public class SwaggerConfig
 									  + "Baza se bira pri prijavi (storageType) i nosi se u tokenu."))
 				.tags(List.of(
 						new Tag().name("Auth").description("Prijava i registracija"),
-						new Tag().name("Nalog i korisnici").description("Moj profil i lozinka, pregled korisnika za SYSTEM_ADMIN-a"),
+						new Tag().name("Nalog i korisnici").description("Moj profil i lozinka, upravljanje korisnicima za SYSTEM_ADMIN-a"),
 						new Tag().name("Sportovi").description("Katalog sportova i njihova pravila bodovanja"),
 						new Tag().name("Grupe i članstvo").description("Grupe, pridruživanje i upravljanje članovima"),
 						new Tag().name("Mečevi").description("Unos i pregled odigranih mečeva"),

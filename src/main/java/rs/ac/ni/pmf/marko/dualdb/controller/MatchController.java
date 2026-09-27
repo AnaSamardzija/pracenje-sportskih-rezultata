@@ -119,7 +119,7 @@ public class MatchController
 			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
 			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "201", description = "Meč je unet")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti)",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti) ili nenumerički id sporta ili grupe (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -144,7 +144,7 @@ public class MatchController
 			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
 			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Meč je izmenjen")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

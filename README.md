@@ -98,7 +98,7 @@ klikom na dugme **Run** (▶) na glavnoj klasi `DualDatabaseAccessApplication`.
 Aplikacija se podiže na **http://localhost:8080**.
 
 Pri prvom pokretanju, klasa `DataInitializer` automatski kreira osnovne uloge i
-permisije (u MariaDB) i podrazumevanog **admin** korisnika **u obe baze**:
+permisije i podrazumevanog **admin** korisnika **u obe baze**:
 
 | Polje    | Vrednost     |
 |----------|--------------|
@@ -184,7 +184,7 @@ src/main/resources/
 ├── application.properties
 └── db/migration/    # Flyway migracije (šema, trigeri, procedure, funkcije, event)
 
-src/test/java/...    # Testovi (SportServiceTest, SportControllerTest)
+src/test/java/...    # Testovi (SportServiceTest, SportControllerTest, DualDatabaseAccessApplicationTests)
 
 mongo/               # Mongo skripte (agregacije i kursor), pandan SQL mehanizmima
 

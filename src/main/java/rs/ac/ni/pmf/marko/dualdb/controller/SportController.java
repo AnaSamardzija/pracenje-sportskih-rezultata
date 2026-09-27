@@ -155,7 +155,7 @@ public class SportController
 			@ExampleObject(name = "Fudbal (POINTS)", value = FUDBAL_EXAMPLE),
 			@ExampleObject(name = "Sah (OUTCOME)", value = SAH_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Sport je izmenjen")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

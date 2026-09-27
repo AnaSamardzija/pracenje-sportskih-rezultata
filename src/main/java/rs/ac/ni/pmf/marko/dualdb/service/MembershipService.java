@@ -177,17 +177,17 @@ public class MembershipService
 		requireGroupExists(groupId);
 		requireGroupAdmin(groupId, currentUserId);
 
-		if (targetUserId.equals(currentUserId))
+		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
+				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
+
+		if (membership.getUserId().equals(currentUserId))
 		{
 			throw new InvalidOperationException("You cannot remove yourself from the group; use leave instead");
 		}
 
-		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
-				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
-
 		membershipStorage().deleteById(membership.getId());
 
-		log.info("User {} removed from group {}", targetUserId, groupId);
+		log.info("User {} removed from group {}", membership.getUserId(), groupId);
 	}
 
 	public void removeAllForGroup(final String groupId)

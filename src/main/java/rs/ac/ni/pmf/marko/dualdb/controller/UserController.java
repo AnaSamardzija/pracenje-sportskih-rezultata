@@ -171,7 +171,7 @@ public class UserController
 			description = "Menjaju se ime, prezime, email i uloge; izostavljeno ime ili prezime postaje null. "
 					+ "Korisničko ime se ne menja. Admin sebi ne može da skine ulogu SYSTEM_ADMIN.")
 	@ApiResponse(responseCode = "200", description = "Korisnik je izmenjen")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nepoznata uloga)",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nepoznata uloga) ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

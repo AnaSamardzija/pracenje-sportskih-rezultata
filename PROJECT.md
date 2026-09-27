@@ -16,11 +16,11 @@ tokom vremena — umesto da se rezultati pamte napamet ili razbacano po porukama
 
 ## Korisničke uloge
 
-- **Igrač** — registruje se, pridružuje se grupama, unosi rezultate svojih mečeva
-  i prati svoje statistike i poziciju na rang-listi.
-- **Administrator grupe** — kreira grupu i upravlja njome: dodaje i uklanja članove
-  i uređuje njena podešavanja. Svaki igrač koji kreira grupu postaje njen
-  administrator.
+- **Igrač** — registruje se, pridružuje se grupama, unosi rezultate mečeva u svojim
+  grupama (ne mora sam da igra) i prati svoje statistike i poziciju na rang-listi.
+- **Administrator grupe** — kreira grupu i upravlja njome: dodaje i uklanja članove,
+  uređuje njena podešavanja i može da menja i briše sve mečeve u grupi. Svaki igrač
+  koji kreira grupu postaje njen administrator.
 - **Sistem administrator** — upravlja katalogom sportova i svim korisnicima.
 
 ---
@@ -36,8 +36,8 @@ Osnovni, obavezni deo aplikacije:
   sistem na osnovu rezultata određuje pobednika
 - Pregled liste odigranih mečeva (svi mečevi, mečevi u okviru grupe, sopstveni
   mečevi)
-- Rang-lista igrača unutar grupe i po sportu, na osnovu broja pobeda i osvojenih
-  bodova
+- Rang-lista igrača unutar grupe i po sportu, na osnovu osvojenih bodova i broja
+  pobeda
 - Lični profil sa istorijom odigranih mečeva i osnovnom statistikom (broj pobeda,
   poraza i procenat uspešnosti)
 - Mogućnost izbora baze podataka (relaciona ili nerelaciona) pri prijavi, pri čemu
@@ -92,7 +92,7 @@ mapperi i repozitorijumi za svaku bazu).
 | Metoda | Putanja                       | Opis                                                                |
 |--------|-------------------------------|---------------------------------------------------------------------|
 | GET    | `/api/v1/sports`              | Lista aktivnih sportova (`?includeInactive=true` samo SYSTEM_ADMIN) |
-| GET    | `/api/v1/sports/{id}`         | Detalji sporta                                                      |
+| GET    | `/api/v1/sports/{id}`         | Detalji sporta (`?includeInactive=true` samo SYSTEM_ADMIN)          |
 | POST   | `/api/v1/sports`              | Dodavanje (SYSTEM_ADMIN)                                            |
 | PUT    | `/api/v1/sports/{id}`         | Izmena (SYSTEM_ADMIN)                                               |
 | DELETE | `/api/v1/sports/{id}`         | Brisanje, sport postaje neaktivan (SYSTEM_ADMIN)                    |
@@ -125,11 +125,11 @@ mapperi i repozitorijumi za svaku bazu).
 
 ### Rang-liste i statistike — `/api/v1/rankings`, `/api/v1/users/{id}/stats`
 
-| Metoda | Putanja                                    | Opis                             |
-|--------|--------------------------------------------|----------------------------------|
-| GET    | `/api/v1/rankings?groupId=...&sportId=...` | Rang-lista po grupi i/ili sportu |
-| GET    | `/api/v1/users/{id}/stats?sportId=...`     | Statistika konkretnog igrača     |
-| GET    | `/api/v1/users/me/stats`                   | Moja statistika (skraćenica)     |
+| Metoda | Putanja                                    | Opis                                                     |
+|--------|--------------------------------------------|----------------------------------------------------------|
+| GET    | `/api/v1/rankings?groupId=...&sportId=...` | Rang-lista (oba filtera su opciona; bez njih svi mečevi) |
+| GET    | `/api/v1/users/{id}/stats?sportId=...`     | Statistika konkretnog igrača                             |
+| GET    | `/api/v1/users/me/stats?sportId=...`       | Moja statistika (skraćenica)                             |
 
 ### Sistem administracija — `/api/v1/users`
 

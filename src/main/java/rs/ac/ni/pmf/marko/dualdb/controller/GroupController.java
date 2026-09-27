@@ -92,7 +92,7 @@ public class GroupController
 	@Operation(summary = "Izmena grupe (samo GROUP_ADMIN)",
 			description = "SYSTEM_ADMIN nema posebna prava nad grupama.")
 	@ApiResponse(responseCode = "200", description = "Grupa je izmenjena")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -149,7 +149,7 @@ public class GroupController
 	@Operation(summary = "Dodavanje člana u grupu (samo GROUP_ADMIN)",
 			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe.")
 	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
-	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
+	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -190,8 +190,8 @@ public class GroupController
 	@DeleteMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Napuštanje grupe (član grupe)",
-			description = "Kad ode poslednji GROUP_ADMIN, admin postaje aktivan član koji je najduže u grupi. Jedini aktivan član ne može da ode, "
-					+ "već briše grupu. Mečevi tog igrača ostaju.")
+			description = "Kad ode poslednji GROUP_ADMIN, admin postaje aktivan član koji je najduže u grupi. GROUP_ADMIN koji je jedini "
+					+ "aktivan član ne može da ode, već briše grupu. Mečevi tog igrača ostaju.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je napustio grupu")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -199,7 +199,7 @@ public class GroupController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik nije član grupe ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Korisnik je jedini aktivan član grupe",
+	@ApiResponse(responseCode = "422", description = "Korisnik je GROUP_ADMIN i jedini aktivan član grupe",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public void leave(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{
