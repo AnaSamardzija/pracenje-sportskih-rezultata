@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
     import {push} from 'svelte-spa-router';
     import {
         addMember,
@@ -39,16 +38,33 @@
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
 
-    onMount(load);
+    // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3 → /groups/5),
+    // pa se tada sve vraća na početak, da dugmad nikad ne rade nad grupom koja nije prikazana
+    $effect(() => {
+        const id = groupId;
+        group = null;
+        members = [];
+        loading = true;
+        error = null;
+        newMember = '';
+        addError = null;
+        addSuccess = null;
+        load(id);
+    });
 
-    // Grupa i članovi se uvek učitavaju zajedno: posle izlaska ili izbacivanja backend može da promeni i ulogu i broj članova
-    async function load() {
+    // Grupa i članovi se uvek učitavaju zajedno: posle izlaska ili izbacivanja backend može da promeni i ulogu i broj članova.
+    // Odgovor koji stigne za id koji više nije u adresi se odbacuje.
+    async function load(id = groupId) {
         try {
-            [group, members] = await Promise.all([getGroup(groupId), getMembers(groupId)]);
+            const [loadedGroup, loadedMembers] = await Promise.all([getGroup(id), getMembers(id)]);
+            if (id !== groupId) return;
+            group = loadedGroup;
+            members = loadedMembers;
         } catch (e) {
+            if (id !== groupId) return;
             error = e instanceof Error ? e.message : 'Failed to load group';
         } finally {
-            loading = false;
+            if (id === groupId) loading = false;
         }
     }
 

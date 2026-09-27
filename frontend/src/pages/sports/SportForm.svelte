@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
     import {push} from 'svelte-spa-router';
     import {createSport, getSport, updateSport} from '../../lib/api/sports.api';
     import PageHeader from '../../lib/components/PageHeader.svelte';
@@ -36,11 +35,19 @@
     let saving = $state(false);
     let error = $state<string | null>(null);
 
-    onMount(async () => {
-        if (!editId) return;
+    // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /sports/1/edit → /sports/2/edit)
+    $effect(() => {
+        if (editId) loadSport(editId);
+    });
+
+    // Odgovor koji stigne za id koji više nije u adresi se odbacuje
+    async function loadSport(id: string) {
         loadingData = true;
+        loadFailed = false;
+        error = null;
         try {
-            const sport = await getSport(editId);
+            const sport = await getSport(id);
+            if (id !== editId) return;
             name = sport.name;
             type = sport.type;
             scoringMode = sport.scoringMode;
@@ -53,12 +60,13 @@
             pointsForDraw = sport.rules.pointsForDraw;
             pointsForLoss = sport.rules.pointsForLoss;
         } catch (e) {
+            if (id !== editId) return;
             error = e instanceof Error ? e.message : 'Sport not found';
             loadFailed = true;
         } finally {
-            loadingData = false;
+            if (id === editId) loadingData = false;
         }
-    });
+    }
 
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();

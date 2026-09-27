@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
     import {push} from 'svelte-spa-router';
     import {createGroup, getGroup, updateGroup} from '../../lib/api/groups.api';
     import PageHeader from '../../lib/components/PageHeader.svelte';
@@ -18,12 +17,20 @@
     let saving = $state(false);
     let error = $state<string | null>(null);
 
-    // Izmenu dozvoljava samo GROUP_ADMIN; backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud
-    onMount(async () => {
-        if (!editId) return;
+    // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3/edit → /groups/5/edit)
+    $effect(() => {
+        if (editId) loadGroup(editId);
+    });
+
+    // Izmenu dozvoljava samo GROUP_ADMIN; backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud.
+    // Odgovor koji stigne za id koji više nije u adresi se odbacuje.
+    async function loadGroup(id: string) {
         loadingData = true;
+        loadFailed = false;
+        error = null;
         try {
-            const group = await getGroup(editId);
+            const group = await getGroup(id);
+            if (id !== editId) return;
             if (group.myRole !== 'GROUP_ADMIN') {
                 error = 'Only a group admin can edit this group';
                 loadFailed = true;
@@ -32,12 +39,13 @@
             name = group.name;
             description = group.description ?? '';
         } catch (e) {
+            if (id !== editId) return;
             error = e instanceof Error ? e.message : 'Group not found';
             loadFailed = true;
         } finally {
-            loadingData = false;
+            if (id === editId) loadingData = false;
         }
-    });
+    }
 
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
