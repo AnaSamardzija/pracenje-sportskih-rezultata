@@ -1,3 +1,5 @@
+import type {UserDto} from './user.types';
+
 // Vrednosti su tačno enum StorageType sa backend-a
 export type StorageType = 'MARIADB' | 'MONGODB';
 
@@ -21,10 +23,12 @@ export interface AuthResponse {
     accessToken: string;
 }
 
-// storageType se čuva pored tokena da bi UI znao na koju bazu je korisnik prijavljen (token se ne dekodira)
+// storageType se čuva pored tokena da bi UI znao na koju bazu je korisnik prijavljen (token se ne dekodira),
+// a user (odgovor /users/me posle prijave) da bi znao uloge, npr. da li da prikaže admin dugmad
 export type AuthState = {
     accessToken: string | null;
     storageType: StorageType | null;
+    user: UserDto | null;
 }
 
 export const STORAGE_LABELS: Record<StorageType, string> = {
