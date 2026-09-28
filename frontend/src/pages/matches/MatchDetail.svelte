@@ -6,6 +6,7 @@
     import ConfirmModal from '../../lib/components/ConfirmModal.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
     import {OUTCOME_BADGES, resultLabel, sideNames, type MatchResponse, type MatchSideResponse} from '../../lib/types/match.types';
+    import {isSystemAdmin} from '../../lib/types/user.types';
     import {formatDateTime} from '../../lib/utils/date';
 
     let {params}: {params?: {id?: string}} = $props();
@@ -19,6 +20,7 @@
     let deleting = $state(false);
 
     const myId = $derived($authStore.user?.id);
+    const systemAdmin = $derived(isSystemAdmin($authStore.user));
     const title = $derived(match ? `${sideNames(match.sides[0])} vs ${sideNames(match.sides[1])}` : 'Match');
     const subtitle = $derived(match ? `${match.sport.name} · ${match.group.name} · ${formatDateTime(match.playedAt)}` : undefined);
 
@@ -35,13 +37,12 @@
         load(id);
     });
 
-    // Menjati i brisati meč može učesnik ili GROUP_ADMIN grupe; ulogu u grupi pitamo samo kad korisnik ne igra.
+    // Menjati i brisati meč može GROUP_ADMIN grupe ili SYSTEM_ADMIN; ulogu u grupi pitamo samo kad korisnik nije SYSTEM_ADMIN.
     // Odgovor koji stigne za id koji više nije u adresi se odbacuje.
     async function load(id: string) {
         try {
             const loaded = await getMatch(id);
-            const plays = loaded.sides.some(side => side.players.some(p => p.id === myId));
-            const manage = plays || await isGroupAdmin(loaded.group.id);
+            const manage = systemAdmin || await isGroupAdmin(loaded.group.id);
             if (id !== matchId) return;
             match = loaded;
             canManage = manage;
@@ -145,11 +146,11 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {#each match.sides as side, i (i)}
+                                {#each match.sides as side, i}
                                     {@const other = match.sides[1 - i]}
                                     <tr>
                                         <td class="text-start text-nowrap" class:fw-semibold={side.winner}>{sideNames(side)}</td>
-                                        {#each side.setScores ?? [] as games, s (s)}
+                                        {#each side.setScores ?? [] as games, s}
                                             <td class:fw-bold={games > (other.setScores?.[s] ?? 0)}>{games}</td>
                                         {/each}
                                         <td class="fw-bold">{side.score}</td>

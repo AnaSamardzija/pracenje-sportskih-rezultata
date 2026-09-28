@@ -9,6 +9,7 @@ import rs.ac.ni.pmf.ana.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.ana.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 import rs.ac.ni.pmf.ana.dualdb.model.SportRules;
+import rs.ac.ni.pmf.ana.dualdb.model.SportType;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.StorageResolver;
 import rs.ac.ni.pmf.ana.dualdb.storage.sport.SportStorage;
@@ -38,7 +39,7 @@ public class SportService
 	public Sport create(final Sport sport)
 	{
 		requireUniqueName(sport.getName(), null);
-		requireValidPlayerRange(sport.getRules());
+		requireValidPlayerRange(sport);
 
 		sport.setActive(true);
 		final Sport saved = storage().save(sport);
@@ -52,7 +53,7 @@ public class SportService
 		final Sport existing = findById(id, false);
 
 		requireUniqueName(sport.getName(), id);
-		requireValidPlayerRange(sport.getRules());
+		requireValidPlayerRange(sport);
 
 		existing.setName(sport.getName());
 		existing.setType(sport.getType());
@@ -105,8 +106,16 @@ public class SportService
 				});
 	}
 
-	private void requireValidPlayerRange(final SportRules rules)
+	private void requireValidPlayerRange(final Sport sport)
 	{
+		final SportRules rules = sport.getRules();
+
+		if (sport.getType() == SportType.INDIVIDUAL
+				&& (rules.getMinPlayersPerSide() != 1 || rules.getMaxPlayersPerSide() == null || rules.getMaxPlayersPerSide() != 1))
+		{
+			throw new InvalidOperationException("An individual sport must have exactly 1 player per side");
+		}
+
 		if (rules.getMaxPlayersPerSide() != null && rules.getMaxPlayersPerSide() < rules.getMinPlayersPerSide())
 		{
 			throw new InvalidOperationException("maxPlayersPerSide cannot be less than minPlayersPerSide");

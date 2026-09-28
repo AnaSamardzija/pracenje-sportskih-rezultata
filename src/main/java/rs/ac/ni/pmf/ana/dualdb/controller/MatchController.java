@@ -109,8 +109,8 @@ public class MatchController
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Unos meča (član grupe)",
-			description = "Meč unosi bilo koji član grupe, ne mora da igra, a svi igrači moraju biti članovi grupe. "
+	@Operation(summary = "Unos meča (član grupe ili SYSTEM_ADMIN)",
+			description = "Meč unosi bilo koji član grupe, ne mora da igra, a SYSTEM_ADMIN i bez članstva. Svi igrači moraju biti članovi grupe. "
 					+ "Oblik rezultata zavisi od sporta: SETS šalje setScores, POINTS score, a OUTCOME outcome. "
 					+ "Pobednika, a za SETS i POINTS i outcome, određuje sistem. "
 					+ "ID-jevi u primerima su MariaDB ID-jevi; za MongoDB se zamenjuju hex ID-jevima.")
@@ -123,7 +123,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -132,13 +132,13 @@ public class MatchController
 	public MatchResponse create(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @RequestBody @Valid final MatchRequest request)
 	{
-		return _matchMapper.toResponse(_matchService.create(_matchMapper.toModel(request), principal.getUser().getId()));
+		return _matchMapper.toResponse(_matchService.create(_matchMapper.toModel(request), principal.getUser()));
 	}
 
 	@PutMapping("/{id}")
-	@Operation(summary = "Izmena meča (učesnik meča ili GROUP_ADMIN)",
+	@Operation(summary = "Izmena meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
 			description = "Telo i provere rezultata su isti kao kod unosa. Meč ne može da se premesti u drugu grupu; sport "
-					+ "može da se promeni, ali oblik rezultata mora da odgovara novom sportu. SYSTEM_ADMIN nema posebna prava.")
+					+ "može da se promeni, ali oblik rezultata mora da odgovara novom sportu. Učesnik meča koji nije GROUP_ADMIN ne može da ga menja.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
 			@ExampleObject(name = "Tenis (SETS)", value = SETS_EXAMPLE),
 			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
@@ -148,7 +148,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije učesnik meča ni GROUP_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -159,24 +159,24 @@ public class MatchController
 	                            @RequestBody @Valid final MatchRequest request)
 	{
 		return _matchMapper.toResponse(
-				_matchService.update(id, _matchMapper.toModel(request), principal.getUser().getId()));
+				_matchService.update(id, _matchMapper.toModel(request), principal.getUser()));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Brisanje meča (učesnik meča ili GROUP_ADMIN)",
-			description = "Učesnik može da obriše meč i ako je u međuvremenu napustio grupu.")
+	@Operation(summary = "Brisanje meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
+			description = "Učesnik meča koji nije GROUP_ADMIN ne može da ga obriše.")
 	@ApiResponse(responseCode = "204", description = "Meč je obrisan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije učesnik meča ni GROUP_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public void delete(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{
-		_matchService.delete(id, principal.getUser().getId());
+		_matchService.delete(id, principal.getUser());
 	}
 }

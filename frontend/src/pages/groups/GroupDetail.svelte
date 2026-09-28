@@ -22,6 +22,7 @@
     import type {MatchResponse} from '../../lib/types/match.types';
     import type {SportResponse} from '../../lib/types/sport.types';
     import type {RankingEntryResponse} from '../../lib/types/stats.types';
+    import {isSystemAdmin} from '../../lib/types/user.types';
     import {formatDate} from '../../lib/utils/date';
     import {queryParams, withQuery} from '../../lib/utils/query';
 
@@ -66,6 +67,7 @@
 
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
+    const systemAdmin = $derived(isSystemAdmin($authStore.user));
 
     // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3 → /groups/5),
     // pa se tada sve vraća na početak, da dugmad nikad ne rade nad grupom koja nije prikazana
@@ -194,7 +196,8 @@
             subtitle={group?.description ?? (group ? 'No description.' : undefined)}>
     {#snippet actions()}
         {#if group}
-            {#if group.myRole}
+            <!-- Meč unosi član grupe, a SYSTEM_ADMIN i bez članstva -->
+            {#if group.myRole || systemAdmin}
                 <a class="btn btn-light" href="#/matches/new?groupId={group.id}"><i class="bi bi-plus-lg me-1"></i>Record match</a>
             {/if}
             {#if isAdmin}

@@ -20,6 +20,11 @@ export interface ChangePasswordRequest {
     newPassword: string;
 }
 
+// Uloga iz /users/me; služi samo za prikaz, backend svaku radnju proverava sam
+export function isSystemAdmin(user: UserDto | null | undefined): boolean {
+    return user?.roles.includes('SYSTEM_ADMIN') ?? false;
+}
+
 // Inicijali za avatar; ime i prezime nisu obavezni, pa je rezerva prvo slovo username-a
 export function userInitials(user: UserDto): string {
     return ((user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0]).toUpperCase();

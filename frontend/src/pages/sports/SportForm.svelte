@@ -30,6 +30,9 @@
     let pointsForDraw = $state(1);
     let pointsForLoss = $state(0);
 
+    // Pojedinačni sport uvek ima tačno jednog igrača po strani (backend isto proverava), pa su ta polja tada zaključana
+    const isIndividual = $derived(type === 'INDIVIDUAL');
+
     let loadingData = $state(false);
     let loadFailed = $state(false);
     let saving = $state(false);
@@ -66,6 +69,11 @@
         } finally {
             if (id === editId) loadingData = false;
         }
+    }
+
+    function useSinglePlayer() {
+        minPlayersPerSide = 1;
+        maxPlayersPerSide = 1;
     }
 
     async function handleSubmit(e: SubmitEvent) {
@@ -141,7 +149,7 @@
                             <fieldset class="mb-3">
                                 <legend class="form-label fs-6">Type</legend>
                                 <div class="btn-group w-100">
-                                    <input id="type-individual" class="btn-check" type="radio" value="INDIVIDUAL" bind:group={type}/>
+                                    <input id="type-individual" class="btn-check" type="radio" value="INDIVIDUAL" bind:group={type} onchange={useSinglePlayer}/>
                                     <label class="btn btn-outline-primary" for="type-individual">
                                         <i class="bi bi-person-fill me-1"></i>Individual
                                     </label>
@@ -172,16 +180,15 @@
                             <i class="bi bi-sliders me-2 text-primary"></i>Rules
                         </div>
                         <div class="card-body">
-                            <!-- max ne sme biti manji od min; browser to proverava preko min atributa, backend vraća 422 -->
-                            <div class="row g-3 mb-3">
+                            <!-- max ne sme biti manji od min; browser to proverava preko min atributa, backend vraća 422 -->                            <div class="row g-3 mb-3">
                                 <div class="col-sm-6">
                                     <label class="form-label" for="minPlayers">Min players per side</label>
-                                    <input id="minPlayers" type="number" class="form-control" min="1" bind:value={minPlayersPerSide} required/>
+                                    <input id="minPlayers" type="number" class="form-control" min="1" bind:value={minPlayersPerSide} disabled={isIndividual} required/>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="form-label" for="maxPlayers">Max players per side <span class="text-muted small">(optional)</span></label>
-                                    <input id="maxPlayers" type="number" class="form-control" min={minPlayersPerSide || 1} bind:value={maxPlayersPerSide}/>
-                                    <div class="form-text">Leave empty for no upper limit.</div>
+                                    <input id="maxPlayers" type="number" class="form-control" min={minPlayersPerSide || 1} bind:value={maxPlayersPerSide} disabled={isIndividual}/>
+                                    <div class="form-text">{isIndividual ? 'An individual sport has exactly 1 player per side.' : 'Leave empty for no upper limit.'}</div>
                                 </div>
                             </div>
 

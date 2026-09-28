@@ -152,13 +152,27 @@ class SportServiceTest
 	@Test
 	void shouldThrowInvalidOperationWhenMaxPlayersIsLessThanMin()
 	{
-		final Sport input = TestData.SPORTS.newTenis();
-		input.getRules().setMinPlayersPerSide(2);
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.empty());
+		final Sport input = TestData.SPORTS.newFudbal();
+		input.getRules().setMinPlayersPerSide(12);
+		when(_sportStorage.findByName("Fudbal")).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> _sportService.create(input))
 				.isInstanceOf(InvalidOperationException.class)
 				.hasMessage("maxPlayersPerSide cannot be less than minPlayersPerSide");
+
+		verify(_sportStorage, never()).save(any());
+	}
+
+	@Test
+	void shouldThrowInvalidOperationWhenIndividualSportAllowsMoreThanOnePlayer()
+	{
+		final Sport input = TestData.SPORTS.newTenis();
+		input.getRules().setMaxPlayersPerSide(2);
+		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> _sportService.create(input))
+				.isInstanceOf(InvalidOperationException.class)
+				.hasMessage("An individual sport must have exactly 1 player per side");
 
 		verify(_sportStorage, never()).save(any());
 	}

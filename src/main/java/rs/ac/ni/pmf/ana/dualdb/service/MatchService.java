@@ -71,14 +71,14 @@ public class MatchService
 	}
 
 	@Transactional
-	public MatchDetails create(final Match match, final String currentUserId)
+	public MatchDetails create(final Match match, final User currentUser)
 	{
 		final Sport sport = loadActiveSport(match.getSportId());
 		requireGroupExists(match.getGroupId());
 
 		final Set<String> memberIds = _membershipService.memberIds(match.getGroupId());
 
-		if (!memberIds.contains(currentUserId))
+		if (!isSystemAdmin(currentUser) && !memberIds.contains(currentUser.getId()))
 		{
 			throw new AccessDeniedException("Only a member of the group can record a match");
 		}
@@ -86,7 +86,7 @@ public class MatchService
 		validateSides(sport, match, memberIds);
 		_resultResolver.applyResult(sport, match);
 
-		match.setRecordedBy(currentUserId);
+		match.setRecordedBy(currentUser.getId());
 		final Match saved = matchStorage().save(match);
 
 		log.info("Match {} created in group {}", saved.getId(), saved.getGroupId());
@@ -94,10 +94,10 @@ public class MatchService
 	}
 
 	@Transactional
-	public MatchDetails update(final String id, final Match match, final String currentUserId)
+	public MatchDetails update(final String id, final Match match, final User currentUser)
 	{
 		final Match existing = loadMatch(id);
-		requireParticipantOrGroupAdmin(existing, currentUserId);
+		requireGroupAdmin(existing, currentUser);
 
 		if (!existing.getGroupId().equals(match.getGroupId()))
 		{
@@ -119,26 +119,28 @@ public class MatchService
 	}
 
 	@Transactional
-	public void delete(final String id, final String currentUserId)
+	public void delete(final String id, final User currentUser)
 	{
 		final Match existing = loadMatch(id);
-		requireParticipantOrGroupAdmin(existing, currentUserId);
+		requireGroupAdmin(existing, currentUser);
 
 		matchStorage().deleteById(id);
 
 		log.info("Match {} deleted", id);
 	}
 
-	private void requireParticipantOrGroupAdmin(final Match match, final String currentUserId)
+	private void requireGroupAdmin(final Match match, final User currentUser)
 	{
-		final boolean participant = match.getSides().stream()
-				.flatMap(side -> side.getPlayerIds().stream())
-				.anyMatch(currentUserId::equals);
-
-		if (!participant && _membershipService.roleOf(match.getGroupId(), currentUserId) != GroupRole.GROUP_ADMIN)
+		if (!isSystemAdmin(currentUser)
+				&& _membershipService.roleOf(match.getGroupId(), currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
-			throw new AccessDeniedException("Only a participant of the match or a group admin can change it");
+			throw new AccessDeniedException("Only a group admin can edit or delete a match");
 		}
+	}
+
+	private boolean isSystemAdmin(final User user)
+	{
+		return user.getRoles().contains("SYSTEM_ADMIN");
 	}
 
 	private void validateSides(final Sport sport, final Match match, final Set<String> memberIds)
