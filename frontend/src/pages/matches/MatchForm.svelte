@@ -1,7 +1,7 @@
 <script lang="ts">
     import {push} from 'svelte-spa-router';
     import {createMatch, getMatch, updateMatch} from '../../lib/api/matches.api';
-    import {getAllGroups, getMembers} from '../../lib/api/groups.api';
+    import {getAllGroups, getGroup, getMembers} from '../../lib/api/groups.api';
     import {getAllSports} from '../../lib/api/sports.api';
     import {authStore} from '../../lib/auth/auth.store';
     import PageHeader from '../../lib/components/PageHeader.svelte';
@@ -14,6 +14,7 @@
         SCORING_MODE_LABELS,
         type SportResponse
     } from '../../lib/types/sport.types';
+    import {isSystemAdmin} from '../../lib/types/user.types';
     import {toDateTimeInput} from '../../lib/utils/date';
     import {queryParams} from '../../lib/utils/query';
 
@@ -57,6 +58,7 @@
     let maxPlayedAt = $state(toDateTimeInput(new Date()));
 
     const myId = $derived($authStore.user?.id);
+    const systemAdmin = $derived(isSystemAdmin($authStore.user));
     const sport = $derived(sports.find(s => s.id === sportId) ?? null);
     const maxPlayers = $derived(sport?.rules.maxPlayersPerSide ?? null);
     const bestOf = $derived(sport?.rules.bestOf ?? null);
@@ -90,6 +92,9 @@
         init(editId, queryGroupId);
     });
 
+    // Odgovor koji stigne posle novijeg učitavanja (drugi meč ili druga grupa iz adrese) se odbacuje
+    let lastInit = 0;
+
     function reset() {
         groupId = '';
         sportId = '';
@@ -104,6 +109,7 @@
     }
 
     async function init(id: string | null, fromUrl: string | null) {
+        const request = ++lastInit;
         reset();
         loading = true;
         loadFailed = false;
@@ -111,12 +117,20 @@
         try {
             if (id) {
                 const [match, allSports] = await Promise.all([getMatch(id), getAllSports()]);
-                if (id !== editId) return;
+                // Menjati meč sme admin grupe (ili SYSTEM_ADMIN); backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud
+                const allowed = systemAdmin || (await getGroup(match.group.id)).myRole === 'GROUP_ADMIN';
+                if (request !== lastInit) return;
+                if (!allowed) {
+                    error = 'Only a group admin can edit a match';
+                    loadFailed = true;
+                    return;
+                }
                 sports = allSports;
                 fillFrom(match);
             } else {
-                const [myGroups, allSports] = await Promise.all([getAllGroups({mine: true}), getAllSports()]);
-                if (editId !== null || fromUrl !== queryGroupId) return;
+                // Član bira među svojim grupama, a SYSTEM_ADMIN može da unese meč u bilo koju grupu
+                const [myGroups, allSports] = await Promise.all([getAllGroups({mine: !systemAdmin}), getAllSports()]);
+                if (request !== lastInit) return;
                 groups = myGroups;
                 sports = allSports;
                 // Grupa iz adrese, a ako je korisnik u samo jednoj grupi, ta
@@ -124,11 +138,11 @@
                 if (preselected) selectGroup(preselected.id);
             }
         } catch (e) {
-            if (id !== editId) return;
+            if (request !== lastInit) return;
             error = e instanceof Error ? e.message : 'Failed to load match';
             loadFailed = true;
         } finally {
-            if (id === editId) loading = false;
+            if (request === lastInit) loading = false;
         }
     }
 
@@ -167,9 +181,11 @@
     }
 
     // Nova grupa znači nove igrače; prijavljeni korisnik je unapred na prvoj strani, jer najčešće unosi svoj meč
+    // (SYSTEM_ADMIN samo ako je član te grupe)
     function selectGroup(id: string) {
         groupId = id;
-        players = [myId ? [myId] : [], []];
+        const member = groups.some(g => g.id === id && g.myRole);
+        players = [member && myId ? [myId] : [], []];
     }
 
     // Unos rezultata zavisi od načina bodovanja, pa se posle promene sporta prazni; višak igrača se skida
@@ -392,7 +408,7 @@
                                         <div class="col text-truncate">{sideLabel(1)}</div>
                                         <div class="col-auto"><span class="btn btn-sm invisible"><i class="bi bi-x-lg"></i></span></div>
                                     </div>
-                                    {#each setRows as row, i (i)}
+                                    {#each setRows as row, i}
                                         <div class="row g-2 align-items-center mb-2">
                                             <div class="col-2 text-muted small text-nowrap">Set {i + 1}</div>
                                             <div class="col">

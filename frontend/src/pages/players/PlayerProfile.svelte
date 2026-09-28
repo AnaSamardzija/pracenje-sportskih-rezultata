@@ -20,7 +20,9 @@
     let stats = $state<PlayerStatsResponse | null>(null);
     let username = $state('');
     let loading = $state(true);
-    let error = $state<string | null>(null);
+    // Statistika i istorija imaju svaka svoju grešku: nova statistika (drugi sport) briše samo svoju
+    let statsError = $state<string | null>(null);
+    let matchesError = $state<string | null>(null);
 
     const isMe = $derived(playerId === $authStore.user?.id);
 
@@ -45,7 +47,7 @@
         stats = null;
         username = '';
         loading = true;
-        error = null;
+        matchesError = null;
         loadMatches(id);
     });
 
@@ -58,7 +60,7 @@
             const result = await getAllMatches({playerId: id});
             if (id === playerId) matches = result;
         } catch (e) {
-            if (id === playerId) error = e instanceof Error ? e.message : 'Failed to load matches';
+            if (id === playerId) matchesError = e instanceof Error ? e.message : 'Failed to load matches';
         } finally {
             if (id === playerId) loading = false;
         }
@@ -66,6 +68,7 @@
 
     // Odgovor za igrača ili sport koji više nisu u adresi se odbacuje
     async function loadStats(id: string, sport: string) {
+        statsError = null;
         try {
             const result = await getUserStats(id, sport || undefined);
             if (id !== playerId || sport !== sportId) return;
@@ -73,7 +76,8 @@
             username = result.username;
         } catch (e) {
             if (id !== playerId || sport !== sportId) return;
-            error = e instanceof Error ? e.message : 'Failed to load statistics';
+            stats = null;
+            statsError = e instanceof Error ? e.message : 'Failed to load statistics';
         }
     }
 
@@ -94,9 +98,10 @@
 </PageHeader>
 
 <div class="container pb-5 page-fade">
-    {#if error}
-        <div class="alert alert-danger d-flex align-items-center page-header-pull">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>{error}
+    <!-- Kartice statistike delimično prelaze preko trake zaglavlja, kao na početnoj; greška stoji na njihovom mestu -->
+    {#if statsError}
+        <div class="alert alert-danger d-flex align-items-center page-header-pull mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{statsError}
         </div>
     {:else if !stats}
         <div class="card page-header-pull">
@@ -105,11 +110,13 @@
             </div>
         </div>
     {:else}
-        <!-- Kartice statistike delimično prelaze preko trake zaglavlja, kao na početnoj -->
         <div class="page-header-pull mb-4">
             <StatCards {stats} scope={sportName ? `in ${sportName}` : 'across all sports'}/>
         </div>
+    {/if}
 
+    <!-- Kad statistika za izabrani sport ne uspe, izbor sporta i istorija ostaju, da se sport može promeniti -->
+    {#if stats || sportId}
         <div class="row g-4">
             <!-- Na telefonu izbor sporta ide iznad istorije, a na velikom ekranu u bočnu kolonu -->
             <div class="col-lg-4 order-lg-last">
@@ -141,6 +148,12 @@
                     {#if loading}
                         <div class="card-body text-center py-5">
                             <div class="spinner-border text-primary"></div>
+                        </div>
+                    {:else if matchesError}
+                        <div class="card-body">
+                            <div class="alert alert-danger d-flex align-items-center mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>{matchesError}
+                            </div>
                         </div>
                     {:else if shownMatches.length === 0}
                         <div class="card-body text-center text-muted py-5">

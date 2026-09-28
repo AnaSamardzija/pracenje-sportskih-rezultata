@@ -17,7 +17,7 @@ export async function getMatch(id: string): Promise<MatchResponse> {
     return res.json();
 }
 
-// Meč unosi bilo koji član grupe; svi igrači moraju biti aktivni članovi iste grupe
+// Meč unosi bilo koji član grupe (SYSTEM_ADMIN i bez članstva); svi igrači moraju biti aktivni članovi iste grupe
 export async function createMatch(data: MatchRequest): Promise<MatchResponse> {
     const res = await apiFetch(BASE, {
         method: 'POST',
@@ -27,7 +27,7 @@ export async function createMatch(data: MatchRequest): Promise<MatchResponse> {
     return res.json();
 }
 
-// Samo učesnik meča ili GROUP_ADMIN; grupa meča se ne može promeniti (422)
+// Samo GROUP_ADMIN grupe ili SYSTEM_ADMIN; grupa meča se ne može promeniti (422)
 export async function updateMatch(id: string, data: MatchRequest): Promise<MatchResponse> {
     const res = await apiFetch(`${BASE}/${id}`, {
         method: 'PUT',
@@ -37,7 +37,7 @@ export async function updateMatch(id: string, data: MatchRequest): Promise<Match
     return res.json();
 }
 
-// Samo učesnik meča ili GROUP_ADMIN grupe (ostali dobijaju 403)
+// Samo GROUP_ADMIN grupe ili SYSTEM_ADMIN (ostali dobijaju 403)
 export async function deleteMatch(id: string): Promise<void> {
     const res = await apiFetch(`${BASE}/${id}`, {method: 'DELETE'});
     if (!res.ok) throw new Error(await errorMessage(res, 'Failed to delete match'));

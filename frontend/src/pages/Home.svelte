@@ -4,13 +4,13 @@
     import {getAllMatches} from '../lib/api/matches.api';
     import {getAllGroups} from '../lib/api/groups.api';
     import {authStore} from '../lib/auth/auth.store';
+    import MatchItem from '../lib/components/MatchItem.svelte';
     import PageHeader from '../lib/components/PageHeader.svelte';
     import StatCards from '../lib/components/StatCards.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
     import {GROUP_ROLE_LABELS, type GroupResponse} from '../lib/types/group.types';
-    import {formatScore, OUTCOME_BADGES, type MatchResponse} from '../lib/types/match.types';
+    import type {MatchResponse} from '../lib/types/match.types';
     import type {PlayerStatsResponse} from '../lib/types/stats.types';
-    import {formatDate} from '../lib/utils/date';
 
     const RECENT_MATCHES = 5;
 
@@ -52,17 +52,6 @@
             loading = false;
         }
     });
-
-    // Meč iz ugla prijavljenog korisnika: njegova strana, protivnici i rezultat sa njegovim brojem prvim
-    function view(match: MatchResponse) {
-        const mine = match.sides.find(s => s.players.some(p => p.id === user?.id)) ?? match.sides[0];
-        const others = match.sides.filter(s => s !== mine);
-        return {
-            outcome: OUTCOME_BADGES[mine.outcome],
-            opponents: others.flatMap(s => s.players.map(p => p.username)).join(', '),
-            score: others.length === 1 ? formatScore(mine, others[0]) : ''
-        };
-    }
 </script>
 
 <PageHeader title={greeting} icon="bi-house" {subtitle} overlap/>
@@ -136,18 +125,9 @@
                             </div>
                         {:else}
                             <div class="list-group list-group-flush">
+                                <!-- Značka W / D / L je iz ugla prijavljenog korisnika, kao na profilu igrača -->
                                 {#each matches as match (match.id)}
-                                    {@const v = view(match)}
-                                    <a class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" href="#/matches/{match.id}">
-                                        <span class="badge outcome-badge {v.outcome.css}">{v.outcome.letter}</span>
-                                        <div class="flex-grow-1 overflow-hidden">
-                                            <div class="fw-semibold text-truncate">vs {v.opponents}</div>
-                                            <div class="text-muted small text-truncate">{match.sport.name} · {match.group.name} · {formatDate(match.playedAt)}</div>
-                                        </div>
-                                        {#if v.score}
-                                            <span class="fw-semibold text-nowrap">{v.score}</span>
-                                        {/if}
-                                    </a>
+                                    <MatchItem {match} playerId={user?.id}/>
                                 {/each}
                             </div>
                         {/if}

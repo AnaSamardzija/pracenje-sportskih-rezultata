@@ -19,6 +19,8 @@
     let sports = $state<SportResponse[]>([]);
     let loading = $state(true);
     let error = $state<string | null>(null);
+    // Greška pri učitavanju padajućih lista je odvojena, da je ne obriše sledeće učitavanje liste
+    let filtersError = $state<string | null>(null);
 
     // Filteri stoje u adresi (npr. #/matches?groupId=3&mine=true), pa druga stranica može da otvori već filtriranu listu,
     // a osvežavanje i dugme nazad ih čuvaju
@@ -32,12 +34,15 @@
     });
     const hasFilters = $derived(filters.groupId !== '' || filters.sportId !== '' || filters.mine);
 
+    // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira, pa ga i padajuća lista mora pokazati
+    const deletedSport = $derived(filters.sportId !== '' && sports.length > 0 && !sports.some(s => s.id === filters.sportId));
+
     // Grupe i sportovi služe samo za padajuće liste filtera
     onMount(async () => {
         try {
             [groups, sports] = await Promise.all([getAllGroups(), getAllSports()]);
         } catch (e) {
-            error = e instanceof Error ? e.message : 'Failed to load filters';
+            filtersError = e instanceof Error ? e.message : 'Failed to load filters';
         }
     });
 
@@ -103,6 +108,9 @@
                     {/if}
                 </div>
                 <div class="card-body">
+                    {#if filtersError}
+                        <div class="alert alert-danger py-2 small">{filtersError}</div>
+                    {/if}
                     <div class="mb-3">
                         <label class="form-label" for="filterGroup">Group</label>
                         <select id="filterGroup"
@@ -123,6 +131,9 @@
                             {#each sports as sport (sport.id)}
                                 <option value={sport.id} selected={filters.sportId === sport.id}>{sport.name}</option>
                             {/each}
+                            {#if deletedSport}
+                                <option value={filters.sportId} selected>Deleted sport</option>
+                            {/if}
                         </select>
                     </div>
                     <div class="form-check form-switch">

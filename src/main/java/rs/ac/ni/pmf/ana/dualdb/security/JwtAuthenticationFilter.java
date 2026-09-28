@@ -1,0 +1,83 @@
+package rs.ac.ni.pmf.ana.dualdb.security;
+
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
+import org.slf4j.MDC;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+import rs.ac.ni.pmf.ana.dualdb.data.StorageType;
+
+import java.io.IOException;
+
+@RequiredArgsConstructor
+@NullMarked
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter
+{
+	private final JwtUtil _jwtUtil;
+	private final StorageSelectionUserDetailsService _userDetailsService;
+
+	@Override
+	protected void doFilterInternal(
+			final HttpServletRequest request,
+			final HttpServletResponse response,
+			final FilterChain filterChain) throws ServletException, IOException
+	{
+		final String authorizationHeader = request.getHeader("Authorization");
+
+		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer "))
+		{
+			// Istekao ili pokvaren token (JwtException), token za korisnika koji više ne postoji
+			// (UsernameNotFoundException) i nepoznata baza (IllegalArgumentException) ne smeju da obore
+			// zahtev sa 500: zahtev samo nastavlja kao neprijavljen, pa ga Spring odbije kroz
+			// RestAuthenticationEntryPoint sa 401. Isto važi i za token deaktiviranog korisnika.
+			try
+			{
+				final String jwt = authorizationHeader.substring(7);
+				final String username = _jwtUtil.extractUsername(jwt);
+
+				if (username != null && SecurityContextHolder.getContext().getAuthentication() == null)
+				{
+					final StorageType storageType = _jwtUtil.extractStorageType(jwt);
+					final UserDetails userDetails = _userDetailsService.loadUserByUsername(username, storageType);
+
+					if (userDetails.isEnabled() && _jwtUtil.validateToken(jwt, storageType, userDetails))
+					{
+						final UsernamePasswordAuthenticationToken authToken =
+								new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+						authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+						SecurityContextHolder.getContext().setAuthentication(authToken);
+
+						MDC.put("username", userDetails.getUsername());
+						MDC.put("storageType", storageType.name());
+					}
+				}
+			}
+			catch (final JwtException | AuthenticationException | IllegalArgumentException ex)
+			{
+				log.debug("Rejected JWT: {}", ex.getMessage());
+				SecurityContextHolder.clearContext();
+			}
+		}
+
+		try
+		{
+			filterChain.doFilter(request, response);
+		}
+		finally
+		{
+			MDC.remove("username");
+			MDC.remove("storageType");
+		}
+	}
+}

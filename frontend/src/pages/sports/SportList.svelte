@@ -1,7 +1,7 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import {deleteSport, getAllSports, restoreSport} from '../../lib/api/sports.api';
-    import {hasRole} from '../../lib/auth/auth.guard';
+    import {authStore} from '../../lib/auth/auth.store';
     import ConfirmModal from '../../lib/components/ConfirmModal.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
     import {
@@ -13,9 +13,10 @@
         SPORT_TYPE_LABELS,
         type SportResponse
     } from '../../lib/types/sport.types';
+    import {isSystemAdmin} from '../../lib/types/user.types';
 
     // Katalog vide svi; dodavanje, izmenu, brisanje i vraćanje obrisanih samo SYSTEM_ADMIN
-    const isAdmin = hasRole('SYSTEM_ADMIN');
+    const isAdmin = $derived(isSystemAdmin($authStore.user));
 
     let sports = $state<SportResponse[]>([]);
     let loading = $state(true);

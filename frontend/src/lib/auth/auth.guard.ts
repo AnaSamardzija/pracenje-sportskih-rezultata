@@ -1,5 +1,6 @@
 import {get} from 'svelte/store';
 import {authStore} from './auth.store';
+import {isSystemAdmin} from '../types/user.types';
 
 export function requireAuth(): boolean {
     if (!get(authStore).accessToken) {
@@ -19,14 +20,9 @@ export function requireGuest(): boolean {
     return true;
 }
 
-// Uloge su iz /users/me učitanog pri prijavi; služe samo za prikaz, backend svaku rutu ipak proverava sam
-export function hasRole(role: string): boolean {
-    return get(authStore).user?.roles.includes(role) ?? false;
-}
-
 // Forme sporta: ide posle requireAuth, pa je korisnik ovde već prijavljen
 export function requireSystemAdmin(): boolean {
-    if (!hasRole('SYSTEM_ADMIN')) {
+    if (!isSystemAdmin(get(authStore).user)) {
         window.location.href = '#/sports';
         return false;
     }

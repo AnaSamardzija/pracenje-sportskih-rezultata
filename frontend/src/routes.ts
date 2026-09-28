@@ -1,3 +1,4 @@
+import type {Component} from 'svelte';
 import {wrap} from 'svelte-spa-router/wrap';
 import Login from './pages/Login.svelte';
 import Register from './pages/Register.svelte';
@@ -16,9 +17,9 @@ import PlayerProfile from './pages/players/PlayerProfile.svelte';
 import NotFound from './pages/NotFound.svelte';
 import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
 
-const guarded = (component: any) => wrap({component, conditions: [requireAuth]});
-const guestOnly = (component: any) => wrap({component, conditions: [requireGuest]});
-const adminOnly = (component: any) => wrap({component, conditions: [requireAuth, requireSystemAdmin]});
+const guarded = (component: Component) => wrap({component, conditions: [requireAuth]});
+const guestOnly = (component: Component) => wrap({component, conditions: [requireGuest]});
+const adminOnly = (component: Component) => wrap({component, conditions: [requireAuth, requireSystemAdmin]});
 
 export const routes = {
     '/login': guestOnly(Login),

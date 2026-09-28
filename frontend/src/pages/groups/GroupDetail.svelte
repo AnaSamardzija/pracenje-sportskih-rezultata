@@ -22,6 +22,7 @@
     import type {MatchResponse} from '../../lib/types/match.types';
     import type {SportResponse} from '../../lib/types/sport.types';
     import type {RankingEntryResponse} from '../../lib/types/stats.types';
+    import {isSystemAdmin} from '../../lib/types/user.types';
     import {formatDate} from '../../lib/utils/date';
     import {queryParams, withQuery} from '../../lib/utils/query';
 
@@ -63,9 +64,17 @@
     let ranking = $state<RankingEntryResponse[]>([]);
     let sports = $state<SportResponse[]>([]);
     let tabLoading = $state(false);
+    // Greška taba stoji u samom tabu, pa je sledeće uspešno učitavanje briše, a ne dira poruke o radnjama nad grupom
+    let tabError = $state<string | null>(null);
 
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
+    const systemAdmin = $derived(isSystemAdmin($authStore.user));
+    // Grupom (izmena, brisanje, članovi) upravlja njen admin, a SYSTEM_ADMIN svakom grupom
+    const canManage = $derived(isAdmin || systemAdmin);
+
+    // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira rang-listu, pa ga i padajuća lista mora pokazati
+    const deletedRankingSport = $derived(rankingSportId !== '' && sports.length > 0 && !sports.some(s => s.id === rankingSportId));
 
     // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3 → /groups/5),
     // pa se tada sve vraća na početak, da dugmad nikad ne rade nad grupom koja nije prikazana
@@ -105,11 +114,12 @@
     async function loadTab<T>(request: () => Promise<T>, apply: (result: T) => void) {
         const current = ++lastTabRequest;
         tabLoading = true;
+        tabError = null;
         try {
             const result = await request();
             if (current === lastTabRequest) apply(result);
         } catch (e) {
-            if (current === lastTabRequest) error = e instanceof Error ? e.message : 'Failed to load';
+            if (current === lastTabRequest) tabError = e instanceof Error ? e.message : 'Failed to load';
         } finally {
             if (current === lastTabRequest) tabLoading = false;
         }
@@ -163,11 +173,14 @@
 
     async function handleDelete() {
         error = null;
+        busy = true;
         try {
             await deleteGroup(groupId);
             push('/groups');
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to delete group';
+        } finally {
+            busy = false;
         }
     }
 
@@ -194,10 +207,11 @@
             subtitle={group?.description ?? (group ? 'No description.' : undefined)}>
     {#snippet actions()}
         {#if group}
-            {#if group.myRole}
+            <!-- Meč unosi član grupe, a SYSTEM_ADMIN i bez članstva -->
+            {#if group.myRole || systemAdmin}
                 <a class="btn btn-light" href="#/matches/new?groupId={group.id}"><i class="bi bi-plus-lg me-1"></i>Record match</a>
             {/if}
-            {#if isAdmin}
+            {#if canManage}
                 <a class="btn btn-light" href="#/groups/{group.id}/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
                 <button class="btn btn-outline-light" disabled={busy} onclick={() => showDelete = true}>
                     <i class="bi bi-trash me-1"></i>Delete
@@ -254,6 +268,9 @@
                                 {#each sports as sport (sport.id)}
                                     <option value={sport.id} selected={rankingSportId === sport.id}>{sport.name}</option>
                                 {/each}
+                                {#if deletedRankingSport}
+                                    <option value={rankingSportId} selected>Deleted sport</option>
+                                {/if}
                             </select>
                         {:else if tab === 'matches'}
                             <a class="small fw-normal text-decoration-none" href="#/matches?groupId={group.id}">Filter all matches <i class="bi bi-arrow-right"></i></a>
@@ -263,6 +280,12 @@
                     {#if tab !== 'members' && tabLoading}
                         <div class="card-body text-center py-5">
                             <div class="spinner-border text-primary"></div>
+                        </div>
+                    {:else if tab !== 'members' && tabError}
+                        <div class="card-body">
+                            <div class="alert alert-danger d-flex align-items-center mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>{tabError}
+                            </div>
                         </div>
                     {:else if tab === 'matches'}
                         {#if matches.length === 0}
@@ -294,7 +317,7 @@
                                     <th>Player</th>
                                     <th>Role</th>
                                     <th class="d-none d-sm-table-cell">Joined</th>
-                                    {#if isAdmin}
+                                    {#if canManage}
                                         <th><span class="visually-hidden">Actions</span></th>
                                     {/if}
                                 </tr>
@@ -322,7 +345,7 @@
                                             {/if}
                                         </td>
                                         <td class="d-none d-sm-table-cell text-muted small">{formatDate(member.joinedAt)}</td>
-                                        {#if isAdmin}
+                                        {#if canManage}
                                             <td class="text-end">
                                                 {#if member.userId !== myId}
                                                     <button class="btn btn-sm btn-outline-danger"
@@ -364,7 +387,7 @@
                     </ul>
                 </div>
 
-                {#if isAdmin}
+                {#if canManage}
                     <div class="card">
                         <div class="card-header">
                             <i class="bi bi-person-plus me-2 text-primary"></i>Add member

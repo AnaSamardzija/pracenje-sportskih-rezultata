@@ -13,10 +13,20 @@
         confirmLabel?: string;
         onConfirm: () => void;
     } = $props();
+
+    // Kao Bootstrap modal: pri otvaranju dobija fokus, pa se zatvara tasterom Escape, a i klikom na tamnu pozadinu oko prozora
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === 'Escape') show = false;
+    }
+
+    function handleBackdropClick(e: MouseEvent) {
+        if (e.target === e.currentTarget) show = false;
+    }
 </script>
 
 {#if show}
-    <div class="modal d-block modal-app" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal d-block modal-app" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
+         onclick={handleBackdropClick} onkeydown={handleKeydown} {@attach node => node.focus()}>
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
