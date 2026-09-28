@@ -28,4 +28,9 @@ public class User implements DataModel
 	Set<String> roles = new HashSet<>();
 	@Builder.Default
 	Set<String> permissions = new HashSet<>();
+
+	public boolean isSystemAdmin()
+	{
+		return roles.contains("SYSTEM_ADMIN");
+	}
 }

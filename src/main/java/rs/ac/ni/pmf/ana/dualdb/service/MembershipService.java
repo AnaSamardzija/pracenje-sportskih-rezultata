@@ -66,10 +66,10 @@ public class MembershipService
 		log.info("User {} joined group {}", userId, groupId);
 	}
 
-	public MemberView addMember(final String groupId, final String username, final String currentUserId)
+	public MemberView addMember(final String groupId, final String username, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUserId);
+		requireGroupAdmin(groupId, currentUser);
 
 		final User user = userStorage().findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
@@ -92,7 +92,7 @@ public class MembershipService
 
 		final Membership saved = membershipStorage().save(membership);
 
-		log.info("User {} added to group {} by {}", user.getId(), groupId, currentUserId);
+		log.info("User {} added to group {} by {}", user.getId(), groupId, currentUser.getId());
 
 		return MemberView.builder()
 				.userId(saved.getUserId())
@@ -172,17 +172,28 @@ public class MembershipService
 				.collect(Collectors.toList());
 	}
 
-	public void kick(final String groupId, final String targetUserId, final String currentUserId)
+	@Transactional
+	public void kick(final String groupId, final String targetUserId, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUserId);
+		requireGroupAdmin(groupId, currentUser);
 
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
 
-		if (membership.getUserId().equals(currentUserId))
+		if (membership.getUserId().equals(currentUser.getId()))
 		{
 			throw new InvalidOperationException("You cannot remove yourself from the group; use leave instead");
+		}
+
+		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+		{
+			final List<Membership> others = activeOthers(membership);
+
+			if (!others.isEmpty())
+			{
+				keepGroupAdmin(groupId, others);
+			}
 		}
 
 		membershipStorage().deleteById(membership.getId());
@@ -227,9 +238,9 @@ public class MembershipService
 				.collect(Collectors.toMap(Membership::getGroupId, Membership::getRoleInGroup));
 	}
 
-	public void requireGroupAdmin(final String groupId, final String userId)
+	public void requireGroupAdmin(final String groupId, final User currentUser)
 	{
-		if (roleOf(groupId, userId) != GroupRole.GROUP_ADMIN)
+		if (!currentUser.isSystemAdmin() && roleOf(groupId, currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
 			throw new AccessDeniedException("Only a group admin can perform this action");
 		}

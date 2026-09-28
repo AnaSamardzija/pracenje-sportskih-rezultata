@@ -70,6 +70,8 @@
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
     const systemAdmin = $derived(isSystemAdmin($authStore.user));
+    // Grupom (izmena, brisanje, članovi) upravlja njen admin, a SYSTEM_ADMIN svakom grupom
+    const canManage = $derived(isAdmin || systemAdmin);
 
     // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira rang-listu, pa ga i padajuća lista mora pokazati
     const deletedRankingSport = $derived(rankingSportId !== '' && sports.length > 0 && !sports.some(s => s.id === rankingSportId));
@@ -209,7 +211,7 @@
             {#if group.myRole || systemAdmin}
                 <a class="btn btn-light" href="#/matches/new?groupId={group.id}"><i class="bi bi-plus-lg me-1"></i>Record match</a>
             {/if}
-            {#if isAdmin}
+            {#if canManage}
                 <a class="btn btn-light" href="#/groups/{group.id}/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
                 <button class="btn btn-outline-light" disabled={busy} onclick={() => showDelete = true}>
                     <i class="bi bi-trash me-1"></i>Delete
@@ -315,7 +317,7 @@
                                     <th>Player</th>
                                     <th>Role</th>
                                     <th class="d-none d-sm-table-cell">Joined</th>
-                                    {#if isAdmin}
+                                    {#if canManage}
                                         <th><span class="visually-hidden">Actions</span></th>
                                     {/if}
                                 </tr>
@@ -343,7 +345,7 @@
                                             {/if}
                                         </td>
                                         <td class="d-none d-sm-table-cell text-muted small">{formatDate(member.joinedAt)}</td>
-                                        {#if isAdmin}
+                                        {#if canManage}
                                             <td class="text-end">
                                                 {#if member.userId !== myId}
                                                     <button class="btn btn-sm btn-outline-danger"
@@ -385,7 +387,7 @@
                     </ul>
                 </div>
 
-                {#if isAdmin}
+                {#if canManage}
                     <div class="card">
                         <div class="card-header">
                             <i class="bi bi-person-plus me-2 text-primary"></i>Add member

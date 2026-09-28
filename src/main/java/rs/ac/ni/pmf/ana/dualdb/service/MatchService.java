@@ -78,7 +78,7 @@ public class MatchService
 
 		final Set<String> memberIds = _membershipService.memberIds(match.getGroupId());
 
-		if (!isSystemAdmin(currentUser) && !memberIds.contains(currentUser.getId()))
+		if (!currentUser.isSystemAdmin() && !memberIds.contains(currentUser.getId()))
 		{
 			throw new AccessDeniedException("Only a member of the group can record a match");
 		}
@@ -131,16 +131,11 @@ public class MatchService
 
 	private void requireGroupAdmin(final Match match, final User currentUser)
 	{
-		if (!isSystemAdmin(currentUser)
+		if (!currentUser.isSystemAdmin()
 				&& _membershipService.roleOf(match.getGroupId(), currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
 			throw new AccessDeniedException("Only a group admin can edit or delete a match");
 		}
-	}
-
-	private boolean isSystemAdmin(final User user)
-	{
-		return user.getRoles().contains("SYSTEM_ADMIN");
 	}
 
 	private void validateSides(final Sport sport, final Match match, final Set<String> memberIds)

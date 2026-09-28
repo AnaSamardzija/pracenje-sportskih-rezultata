@@ -10,6 +10,7 @@ import rs.ac.ni.pmf.ana.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.ana.dualdb.model.Group;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupDetails;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupRole;
+import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
 import rs.ac.ni.pmf.ana.dualdb.storage.StorageResolver;
@@ -77,24 +78,24 @@ public class GroupService
 		return toDetails(saved, currentUserId);
 	}
 
-	public GroupDetails update(final String id, final Group group, final String currentUserId)
+	public GroupDetails update(final String id, final Group group, final User currentUser)
 	{
 		final Group existing = loadGroup(id);
-		_membershipService.requireGroupAdmin(id, currentUserId);
+		_membershipService.requireGroupAdmin(id, currentUser);
 
 		existing.setName(group.getName());
 		existing.setDescription(group.getDescription());
 		final Group saved = storage().save(existing);
 
 		log.info("Group {} '{}' updated", saved.getId(), saved.getName());
-		return toDetails(saved, currentUserId);
+		return toDetails(saved, currentUser.getId());
 	}
 
 	@Transactional
-	public void delete(final String id, final String currentUserId)
+	public void delete(final String id, final User currentUser)
 	{
 		final Group existing = loadGroup(id);
-		_membershipService.requireGroupAdmin(id, currentUserId);
+		_membershipService.requireGroupAdmin(id, currentUser);
 
 		if (_matchService.hasMatches(id))
 		{

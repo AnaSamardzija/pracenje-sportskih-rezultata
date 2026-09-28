@@ -89,14 +89,14 @@ public class GroupController
 	}
 
 	@PutMapping("/{id}")
-	@Operation(summary = "Izmena grupe (samo GROUP_ADMIN)",
-			description = "SYSTEM_ADMIN nema posebna prava nad grupama.")
+	@Operation(summary = "Izmena grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
+			description = "SYSTEM_ADMIN sme da menja i grupu čiji nije član.")
 	@ApiResponse(responseCode = "200", description = "Grupa je izmenjena")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -104,19 +104,19 @@ public class GroupController
 	                            @PathVariable final String id,
 	                            @RequestBody @Valid final GroupRequest request)
 	{
-		return _groupMapper.toResponse(_groupService.update(id, _groupMapper.toModel(request), principal.getUser().getId()));
+		return _groupMapper.toResponse(_groupService.update(id, _groupMapper.toModel(request), principal.getUser()));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Brisanje grupe (samo GROUP_ADMIN)",
+	@Operation(summary = "Brisanje grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
 			description = "Brišu se i sva članstva. Grupa koja ima unete mečeve ne može da se obriše.")
 	@ApiResponse(responseCode = "204", description = "Grupa je obrisana")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -124,7 +124,7 @@ public class GroupController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public void delete(@AuthenticationPrincipal final CustomUserDetails principal, @PathVariable final String id)
 	{
-		_groupService.delete(id, principal.getUser().getId());
+		_groupService.delete(id, principal.getUser());
 	}
 
 	@GetMapping("/{id}/members")
@@ -146,14 +146,14 @@ public class GroupController
 
 	@PostMapping("/{id}/members")
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Dodavanje člana u grupu (samo GROUP_ADMIN)",
+	@Operation(summary = "Dodavanje člana u grupu (GROUP_ADMIN ili SYSTEM_ADMIN)",
 			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe.")
 	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ili korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -166,7 +166,7 @@ public class GroupController
 	                                @RequestBody @Valid final AddMemberRequest request)
 	{
 		return _groupMapper.toMemberResponse(
-				_membershipService.addMember(id, request.getUsername(), principal.getUser().getId()));
+				_membershipService.addMember(id, request.getUsername(), principal.getUser()));
 	}
 
 	@PostMapping("/{id}/members/me")
@@ -208,14 +208,15 @@ public class GroupController
 
 	@DeleteMapping("/{id}/members/{userId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Izbacivanje člana iz grupe (samo GROUP_ADMIN)",
-			description = "Admin ne može da izbaci sebe, za to služi napuštanje grupe.")
+	@Operation(summary = "Izbacivanje člana iz grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
+			description = "Admin ne može da izbaci sebe, za to služi napuštanje grupe. Kad SYSTEM_ADMIN izbaci jedinog admina grupe, "
+					+ "admin postaje aktivan član koji je najduže u grupi.")
 	@ApiResponse(responseCode = "204", description = "Član je izbačen")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji ili korisnik nije njen član",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -225,6 +226,6 @@ public class GroupController
 	                 @PathVariable final String id,
 	                 @PathVariable final String userId)
 	{
-		_membershipService.kick(id, userId, principal.getUser().getId());
+		_membershipService.kick(id, userId, principal.getUser());
 	}
 }
