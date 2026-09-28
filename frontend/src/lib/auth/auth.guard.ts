@@ -20,10 +20,10 @@ export function requireGuest(): boolean {
     return true;
 }
 
-// Forme sporta: ide posle requireAuth, pa je korisnik ovde već prijavljen
+// Forme sporta i admin panel: ide posle requireAuth, pa je korisnik ovde već prijavljen
 export function requireSystemAdmin(): boolean {
     if (!isSystemAdmin(get(authStore).user)) {
-        window.location.href = '#/sports';
+        window.location.href = '#/';
         return false;
     }
     return true;

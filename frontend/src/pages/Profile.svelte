@@ -5,7 +5,7 @@
     import {setUser} from '../lib/auth/auth.service';
     import PageHeader from '../lib/components/PageHeader.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
-    import {userInitials, type UserDto} from '../lib/types/user.types';
+    import {fullNameOf, userInitials, type UserDto} from '../lib/types/user.types';
 
     let user = $state<UserDto | null>(null);
     let loading = $state(true);
@@ -27,7 +27,7 @@
     let passwordError = $state<string | null>(null);
     let passwordSuccess = $state<string | null>(null);
 
-    const fullName = $derived(user ? [user.firstName, user.lastName].filter(Boolean).join(' ') : '');
+    const fullName = $derived(user ? fullNameOf(user) : '');
 
     // Dugme Save je aktivno samo kad se nešto promenilo u odnosu na sačuvan profil
     const profileChanged = $derived(

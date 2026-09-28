@@ -4,7 +4,7 @@
     import {authStore} from '../auth/auth.store';
     import {logout} from '../auth/auth.service';
     import {STORAGE_LABELS} from '../types/auth.types';
-    import {userInitials} from '../types/user.types';
+    import {fullNameOf, isSystemAdmin, userInitials} from '../types/user.types';
 
     // Glavne stranice; regex drži link aktivnim i na podstranicama (npr. /groups/5)
     const links = [
@@ -20,7 +20,7 @@
     let userMenuOpen = $state(false);
 
     const user = $derived($authStore.user);
-    const fullName = $derived(user ? [user.firstName, user.lastName].filter(Boolean).join(' ') : '');
+    const fullName = $derived(user ? fullNameOf(user) : '');
 
     // Posle prelaska na drugu stranicu oba menija se zatvaraju
     $effect(() => {
@@ -76,6 +76,11 @@
                         <li>
                             <a class="dropdown-item" href="#/profile"><i class="bi bi-gear me-2"></i>Account settings</a>
                         </li>
+                        {#if isSystemAdmin(user)}
+                            <li>
+                                <a class="dropdown-item" href="#/admin/users"><i class="bi bi-shield-lock me-2"></i>Manage users</a>
+                            </li>
+                        {/if}
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <button class="dropdown-item text-danger" onclick={handleLogout}>
