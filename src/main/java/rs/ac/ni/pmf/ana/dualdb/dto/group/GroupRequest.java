@@ -15,9 +15,9 @@ import lombok.Value;
 public class GroupRequest
 {
 	@NotBlank(message = "name is required")
-	@Schema(example = "Tenis kvarta")
+	@Schema(example = "Saturday Tennis")
 	String name;
 
-	@Schema(example = "subotnji tenis")
+	@Schema(example = "Tennis with neighbors every Saturday")
 	String description;
 }

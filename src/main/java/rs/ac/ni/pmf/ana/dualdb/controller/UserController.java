@@ -197,7 +197,7 @@ public class UserController
 	@Operation(summary = "Deaktivacija korisnika (samo SYSTEM_ADMIN)",
 			description = "Korisnik se ne briše iz baze, već postaje neaktivan: ne može da se prijavi, a token koji "
 					+ "već ima prestaje da važi. Ostaje u mečevima, rang-listama i grupama, a u grupama gde je bio GROUP_ADMIN "
-					+ "admin postaje najstariji aktivan član. Vraća se preko PATCH /restore.")
+					+ "admin postaje aktivan član koji je najduže u grupi, ako takav postoji. Vraća se preko PATCH /restore.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je deaktiviran")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

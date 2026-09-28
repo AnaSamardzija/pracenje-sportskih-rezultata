@@ -21,6 +21,6 @@ public class ChangePasswordRequest
 
 	@NotBlank(message = "newPassword is required")
 	@Size(min = 4, message = "newPassword must be at least 4 characters")
-	@Schema(example = "novaSifra1")
+	@Schema(example = "pera.456")
 	String newPassword;
 }

@@ -17,7 +17,7 @@ public class SportResponse
 {
 	@Schema(example = "1")
 	String id;
-	@Schema(example = "Tenis")
+	@Schema(example = "Tennis")
 	String name;
 	@Schema(example = "INDIVIDUAL")
 	SportType type;

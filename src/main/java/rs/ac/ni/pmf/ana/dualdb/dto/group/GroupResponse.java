@@ -18,9 +18,9 @@ public class GroupResponse
 {
 	@Schema(example = "1")
 	String id;
-	@Schema(example = "Tenis kvarta")
+	@Schema(example = "Saturday Tennis")
 	String name;
-	@Schema(example = "subotnji tenis")
+	@Schema(example = "Tennis with neighbors every Saturday")
 	String description;
 	@Schema(example = "2")
 	String createdBy;

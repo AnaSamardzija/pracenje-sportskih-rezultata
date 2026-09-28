@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
 @Tag(name = "Sportovi")
 public class SportController
 {
-	private static final String TENIS_EXAMPLE = """
+	private static final String BADMINTON_EXAMPLE = """
 			{
-			  "name": "Tenis",
+			  "name": "Badminton",
 			  "type": "INDIVIDUAL",
 			  "scoringMode": "SETS",
 			  "rules": {
@@ -46,31 +46,31 @@ public class SportController
 			    "minPlayersPerSide": 1,
 			    "maxPlayersPerSide": 1,
 			    "bestOf": 3,
-			    "pointsToWinSet": 6,
+			    "pointsToWinSet": 21,
 			    "pointsForWin": 3,
 			    "pointsForDraw": 1,
 			    "pointsForLoss": 0
 			  }
 			}""";
 
-	private static final String FUDBAL_EXAMPLE = """
+	private static final String HANDBALL_EXAMPLE = """
 			{
-			  "name": "Fudbal",
+			  "name": "Handball",
 			  "type": "TEAM",
 			  "scoringMode": "POINTS",
 			  "rules": {
 			    "allowDraw": true,
 			    "minPlayersPerSide": 1,
-			    "maxPlayersPerSide": 11,
+			    "maxPlayersPerSide": 7,
 			    "pointsForWin": 3,
 			    "pointsForDraw": 1,
 			    "pointsForLoss": 0
 			  }
 			}""";
 
-	private static final String SAH_EXAMPLE = """
+	private static final String CHECKERS_EXAMPLE = """
 			{
-			  "name": "Sah",
+			  "name": "Checkers",
 			  "type": "INDIVIDUAL",
 			  "scoringMode": "OUTCOME",
 			  "rules": {
@@ -127,9 +127,9 @@ public class SportController
 	@Operation(summary = "Kreiranje sporta (samo SYSTEM_ADMIN)",
 			description = "Ime sporta je jedinstveno bez obzira na velika i mala slova, i među obrisanim sportovima.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = TENIS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = FUDBAL_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = SAH_EXAMPLE)}))
+			@ExampleObject(name = "Badminton (SETS)", value = BADMINTON_EXAMPLE),
+			@ExampleObject(name = "Handball (POINTS)", value = HANDBALL_EXAMPLE),
+			@ExampleObject(name = "Checkers (OUTCOME)", value = CHECKERS_EXAMPLE)}))
 	@ApiResponse(responseCode = "201", description = "Sport je kreiran")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -151,9 +151,9 @@ public class SportController
 	@Operation(summary = "Izmena sporta (samo SYSTEM_ADMIN)",
 			description = "Telo i validacija su isti kao kod kreiranja; sport može da zadrži svoje ime.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = TENIS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = FUDBAL_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = SAH_EXAMPLE)}))
+			@ExampleObject(name = "Badminton (SETS)", value = BADMINTON_EXAMPLE),
+			@ExampleObject(name = "Handball (POINTS)", value = HANDBALL_EXAMPLE),
+			@ExampleObject(name = "Checkers (OUTCOME)", value = CHECKERS_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Sport je izmenjen")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

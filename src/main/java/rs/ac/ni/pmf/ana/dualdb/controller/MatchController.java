@@ -49,7 +49,7 @@ public class MatchController
 
 	private static final String POINTS_EXAMPLE = """
 			{
-			  "sportId": "2",
+			  "sportId": "4",
 			  "groupId": "1",
 			  "playedAt": "2026-09-20T12:00:00",
 			  "sides": [
@@ -115,9 +115,9 @@ public class MatchController
 					+ "Pobednika, a za SETS i POINTS i outcome, određuje sistem. "
 					+ "ID-jevi u primerima su MariaDB ID-jevi; za MongoDB se zamenjuju hex ID-jevima.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = SETS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
+			@ExampleObject(name = "Tennis (SETS)", value = SETS_EXAMPLE),
+			@ExampleObject(name = "Football (POINTS)", value = POINTS_EXAMPLE),
+			@ExampleObject(name = "Chess (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "201", description = "Meč je unet")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti) ili nenumerički id sporta ili grupe (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -127,7 +127,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, isti igrač je naveden dva puta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse create(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @RequestBody @Valid final MatchRequest request)
@@ -140,9 +140,9 @@ public class MatchController
 			description = "Telo i provere rezultata su isti kao kod unosa. Meč ne može da se premesti u drugu grupu; sport "
 					+ "može da se promeni, ali oblik rezultata mora da odgovara novom sportu. Učesnik meča koji nije GROUP_ADMIN ne može da ga menja.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = SETS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
+			@ExampleObject(name = "Tennis (SETS)", value = SETS_EXAMPLE),
+			@ExampleObject(name = "Football (POINTS)", value = POINTS_EXAMPLE),
+			@ExampleObject(name = "Chess (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Meč je izmenjen")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -152,7 +152,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, isti igrač je naveden dva puta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse update(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @PathVariable final String id,

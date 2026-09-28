@@ -105,6 +105,10 @@ permisije i podrazumevanog **admin** korisnika **u obe baze**:
 | username | `admin`      |
 | password | `admin.123`  |
 
+Obe baze dobijaju i početni katalog sportova (Tennis, Table Tennis, Chess, Football,
+Basketball, Volleyball): u MariaDB ga upisuje Flyway migracija `V14__insert_sports.sql`,
+a u MongoDB `DataInitializer`, samo ako je kolekcija sportova prazna.
+
 ---
 
 ## Pokretanje frontenda
@@ -163,7 +167,7 @@ Rute se mogu isprobati direktno iz Swagger UI-ja:
 ## Struktura projekta (ukratko)
 
 ```
-src/main/java/rs/ac/ni/pmf/marko/dualdb/
+src/main/java/rs/ac/ni/pmf/ana/dualdb/
 ├── controller/      # REST kontroleri i ErrorHandler (jedinstveni za obe baze)
 ├── service/         # Poslovna logika (jedinstvena za obe baze)
 ├── model/           # Model nezavisan od baze (User, Sport, Group, Match, ...)

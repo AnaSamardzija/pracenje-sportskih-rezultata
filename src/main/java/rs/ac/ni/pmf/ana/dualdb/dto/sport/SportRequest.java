@@ -19,7 +19,7 @@ import rs.ac.ni.pmf.ana.dualdb.model.SportType;
 public class SportRequest
 {
 	@NotBlank(message = "name is required")
-	@Schema(example = "Tenis")
+	@Schema(example = "Badminton")
 	String name;
 
 	@NotNull(message = "type is required (INDIVIDUAL or TEAM)")

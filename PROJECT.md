@@ -21,7 +21,8 @@ tokom vremena — umesto da se rezultati pamte napamet ili razbacano po porukama
 - **Administrator grupe** — kreira grupu i upravlja njome: dodaje i uklanja članove,
   uređuje njena podešavanja i može da menja i briše sve mečeve u grupi. Svaki igrač
   koji kreira grupu postaje njen administrator.
-- **Sistem administrator** — upravlja katalogom sportova i svim korisnicima.
+- **Sistem administrator** — upravlja katalogom sportova i svim korisnicima, a sa
+  grupama i mečevima sme sve što i administrator grupe, u svakoj grupi i bez članstva.
 
 ---
 
@@ -100,28 +101,28 @@ mapperi i repozitorijumi za svaku bazu).
 
 ### Grupe — `/api/v1/groups`
 
-| Metoda | Putanja                                | Opis                                               |
-|--------|----------------------------------------|----------------------------------------------------|
-| GET    | `/api/v1/groups`                       | Lista grupa (filteri: `?mine=true`, `?search=...`) |
-| GET    | `/api/v1/groups/{id}`                  | Detalji grupe                                      |
-| POST   | `/api/v1/groups`                       | Kreiranje grupe (kreator postaje GROUP_ADMIN)      |
-| PUT    | `/api/v1/groups/{id}`                  | Izmena podešavanja (GROUP_ADMIN te grupe)          |
-| DELETE | `/api/v1/groups/{id}`                  | Brisanje grupe bez mečeva (GROUP_ADMIN te grupe)   |
-| GET    | `/api/v1/groups/{id}/members`          | Lista članova                                      |
-| POST   | `/api/v1/groups/{id}/members`          | Dodavanje člana po username-u (GROUP_ADMIN)        |
-| POST   | `/api/v1/groups/{id}/members/me`       | Pridruživanje grupi (igrač sam sebe dodaje)        |
-| DELETE | `/api/v1/groups/{id}/members/me`       | Napuštanje grupe                                   |
-| DELETE | `/api/v1/groups/{id}/members/{userId}` | Izbacivanje člana (GROUP_ADMIN)                    |
+| Metoda | Putanja                                | Opis                                                         |
+|--------|----------------------------------------|--------------------------------------------------------------|
+| GET    | `/api/v1/groups`                       | Lista grupa (filteri: `?mine=true`, `?search=...`)           |
+| GET    | `/api/v1/groups/{id}`                  | Detalji grupe                                                |
+| POST   | `/api/v1/groups`                       | Kreiranje grupe (kreator postaje GROUP_ADMIN)                |
+| PUT    | `/api/v1/groups/{id}`                  | Izmena podešavanja (GROUP_ADMIN ili SYSTEM_ADMIN)            |
+| DELETE | `/api/v1/groups/{id}`                  | Brisanje grupe bez mečeva (GROUP_ADMIN ili SYSTEM_ADMIN)     |
+| GET    | `/api/v1/groups/{id}/members`          | Lista članova                                                |
+| POST   | `/api/v1/groups/{id}/members`          | Dodavanje člana po username-u (GROUP_ADMIN ili SYSTEM_ADMIN) |
+| POST   | `/api/v1/groups/{id}/members/me`       | Pridruživanje grupi (igrač sam sebe dodaje)                  |
+| DELETE | `/api/v1/groups/{id}/members/me`       | Napuštanje grupe                                             |
+| DELETE | `/api/v1/groups/{id}/members/{userId}` | Izbacivanje člana (GROUP_ADMIN ili SYSTEM_ADMIN)             |
 
 ### Mečevi — `/api/v1/matches`
 
-| Metoda | Putanja                | Opis                                                               |
-|--------|------------------------|--------------------------------------------------------------------|
-| GET    | `/api/v1/matches`      | Lista mečeva sa filterima (`?groupId=`, `?sportId=`, `?playerId=`) |
-| GET    | `/api/v1/matches/{id}` | Detalji jednog meča                                                |
-| POST   | `/api/v1/matches`      | Unos novog rezultata (član grupe; sistem određuje pobednika)       |
-| PUT    | `/api/v1/matches/{id}` | Izmena rezultata (samo učesnik ili GROUP_ADMIN)                    |
-| DELETE | `/api/v1/matches/{id}` | Brisanje (samo učesnik ili GROUP_ADMIN)                            |
+| Metoda | Putanja                | Opis                                                                          |
+|--------|------------------------|-------------------------------------------------------------------------------|
+| GET    | `/api/v1/matches`      | Lista mečeva sa filterima (`?groupId=`, `?sportId=`, `?playerId=`)            |
+| GET    | `/api/v1/matches/{id}` | Detalji jednog meča                                                           |
+| POST   | `/api/v1/matches`      | Unos novog rezultata (član grupe ili SYSTEM_ADMIN; sistem određuje pobednika) |
+| PUT    | `/api/v1/matches/{id}` | Izmena rezultata (GROUP_ADMIN ili SYSTEM_ADMIN)                               |
+| DELETE | `/api/v1/matches/{id}` | Brisanje (GROUP_ADMIN ili SYSTEM_ADMIN)                                       |
 
 ### Rang-liste i statistike — `/api/v1/rankings`, `/api/v1/users/{id}/stats`
 
