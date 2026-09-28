@@ -5,7 +5,7 @@
     import {authStore} from '../../lib/auth/auth.store';
     import ConfirmModal from '../../lib/components/ConfirmModal.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
-    import {OUTCOME_BADGES, sideNames, type MatchResponse, type MatchSideResponse} from '../../lib/types/match.types';
+    import {OUTCOME_BADGES, resultLabel, sideNames, type MatchResponse, type MatchSideResponse} from '../../lib/types/match.types';
     import {formatDateTime} from '../../lib/utils/date';
 
     let {params}: {params?: {id?: string}} = $props();
@@ -22,13 +22,7 @@
     const title = $derived(match ? `${sideNames(match.sides[0])} vs ${sideNames(match.sides[1])}` : 'Match');
     const subtitle = $derived(match ? `${match.sport.name} · ${match.group.name} · ${formatDateTime(match.playedAt)}` : undefined);
 
-    // Za POINTS i SETS u sredini je rezultat (za SETS broj osvojenih setova), a za OUTCOME se zna samo ishod
-    const result = $derived.by(() => {
-        if (!match) return '';
-        const [home, away] = match.sides;
-        if (home.score !== null && away.score !== null) return `${home.score} : ${away.score}`;
-        return home.outcome === 'DRAW' ? 'Draw' : 'vs';
-    });
+    const result = $derived(match ? resultLabel(match.sides[0], match.sides[1]) : '');
     const setCount = $derived(match?.sides[0].setScores?.length ?? 0);
 
     // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /matches/3 → /matches/5)
@@ -89,7 +83,7 @@
         {#each side.players as player (player.id)}
             <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-2">
                 <span class="icon-circle icon-circle-xs flex-shrink-0">{player.username[0].toUpperCase()}</span>
-                <span class="text-break" class:fw-semibold={side.winner}>{player.username}</span>
+                <a class="text-break text-decoration-none" class:fw-semibold={side.winner} href="#/players/{player.id}">{player.username}</a>
                 {#if player.id === myId}
                     <span class="badge text-bg-primary">You</span>
                 {/if}
@@ -186,7 +180,8 @@
                             <span class="text-muted">Played</span><span class="text-end">{formatDateTime(match.playedAt)}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between gap-3">
-                            <span class="text-muted">Recorded by</span><span class="text-end">{match.recordedBy.username}</span>
+                            <span class="text-muted">Recorded by</span>
+                            <a class="text-end text-decoration-none" href="#/players/{match.recordedBy.id}">{match.recordedBy.username}</a>
                         </li>
                     </ul>
                 </div>

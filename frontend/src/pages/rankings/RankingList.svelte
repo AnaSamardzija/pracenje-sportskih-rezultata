@@ -1,38 +1,37 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import {replace} from 'svelte-spa-router';
-    import {getAllMatches} from '../../lib/api/matches.api';
+    import {getRanking} from '../../lib/api/rankings.api';
     import {getAllGroups} from '../../lib/api/groups.api';
     import {getAllSports} from '../../lib/api/sports.api';
-    import {authStore} from '../../lib/auth/auth.store';
-    import MatchItem from '../../lib/components/MatchItem.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
+    import RankingTable from '../../lib/components/RankingTable.svelte';
     import type {GroupResponse} from '../../lib/types/group.types';
-    import type {MatchResponse} from '../../lib/types/match.types';
     import type {SportResponse} from '../../lib/types/sport.types';
+    import type {RankingEntryResponse} from '../../lib/types/stats.types';
     import {queryParams, withQuery} from '../../lib/utils/query';
 
-    type Filters = {groupId: string; sportId: string; mine: boolean};
+    type Filters = {groupId: string; sportId: string};
 
-    let matches = $state<MatchResponse[]>([]);
+    let entries = $state<RankingEntryResponse[]>([]);
     let groups = $state<GroupResponse[]>([]);
     let sports = $state<SportResponse[]>([]);
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    // Filteri stoje u adresi (npr. #/matches?groupId=3&mine=true), pa druga stranica može da otvori već filtriranu listu,
-    // a osvežavanje i dugme nazad ih čuvaju
+    // Filteri stoje u adresi (npr. #/rankings?groupId=3&sportId=1), kao na listi mečeva
     const filters = $derived.by((): Filters => {
         const params = queryParams();
-        return {
-            groupId: params.get('groupId') ?? '',
-            sportId: params.get('sportId') ?? '',
-            mine: params.get('mine') === 'true'
-        };
+        return {groupId: params.get('groupId') ?? '', sportId: params.get('sportId') ?? ''};
     });
-    const hasFilters = $derived(filters.groupId !== '' || filters.sportId !== '' || filters.mine);
+    const hasFilters = $derived(filters.groupId !== '' || filters.sportId !== '');
 
-    // Grupe i sportovi služe samo za padajuće liste filtera
+    // Naslov kartice kaže šta se rangira, npr. „Tenis · Tenis kvarta“
+    const scope = $derived(
+        [sports.find(s => s.id === filters.sportId)?.name ?? 'All sports',
+         groups.find(g => g.id === filters.groupId)?.name ?? 'All groups'].join(' · ')
+    );
+
     onMount(async () => {
         try {
             [groups, sports] = await Promise.all([getAllGroups(), getAllSports()]);
@@ -45,7 +44,7 @@
         load(filters);
     });
 
-    // Svaka promena filtera šalje nov zahtev; odgovor koji stigne posle novijeg zahteva se odbacuje
+    // Odgovor koji stigne posle novijeg zahteva se odbacuje
     let lastRequest = 0;
 
     async function load(f: Filters) {
@@ -53,37 +52,24 @@
         loading = true;
         error = null;
         try {
-            const result = await getAllMatches({
-                groupId: f.groupId,
-                sportId: f.sportId,
-                playerId: f.mine ? $authStore.user?.id : undefined
-            });
+            const result = await getRanking(f);
             if (request !== lastRequest) return;
-            matches = result;
+            entries = result;
         } catch (e) {
             if (request !== lastRequest) return;
-            matches = [];
-            error = e instanceof Error ? e.message : 'Failed to load matches';
+            entries = [];
+            error = e instanceof Error ? e.message : 'Failed to load rankings';
         } finally {
             if (request === lastRequest) loading = false;
         }
     }
 
-    // Promena filtera menja samo adresu; učitavanje pokreće $effect iznad
     function applyFilters(next: Filters) {
-        replace(withQuery('/matches', {groupId: next.groupId, sportId: next.sportId, mine: next.mine ? 'true' : ''}));
+        replace(withQuery('/rankings', next));
     }
-
-    const clearFilters = () => applyFilters({groupId: '', sportId: '', mine: false});
 </script>
 
-<PageHeader title="Matches" icon="bi-calendar-event" subtitle="Every recorded match, newest first.">
-    {#snippet actions()}
-        <a class="btn btn-light" href="#/matches/new">
-            <i class="bi bi-plus-lg me-1"></i>Record match
-        </a>
-    {/snippet}
-</PageHeader>
+<PageHeader title="Rankings" icon="bi-bar-chart-line" subtitle="Who is on top, by group and by sport."/>
 
 <div class="container py-4 page-fade">
     {#if error}
@@ -93,13 +79,13 @@
     {/if}
 
     <div class="row g-4">
-        <!-- Na telefonu filteri idu iznad liste, a na velikom ekranu u bočnu kolonu -->
+        <!-- Na telefonu filteri idu iznad tabele, a na velikom ekranu u bočnu kolonu -->
         <div class="col-lg-4 order-lg-last">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-funnel me-2 text-primary"></i>Filters</span>
                     {#if hasFilters}
-                        <button class="btn btn-sm btn-link text-decoration-none p-0" onclick={clearFilters}>Clear</button>
+                        <button class="btn btn-sm btn-link text-decoration-none p-0" onclick={() => applyFilters({groupId: '', sportId: ''})}>Clear</button>
                     {/if}
                 </div>
                 <div class="card-body">
@@ -114,7 +100,7 @@
                             {/each}
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div>
                         <label class="form-label" for="filterSport">Sport</label>
                         <select id="filterSport"
                                 class="form-select"
@@ -125,53 +111,38 @@
                             {/each}
                         </select>
                     </div>
-                    <div class="form-check form-switch">
-                        <input id="filterMine"
-                               class="form-check-input"
-                               type="checkbox"
-                               role="switch"
-                               checked={filters.mine}
-                               onchange={e => applyFilters({...filters, mine: e.currentTarget.checked})}/>
-                        <label class="form-check-label" for="filterMine">Only my matches</label>
-                    </div>
                 </div>
+            </div>
+
+            <div class="card d-none d-lg-block">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>How ranking works
+                </div>
+                <ul class="list-group list-group-flush small text-muted">
+                    <li class="list-group-item">Each match gives points by its sport's rules for a win, draw or loss.</li>
+                    <li class="list-group-item">Players are ordered by points, then wins. Tied players share a place.</li>
+                    <li class="list-group-item">Matches of deleted sports still count.</li>
+                </ul>
             </div>
         </div>
 
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-list-ul me-2 text-primary"></i>Results
-                    {#if !loading}
-                        <span class="badge bg-primary-subtle text-primary-emphasis ms-1">{matches.length}</span>
-                    {/if}
+                <div class="card-header text-truncate">
+                    <i class="bi bi-trophy me-2 text-primary"></i>{scope}
                 </div>
 
                 {#if loading}
                     <div class="card-body text-center py-5">
                         <div class="spinner-border text-primary"></div>
                     </div>
-                {:else if matches.length === 0}
+                {:else if entries.length === 0}
                     <div class="card-body text-center text-muted py-5">
-                        <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
-                        {#if hasFilters}
-                            No matches for these filters.
-                            <div class="mt-3">
-                                <button class="btn btn-outline-primary btn-sm" onclick={clearFilters}>Clear filters</button>
-                            </div>
-                        {:else}
-                            No matches yet. Record the first one after you play.
-                            <div class="mt-3">
-                                <a class="btn btn-primary btn-sm" href="#/matches/new">Record match</a>
-                            </div>
-                        {/if}
+                        <i class="bi bi-bar-chart fs-1 d-block mb-2"></i>
+                        No matches recorded here yet, so there is no ranking.
                     </div>
                 {:else}
-                    <div class="list-group list-group-flush">
-                        {#each matches as match (match.id)}
-                            <MatchItem {match}/>
-                        {/each}
-                    </div>
+                    <RankingTable {entries}/>
                 {/if}
             </div>
         </div>

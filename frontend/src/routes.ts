@@ -11,6 +11,8 @@ import GroupDetail from './pages/groups/GroupDetail.svelte';
 import MatchList from './pages/matches/MatchList.svelte';
 import MatchDetail from './pages/matches/MatchDetail.svelte';
 import MatchForm from './pages/matches/MatchForm.svelte';
+import RankingList from './pages/rankings/RankingList.svelte';
+import PlayerProfile from './pages/players/PlayerProfile.svelte';
 import NotFound from './pages/NotFound.svelte';
 import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
 
@@ -38,6 +40,11 @@ export const routes = {
     '/matches/new': guarded(MatchForm),
     '/matches/:id/edit': guarded(MatchForm),
     '/matches/:id': guarded(MatchDetail),
+
+    '/rankings': guarded(RankingList),
+
+    // Profil igrača, i sopstveni (My profile u meniju) i tuđi; /profile su podešavanja naloga
+    '/players/:id': guarded(PlayerProfile),
 
     // Mora biti poslednja: sve ostale putanje
     '*': guarded(NotFound),

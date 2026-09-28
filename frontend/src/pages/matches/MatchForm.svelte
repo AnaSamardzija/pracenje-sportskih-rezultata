@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {push, router} from 'svelte-spa-router';
+    import {push} from 'svelte-spa-router';
     import {createMatch, getMatch, updateMatch} from '../../lib/api/matches.api';
     import {getAllGroups, getMembers} from '../../lib/api/groups.api';
     import {getAllSports} from '../../lib/api/sports.api';
@@ -15,6 +15,7 @@
         type SportResponse
     } from '../../lib/types/sport.types';
     import {toDateTimeInput} from '../../lib/utils/date';
+    import {queryParams} from '../../lib/utils/query';
 
     // Rezultat jednog seta: gemovi prve i druge strane
     type SetRow = {home: number | null; away: number | null};
@@ -52,7 +53,8 @@
     let saving = $state(false);
     let error = $state<string | null>(null);
 
-    const maxPlayedAt = toDateTimeInput(new Date());
+    // Meč ne može biti u budućnosti; granica se osvežava pri svakom resetu forme, da ne zaostane za podrazumevanim vremenom
+    let maxPlayedAt = $state(toDateTimeInput(new Date()));
 
     const myId = $derived($authStore.user?.id);
     const sport = $derived(sports.find(s => s.id === sportId) ?? null);
@@ -80,7 +82,7 @@
     }
 
     // Grupa iz adrese, npr. #/matches/new?groupId=3 (dugme za unos meča na stranici grupe)
-    const queryGroupId = $derived(new URLSearchParams(router.querystring ?? '').get('groupId'));
+    const queryGroupId = $derived(queryParams().get('groupId'));
 
     // Učitavanje prati id i grupu iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id ili upit
     // (npr. „Record match“ iz menija dok je forma otvorena), pa se forma tada vraća na početak
@@ -91,7 +93,9 @@
     function reset() {
         groupId = '';
         sportId = '';
-        playedAt = toDateTimeInput(new Date());
+        const now = toDateTimeInput(new Date());
+        maxPlayedAt = now;
+        playedAt = now;
         players = [[], []];
         scores = [null, null];
         setRows = [];
@@ -210,7 +214,7 @@
     function sideRequest(current: SportResponse, side: number): MatchSideRequest {
         const request: MatchSideRequest = {playerIds: players[side], score: null, setScores: null, outcome: null};
         if (current.scoringMode === 'POINTS') request.score = scores[side];
-        if (current.scoringMode === 'SETS') request.setScores = setRows.map(row => (side === 0 ? row.home : row.away) ?? 0);
+        if (current.scoringMode === 'SETS') request.setScores = setRows.map(row => (side === 0 ? row.home : row.away) as number);
         if (current.scoringMode === 'OUTCOME') request.outcome = outcomeOf(side);
         return request;
     }

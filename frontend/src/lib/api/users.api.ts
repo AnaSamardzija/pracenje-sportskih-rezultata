@@ -1,4 +1,5 @@
 import {apiFetch, errorMessage} from './client';
+import {withQuery} from '../utils/query';
 import type {ChangePasswordRequest, UpdateProfileRequest, UserDto} from '../types/user.types';
 import type {PlayerStatsResponse} from '../types/stats.types';
 
@@ -12,6 +13,13 @@ export async function getMe(): Promise<UserDto> {
 
 export async function getMyStats(): Promise<PlayerStatsResponse> {
     const res = await apiFetch(`${BASE}/me/stats`);
+    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to load statistics'));
+    return res.json();
+}
+
+// Statistiku bilo kog igrača vidi svaki prijavljen korisnik; sportId je ograničava na jedan sport
+export async function getUserStats(id: string, sportId?: string): Promise<PlayerStatsResponse> {
+    const res = await apiFetch(withQuery(`${BASE}/${id}/stats`, {sportId}));
     if (!res.ok) throw new Error(await errorMessage(res, 'Failed to load statistics'));
     return res.json();
 }

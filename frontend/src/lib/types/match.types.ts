@@ -56,6 +56,12 @@ export function sideNames(side: MatchSideResponse): string {
     return side.players.map(p => p.username).join(', ');
 }
 
+// Rezultat u sredini prikaza meča: za POINTS i SETS „3 : 1“ (za SETS broj osvojenih setova), a za OUTCOME samo ishod
+export function resultLabel(home: MatchSideResponse, away: MatchSideResponse): string {
+    if (home.score !== null && away.score !== null) return `${home.score} : ${away.score}`;
+    return home.outcome === 'DRAW' ? 'Draw' : 'vs';
+}
+
 // Rezultat iz ugla jedne strane (njen rezultat prvi): „6-3 4-6 6-2“, „3 : 1“ ili prazno kad se beleži samo ishod
 export function formatScore(mine: MatchSideResponse, other: MatchSideResponse): string {
     if (mine.setScores?.length && other.setScores?.length) {

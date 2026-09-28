@@ -103,7 +103,7 @@
     }
 </script>
 
-<PageHeader title="My profile" icon="bi-person-circle" subtitle="Your account details and password."/>
+<PageHeader title="Account settings" icon="bi-gear" subtitle="Your account details and password."/>
 
 <div class="container py-4 page-fade">
 
