@@ -22,10 +22,15 @@ import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbRoleRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.PermissionDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.RoleDocument;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.SportDocument;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.SportRulesDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.UserDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoPermissionRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoRoleRepository;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoSportRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoUserRepository;
+import rs.ac.ni.pmf.ana.dualdb.model.ScoringMode;
+import rs.ac.ni.pmf.ana.dualdb.model.SportType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,6 +52,7 @@ public class DataInitializer implements CommandLineRunner
 
 	private final MongoRoleRepository _mongoRoleRepository;
 	private final MongoPermissionRepository _mongoPermissionRepository;
+	private final MongoSportRepository _mongoSportRepository;
 	private final MongoTemplate _mongoTemplate;
 
 	private final PasswordEncoder _passwordEncoder;
@@ -71,7 +77,6 @@ public class DataInitializer implements CommandLineRunner
 	@Transactional
 	public void run(final String @NonNull ... args)
 	{
-		// TODO: Initialize data for the application
 		initializeJpa();
 		initializeMongoDb();
 	}
@@ -177,6 +182,9 @@ public class DataInitializer implements CommandLineRunner
 					.build();
 			_mongoUserRepository.save(userDocument);
 		}
+
+		log.info("Checking and creating the sport catalog in MongoDB, if needed.");
+		createMongoSports();
 	}
 
 	private void createMongoPermissions()
@@ -219,6 +227,54 @@ public class DataInitializer implements CommandLineRunner
 
 			_mongoRoleRepository.save(roleDocument);
 		}
+	}
+
+	/**
+	 * Pandan migracije V14: sportovi se upisuju samo u praznu kolekciju, jer se Flyway migracija izvrši
+	 * samo jednom. Provera po imenu bi posle restarta ponovo napravila sport koji je admin preimenovao.
+	 */
+	private void createMongoSports()
+	{
+		if (_mongoSportRepository.count() > 0)
+		{
+			return;
+		}
+
+		_mongoSportRepository.saveAll(List.of(
+				sport("Tennis", SportType.INDIVIDUAL, ScoringMode.SETS, false, 1, 1, 3, 6, 3, 1, 0),
+				sport("Table Tennis", SportType.INDIVIDUAL, ScoringMode.SETS, false, 1, 1, 5, 11, 3, 1, 0),
+				sport("Chess", SportType.INDIVIDUAL, ScoringMode.OUTCOME, true, 1, 1, null, null, 2, 1, 0),
+				sport("Football", SportType.TEAM, ScoringMode.POINTS, true, 1, 11, null, null, 3, 1, 0),
+				sport("Basketball", SportType.TEAM, ScoringMode.POINTS, false, 1, 5, null, null, 3, 1, 0),
+				sport("Volleyball", SportType.TEAM, ScoringMode.SETS, false, 2, 6, 5, 25, 3, 1, 0)
+		));
+
+		log.info("Sport catalog created in MongoDB");
+	}
+
+	private SportDocument sport(final String name, final SportType type, final ScoringMode scoringMode,
+			final boolean allowDraw, final int minPlayersPerSide, final Integer maxPlayersPerSide,
+			final Integer bestOf, final Integer pointsToWinSet,
+			final int pointsForWin, final int pointsForDraw, final int pointsForLoss)
+	{
+		final SportRulesDocument rules = SportRulesDocument.builder()
+				.allowDraw(allowDraw)
+				.minPlayersPerSide(minPlayersPerSide)
+				.maxPlayersPerSide(maxPlayersPerSide)
+				.bestOf(bestOf)
+				.pointsToWinSet(pointsToWinSet)
+				.pointsForWin(pointsForWin)
+				.pointsForDraw(pointsForDraw)
+				.pointsForLoss(pointsForLoss)
+				.build();
+
+		return SportDocument.builder()
+				.name(name)
+				.type(type)
+				.scoringMode(scoringMode)
+				.rules(rules)
+				.active(true)
+				.build();
 	}
 
 	/**
