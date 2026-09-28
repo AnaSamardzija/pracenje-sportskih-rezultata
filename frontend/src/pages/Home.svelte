@@ -7,17 +7,11 @@
     import PageHeader from '../lib/components/PageHeader.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
     import {GROUP_ROLE_LABELS, type GroupResponse} from '../lib/types/group.types';
-    import {formatScore, type MatchOutcome, type MatchResponse} from '../lib/types/match.types';
+    import {formatScore, OUTCOME_BADGES, type MatchResponse} from '../lib/types/match.types';
     import type {PlayerStatsResponse} from '../lib/types/stats.types';
     import {formatDate} from '../lib/utils/date';
 
     const RECENT_MATCHES = 5;
-
-    const OUTCOME_BADGES: Record<MatchOutcome, {letter: string; css: string}> = {
-        WIN: {letter: 'W', css: 'text-bg-success'},
-        DRAW: {letter: 'D', css: 'text-bg-secondary'},
-        LOSS: {letter: 'L', css: 'text-bg-danger'}
-    };
 
     const user = $derived($authStore.user);
 

@@ -27,6 +27,18 @@ export interface MatchResponse {
     sides: MatchSideResponse[];
 }
 
+// Značka ishoda iz ugla jedne strane (W / D / L)
+export const OUTCOME_BADGES: Record<MatchOutcome, {letter: string; label: string; css: string}> = {
+    WIN: {letter: 'W', label: 'Win', css: 'text-bg-success'},
+    DRAW: {letter: 'D', label: 'Draw', css: 'text-bg-secondary'},
+    LOSS: {letter: 'L', label: 'Loss', css: 'text-bg-danger'}
+};
+
+// Igrači jedne strane u jednom redu, npr. „pera, mika“ za timski meč
+export function sideNames(side: MatchSideResponse): string {
+    return side.players.map(p => p.username).join(', ');
+}
+
 // Rezultat iz ugla jedne strane (njen rezultat prvi): „6-3 4-6 6-2“, „3 : 1“ ili prazno kad se beleži samo ishod
 export function formatScore(mine: MatchSideResponse, other: MatchSideResponse): string {
     if (mine.setScores?.length && other.setScores?.length) {

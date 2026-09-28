@@ -14,3 +14,15 @@ export async function getAllMatches(filters: {groupId?: string; sportId?: string
     if (!res.ok) throw new Error(await errorMessage(res, 'Failed to load matches'));
     return res.json();
 }
+
+export async function getMatch(id: string): Promise<MatchResponse> {
+    const res = await apiFetch(`${BASE}/${id}`);
+    if (!res.ok) throw new Error(await errorMessage(res, 'Match not found'));
+    return res.json();
+}
+
+// Samo učesnik meča ili GROUP_ADMIN grupe (ostali dobijaju 403)
+export async function deleteMatch(id: string): Promise<void> {
+    const res = await apiFetch(`${BASE}/${id}`, {method: 'DELETE'});
+    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to delete match'));
+}
