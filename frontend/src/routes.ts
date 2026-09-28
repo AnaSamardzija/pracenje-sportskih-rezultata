@@ -10,6 +10,7 @@ import GroupForm from './pages/groups/GroupForm.svelte';
 import GroupDetail from './pages/groups/GroupDetail.svelte';
 import MatchList from './pages/matches/MatchList.svelte';
 import MatchDetail from './pages/matches/MatchDetail.svelte';
+import MatchForm from './pages/matches/MatchForm.svelte';
 import NotFound from './pages/NotFound.svelte';
 import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
 
@@ -33,8 +34,9 @@ export const routes = {
     '/groups/:id': guarded(GroupDetail),
 
     '/matches': guarded(MatchList),
-    // Forma za unos meča dolazi u sledećem delu; ruta mora biti pre /matches/:id, inače bi „new“ bio id
-    '/matches/new': guarded(NotFound),
+    // Mora biti pre /matches/:id, inače bi „new“ bio id meča
+    '/matches/new': guarded(MatchForm),
+    '/matches/:id/edit': guarded(MatchForm),
     '/matches/:id': guarded(MatchDetail),
 
     // Mora biti poslednja: sve ostale putanje

@@ -1,5 +1,5 @@
 import {apiFetch, errorMessage} from './client';
-import type {MatchResponse} from '../types/match.types';
+import type {MatchRequest, MatchResponse} from '../types/match.types';
 
 const BASE = '/api/v1/matches';
 
@@ -18,6 +18,26 @@ export async function getAllMatches(filters: {groupId?: string; sportId?: string
 export async function getMatch(id: string): Promise<MatchResponse> {
     const res = await apiFetch(`${BASE}/${id}`);
     if (!res.ok) throw new Error(await errorMessage(res, 'Match not found'));
+    return res.json();
+}
+
+// Meč unosi bilo koji član grupe; svi igrači moraju biti aktivni članovi iste grupe
+export async function createMatch(data: MatchRequest): Promise<MatchResponse> {
+    const res = await apiFetch(BASE, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to record match'));
+    return res.json();
+}
+
+// Samo učesnik meča ili GROUP_ADMIN; grupa meča se ne može promeniti (422)
+export async function updateMatch(id: string, data: MatchRequest): Promise<MatchResponse> {
+    const res = await apiFetch(`${BASE}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(await errorMessage(res, 'Failed to update match'));
     return res.json();
 }
 

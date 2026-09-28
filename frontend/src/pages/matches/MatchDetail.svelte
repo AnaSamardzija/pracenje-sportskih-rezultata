@@ -101,6 +101,7 @@
 <PageHeader {title} icon="bi-calendar-event" {subtitle}>
     {#snippet actions()}
         {#if match && canManage}
+            <a class="btn btn-light" href="#/matches/{match.id}/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
             <button class="btn btn-outline-light" disabled={deleting} onclick={() => showDelete = true}>
                 <i class="bi bi-trash me-1"></i>Delete
             </button>
