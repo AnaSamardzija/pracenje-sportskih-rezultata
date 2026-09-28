@@ -64,10 +64,15 @@
     let ranking = $state<RankingEntryResponse[]>([]);
     let sports = $state<SportResponse[]>([]);
     let tabLoading = $state(false);
+    // Greška taba stoji u samom tabu, pa je sledeće uspešno učitavanje briše, a ne dira poruke o radnjama nad grupom
+    let tabError = $state<string | null>(null);
 
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
     const systemAdmin = $derived(isSystemAdmin($authStore.user));
+
+    // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira rang-listu, pa ga i padajuća lista mora pokazati
+    const deletedRankingSport = $derived(rankingSportId !== '' && sports.length > 0 && !sports.some(s => s.id === rankingSportId));
 
     // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3 → /groups/5),
     // pa se tada sve vraća na početak, da dugmad nikad ne rade nad grupom koja nije prikazana
@@ -107,11 +112,12 @@
     async function loadTab<T>(request: () => Promise<T>, apply: (result: T) => void) {
         const current = ++lastTabRequest;
         tabLoading = true;
+        tabError = null;
         try {
             const result = await request();
             if (current === lastTabRequest) apply(result);
         } catch (e) {
-            if (current === lastTabRequest) error = e instanceof Error ? e.message : 'Failed to load';
+            if (current === lastTabRequest) tabError = e instanceof Error ? e.message : 'Failed to load';
         } finally {
             if (current === lastTabRequest) tabLoading = false;
         }
@@ -165,11 +171,14 @@
 
     async function handleDelete() {
         error = null;
+        busy = true;
         try {
             await deleteGroup(groupId);
             push('/groups');
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to delete group';
+        } finally {
+            busy = false;
         }
     }
 
@@ -257,6 +266,9 @@
                                 {#each sports as sport (sport.id)}
                                     <option value={sport.id} selected={rankingSportId === sport.id}>{sport.name}</option>
                                 {/each}
+                                {#if deletedRankingSport}
+                                    <option value={rankingSportId} selected>Deleted sport</option>
+                                {/if}
                             </select>
                         {:else if tab === 'matches'}
                             <a class="small fw-normal text-decoration-none" href="#/matches?groupId={group.id}">Filter all matches <i class="bi bi-arrow-right"></i></a>
@@ -266,6 +278,12 @@
                     {#if tab !== 'members' && tabLoading}
                         <div class="card-body text-center py-5">
                             <div class="spinner-border text-primary"></div>
+                        </div>
+                    {:else if tab !== 'members' && tabError}
+                        <div class="card-body">
+                            <div class="alert alert-danger d-flex align-items-center mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>{tabError}
+                            </div>
                         </div>
                     {:else if tab === 'matches'}
                         {#if matches.length === 0}

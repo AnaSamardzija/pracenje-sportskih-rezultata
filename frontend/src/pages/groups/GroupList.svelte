@@ -1,43 +1,64 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
+    import {replace} from 'svelte-spa-router';
     import {getAllGroups, joinGroup} from '../../lib/api/groups.api';
     import PageHeader from '../../lib/components/PageHeader.svelte';
     import {GROUP_ROLE_LABELS, type GroupResponse} from '../../lib/types/group.types';
+    import {queryParams, withQuery} from '../../lib/utils/query';
+
+    type Filters = {mine: boolean; search: string};
 
     const SEARCH_DELAY_MS = 300;
 
     let groups = $state<GroupResponse[]>([]);
     let loading = $state(true);
     let error = $state<string | null>(null);
-    let mine = $state(false);
-    let search = $state('');
     let joiningId = $state<string | null>(null);
 
+    // Tab i pretraga stoje u adresi (npr. #/groups?mine=true&search=tenis), pa ih povratak sa stranice grupe čuva
+    const filters = $derived.by((): Filters => {
+        const params = queryParams();
+        return {mine: params.get('mine') === 'true', search: params.get('search') ?? ''};
+    });
+
+    // Polje pretrage ima svoju vrednost dok korisnik kuca; u adresu ide tek posle pauze
+    let search = $state(queryParams().get('search') ?? '');
     let searchTimer: ReturnType<typeof setTimeout>;
 
-    onMount(load);
+    $effect(() => {
+        load(filters);
+    });
 
-    async function load() {
+    // Odgovor koji stigne posle novijeg zahteva (drugi tab ili pretraga) se odbacuje
+    let lastRequest = 0;
+
+    async function load(f: Filters) {
+        const request = ++lastRequest;
         loading = true;
         error = null;
         try {
-            groups = await getAllGroups({mine, search: search.trim()});
+            const result = await getAllGroups(f);
+            if (request !== lastRequest) return;
+            groups = result;
         } catch (e) {
+            if (request !== lastRequest) return;
+            groups = [];
             error = e instanceof Error ? e.message : 'Failed to load groups';
         } finally {
-            loading = false;
+            if (request === lastRequest) loading = false;
         }
     }
 
-    function showMine(value: boolean) {
-        mine = value;
-        load();
+    // Promena filtera menja samo adresu; učitavanje pokreće $effect iznad
+    function applyFilters(next: Filters) {
+        replace(withQuery('/groups', {mine: next.mine ? 'true' : '', search: next.search}));
     }
+
+    const showMine = (mine: boolean) => applyFilters({...filters, mine});
 
     // Pretraga ide na backend tek kad korisnik zastane sa kucanjem, a ne na svako slovo
     function handleSearch() {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(load, SEARCH_DELAY_MS);
+        searchTimer = setTimeout(() => applyFilters({...filters, search: search.trim()}), SEARCH_DELAY_MS);
     }
 
     // Posle pridruživanja red se menja na licu mesta, bez ponovnog učitavanja liste
@@ -76,10 +97,10 @@
                 <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <ul class="nav nav-pills nav-pills-app">
                         <li class="nav-item">
-                            <button class="nav-link" class:active={!mine} onclick={() => showMine(false)}>All groups</button>
+                            <button class="nav-link" class:active={!filters.mine} onclick={() => showMine(false)}>All groups</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link" class:active={mine} onclick={() => showMine(true)}>My groups</button>
+                            <button class="nav-link" class:active={filters.mine} onclick={() => showMine(true)}>My groups</button>
                         </li>
                     </ul>
                     <div class="input-group input-group-sm search-box">
@@ -100,9 +121,9 @@
                 {:else if groups.length === 0}
                     <div class="card-body text-center text-muted py-5">
                         <i class="bi bi-people fs-1 d-block mb-2"></i>
-                        {#if search.trim()}
-                            No groups match "{search.trim()}".
-                        {:else if mine}
+                        {#if filters.search}
+                            No groups match "{filters.search}".
+                        {:else if filters.mine}
                             You are not in any group yet.
                             <div class="mt-3">
                                 <button class="btn btn-primary btn-sm" onclick={() => showMine(false)}>Browse all groups</button>

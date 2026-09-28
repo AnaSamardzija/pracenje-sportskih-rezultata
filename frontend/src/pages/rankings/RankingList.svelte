@@ -18,6 +18,8 @@
     let sports = $state<SportResponse[]>([]);
     let loading = $state(true);
     let error = $state<string | null>(null);
+    // Greška pri učitavanju padajućih lista je odvojena, da je ne obriše sledeće učitavanje liste
+    let filtersError = $state<string | null>(null);
 
     // Filteri stoje u adresi (npr. #/rankings?groupId=3&sportId=1), kao na listi mečeva
     const filters = $derived.by((): Filters => {
@@ -26,9 +28,12 @@
     });
     const hasFilters = $derived(filters.groupId !== '' || filters.sportId !== '');
 
+    // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira, pa ga i padajuća lista mora pokazati
+    const deletedSport = $derived(filters.sportId !== '' && sports.length > 0 && !sports.some(s => s.id === filters.sportId));
+
     // Naslov kartice kaže šta se rangira, npr. „Tenis · Tenis kvarta“
     const scope = $derived(
-        [sports.find(s => s.id === filters.sportId)?.name ?? 'All sports',
+        [sports.find(s => s.id === filters.sportId)?.name ?? (deletedSport ? 'Deleted sport' : 'All sports'),
          groups.find(g => g.id === filters.groupId)?.name ?? 'All groups'].join(' · ')
     );
 
@@ -36,7 +41,7 @@
         try {
             [groups, sports] = await Promise.all([getAllGroups(), getAllSports()]);
         } catch (e) {
-            error = e instanceof Error ? e.message : 'Failed to load filters';
+            filtersError = e instanceof Error ? e.message : 'Failed to load filters';
         }
     });
 
@@ -89,6 +94,9 @@
                     {/if}
                 </div>
                 <div class="card-body">
+                    {#if filtersError}
+                        <div class="alert alert-danger py-2 small">{filtersError}</div>
+                    {/if}
                     <div class="mb-3">
                         <label class="form-label" for="filterGroup">Group</label>
                         <select id="filterGroup"
@@ -109,6 +117,9 @@
                             {#each sports as sport (sport.id)}
                                 <option value={sport.id} selected={filters.sportId === sport.id}>{sport.name}</option>
                             {/each}
+                            {#if deletedSport}
+                                <option value={filters.sportId} selected>Deleted sport</option>
+                            {/if}
                         </select>
                     </div>
                 </div>
