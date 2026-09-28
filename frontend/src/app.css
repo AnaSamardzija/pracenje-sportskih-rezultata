@@ -214,6 +214,89 @@ body {
     flex-shrink: 0;
 }
 
+/* Meč u listi: prva strana levo, rezultat u sredini, druga strana desno */
+.match-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.match-side {
+    overflow-wrap: anywhere;
+    color: var(--bs-secondary-color);
+}
+
+.match-side-winner {
+    color: var(--app-dark);
+    font-weight: 600;
+}
+
+.match-score {
+    display: inline-block;
+    min-width: 3.5rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.5rem;
+    background-color: var(--app-bg);
+    color: var(--app-primary);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Detalji meča: dve strane (poravnate po vrhu, i kad jedna ima više igrača) i krupan rezultat između njih */
+.scoreboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+}
+
+.scoreboard-score {
+    align-self: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--app-dark);
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .scoreboard-score {
+        font-size: 1.75rem;
+    }
+}
+
+/* Rang-lista: mesto u krugu, prva tri mesta zlatno, srebrno i bronzano */
+.rank-badge {
+    width: 1.9rem;
+    height: 1.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--app-bg);
+    color: var(--app-dark);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.rank-1 {
+    background-color: #F2C230;
+}
+
+.rank-2 {
+    background-color: #C9D1DB;
+}
+
+.rank-3 {
+    background-color: #D9955B;
+    color: #fff;
+}
+
+/* Red prijavljenog korisnika u tabeli (Bootstrap boju ćelije čita iz --bs-table-bg) */
+.row-me {
+    --bs-table-bg: var(--app-bg);
+}
+
 /* Koraci za novog korisnika na početnoj */
 .step {
     display: flex;

@@ -5,19 +5,14 @@
     import {getAllGroups} from '../lib/api/groups.api';
     import {authStore} from '../lib/auth/auth.store';
     import PageHeader from '../lib/components/PageHeader.svelte';
+    import StatCards from '../lib/components/StatCards.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
     import {GROUP_ROLE_LABELS, type GroupResponse} from '../lib/types/group.types';
-    import {formatScore, type MatchOutcome, type MatchResponse} from '../lib/types/match.types';
+    import {formatScore, OUTCOME_BADGES, type MatchResponse} from '../lib/types/match.types';
     import type {PlayerStatsResponse} from '../lib/types/stats.types';
     import {formatDate} from '../lib/utils/date';
 
     const RECENT_MATCHES = 5;
-
-    const OUTCOME_BADGES: Record<MatchOutcome, {letter: string; css: string}> = {
-        WIN: {letter: 'W', css: 'text-bg-success'},
-        DRAW: {letter: 'D', css: 'text-bg-secondary'},
-        LOSS: {letter: 'L', css: 'text-bg-danger'}
-    };
 
     const user = $derived($authStore.user);
 
@@ -85,43 +80,8 @@
         </div>
     {:else if stats}
         <!-- Kartice statistike delimično prelaze preko trake zaglavlja -->
-        <div class="row g-3 page-header-pull mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card h-100">
-                    <div class="card-body">
-                        <div class="stat-label"><i class="bi bi-calendar-event me-2"></i>Matches</div>
-                        <div class="stat-value">{stats.total}</div>
-                        <div class="text-muted small">{stats.wins} W · {stats.draws} D · {stats.losses} L</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card h-100">
-                    <div class="card-body">
-                        <div class="stat-label"><i class="bi bi-percent me-2"></i>Win rate</div>
-                        <div class="stat-value">{stats.winPercentage}%</div>
-                        <progress class="stat-progress mt-2" max="100" value={stats.winPercentage} aria-label="Win rate"></progress>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card h-100">
-                    <div class="card-body">
-                        <div class="stat-label"><i class="bi bi-star me-2"></i>Points</div>
-                        <div class="stat-value">{stats.points}</div>
-                        <div class="text-muted small">across all sports</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card stat-card h-100">
-                    <div class="card-body">
-                        <div class="stat-label"><i class="bi bi-fire me-2"></i>Best streak</div>
-                        <div class="stat-value">{stats.longestWinStreak}</div>
-                        <div class="text-muted small">wins in a row</div>
-                    </div>
-                </div>
-            </div>
+        <div class="page-header-pull mb-4">
+            <StatCards {stats}/>
         </div>
 
         {#if isNewUser}

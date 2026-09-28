@@ -71,7 +71,10 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="#/profile"><i class="bi bi-person-circle me-2"></i>My profile</a>
+                            <a class="dropdown-item" href="#/players/{user.id}"><i class="bi bi-person-circle me-2"></i>My profile</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#/profile"><i class="bi bi-gear me-2"></i>Account settings</a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
