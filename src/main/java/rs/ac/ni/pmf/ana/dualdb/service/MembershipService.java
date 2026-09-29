@@ -47,6 +47,7 @@ public class MembershipService
 		membershipStorage().save(membership);
 	}
 
+	@Transactional
 	public void join(final String groupId, final String userId)
 	{
 		requireGroupExists(groupId);
@@ -59,7 +60,7 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(userId)
 				.groupId(groupId)
-				.roleInGroup(GroupRole.MEMBER)
+				.roleInGroup(roleForNewMember(groupId, userId))
 				.build();
 
 		membershipStorage().save(membership);
@@ -67,6 +68,7 @@ public class MembershipService
 		log.info("User {} joined group {}", userId, groupId);
 	}
 
+	@Transactional
 	public MemberView addMember(final String groupId, final String username, final User currentUser)
 	{
 		requireGroupExists(groupId);
@@ -88,7 +90,7 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(user.getId())
 				.groupId(groupId)
-				.roleInGroup(GroupRole.MEMBER)
+				.roleInGroup(roleForNewMember(groupId, user.getId()))
 				.build();
 
 		final Membership saved = membershipStorage().save(membership);
@@ -252,8 +254,38 @@ public class MembershipService
 	{
 		return membershipStorage().findByGroupId(membership.getGroupId()).stream()
 				.filter(other -> !other.getId().equals(membership.getId()))
-				.filter(other -> userStorage().findById(other.getUserId()).map(User::isActive).orElse(false))
+				.filter(this::isActive)
 				.toList();
+	}
+
+	private boolean isActive(final Membership membership)
+	{
+		return userStorage().findById(membership.getUserId()).map(User::isActive).orElse(false);
+	}
+
+	/**
+	 * Grupa u kojoj nijedan GROUP_ADMIN nije aktivan (admin je deaktiviran ili izbačen, a tada nije imao kome da
+	 * preda ulogu) dobija za admina prvog novog člana, a deaktivirani admin postaje MEMBER, kao pri predaji uloge.
+	 */
+	private GroupRole roleForNewMember(final String groupId, final String userId)
+	{
+		final List<Membership> admins = membershipStorage().findByGroupId(groupId).stream()
+				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+				.toList();
+
+		if (admins.stream().anyMatch(this::isActive))
+		{
+			return GroupRole.MEMBER;
+		}
+
+		admins.forEach(admin ->
+		{
+			admin.setRoleInGroup(GroupRole.MEMBER);
+			membershipStorage().save(admin);
+		});
+
+		log.info("User {} is now group admin of group {}", userId, groupId);
+		return GroupRole.GROUP_ADMIN;
 	}
 
 	/**

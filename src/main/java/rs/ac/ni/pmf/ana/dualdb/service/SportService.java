@@ -24,6 +24,7 @@ public class SportService
 {
 	private final StorageResolver _storageResolver;
 	private final CurrentStorageTypeProvider _storageTypeProvider;
+	private final MatchService _matchService;
 
 	public List<Sport> findAll(final boolean includeInactive)
 	{
@@ -57,6 +58,13 @@ public class SportService
 		requireUniqueName(sport.getName(), id);
 		requireValidPlayerRange(sport);
 		requireValidScoringRules(sport);
+
+		final boolean formatChanged = existing.getType() != sport.getType() || existing.getScoringMode() != sport.getScoringMode();
+
+		if (formatChanged && _matchService.hasMatchesInSport(id))
+		{
+			throw new InvalidOperationException("Sport with id " + id + " has recorded matches; its type and scoringMode cannot be changed");
+		}
 
 		existing.setName(sport.getName());
 		existing.setType(sport.getType());

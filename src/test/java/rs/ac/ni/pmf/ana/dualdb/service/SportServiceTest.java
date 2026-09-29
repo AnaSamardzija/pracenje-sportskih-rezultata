@@ -39,6 +39,9 @@ class SportServiceTest
 	@Mock
 	SportStorage _sportStorage;
 
+	@Mock
+	MatchService _matchService;
+
 	@InjectMocks
 	SportService _sportService;
 

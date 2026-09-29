@@ -6,4 +6,6 @@ import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.MatchDocument;
 public interface MongoMatchRepository extends MongoRepository<MatchDocument, String>
 {
 	boolean existsByGroupId(String groupId);
+
+	boolean existsBySportId(String sportId);
 }

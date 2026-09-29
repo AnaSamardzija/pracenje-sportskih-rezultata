@@ -66,9 +66,14 @@ public class MatchService
 		return toDetails(List.of(loadMatch(id))).get(0);
 	}
 
-	public boolean hasMatches(final String groupId)
+	public boolean hasMatchesInGroup(final String groupId)
 	{
 		return matchStorage().existsByGroupId(groupId);
+	}
+
+	public boolean hasMatchesInSport(final String sportId)
+	{
+		return matchStorage().existsBySportId(sportId);
 	}
 
 	@Transactional

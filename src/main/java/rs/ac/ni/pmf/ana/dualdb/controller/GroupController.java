@@ -147,7 +147,8 @@ public class GroupController
 	@PostMapping("/{id}/members")
 	@ResponseStatus(HttpStatus.CREATED)
 	@Operation(summary = "Dodavanje člana u grupu (GROUP_ADMIN ili permisija groups.members.add_any)",
-			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe.")
+			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe, "
+					+ "a GROUP_ADMIN ako grupa nema aktivnog admina.")
 	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -172,7 +173,7 @@ public class GroupController
 	@PostMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Pridruživanje grupi (prijavljen korisnik)",
-			description = "Bez tela; korisnik postaje MEMBER grupe.")
+			description = "Bez tela; korisnik postaje MEMBER grupe, a GROUP_ADMIN ako grupa nema aktivnog admina.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je postao član")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

@@ -167,7 +167,8 @@ public class SportController
 	@ApiResponse(responseCode = "409", description = "Ime pripada drugom sportu",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "422", description = "maxPlayersPerSide je manji od minPlayersPerSide, INDIVIDUAL sport nema tačno 1 igrača po strani, "
-			+ "SETS sport nema neparan bestOf i pointsToWinSet ili dozvoljava nerešeno, ili sport koji nije SETS ima bestOf ili pointsToWinSet",
+			+ "SETS sport nema neparan bestOf i pointsToWinSet ili dozvoljava nerešeno, sport koji nije SETS ima bestOf ili pointsToWinSet, "
+			+ "ili se menja type ili scoringMode sporta koji ima mečeve",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public SportResponse update(@PathVariable final String id, @RequestBody @Valid final SportRequest request)
 	{

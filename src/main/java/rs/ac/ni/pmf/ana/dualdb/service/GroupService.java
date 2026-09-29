@@ -98,7 +98,7 @@ public class GroupService
 		final Group existing = loadGroup(id);
 		_membershipService.requireGroupAdmin(id, currentUser, Permission.GROUPS_DELETE_ANY);
 
-		if (_matchService.hasMatches(id))
+		if (_matchService.hasMatchesInGroup(id))
 		{
 			throw new InvalidOperationException("Group with id " + id + " has recorded matches and cannot be deleted");
 		}
