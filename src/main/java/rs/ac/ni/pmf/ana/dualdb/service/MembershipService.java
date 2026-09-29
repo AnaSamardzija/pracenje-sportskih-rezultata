@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,12 +61,13 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(userId)
 				.groupId(groupId)
-				.roleInGroup(roleForNewMember(groupId, userId))
+				.roleInGroup(GroupRole.MEMBER)
 				.build();
 
 		membershipStorage().save(membership);
 
 		log.info("User {} joined group {}", userId, groupId);
+		ensureActiveAdmin(groupId);
 	}
 
 	@Transactional
@@ -74,7 +76,7 @@ public class MembershipService
 		requireGroupExists(groupId);
 		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_ADD_ANY);
 
-		final User user = userStorage().findByUsername(username)
+		final User user = userStorage().findByUsername(username.strip())
 				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
 
 		if (!user.isActive())
@@ -90,18 +92,19 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(user.getId())
 				.groupId(groupId)
-				.roleInGroup(roleForNewMember(groupId, user.getId()))
+				.roleInGroup(GroupRole.MEMBER)
 				.build();
 
 		final Membership saved = membershipStorage().save(membership);
 
 		log.info("User {} added to group {} by {}", user.getId(), groupId, currentUser.getId());
+		ensureActiveAdmin(groupId);
 
 		return MemberView.builder()
 				.userId(saved.getUserId())
 				.username(user.getUsername())
 				.active(user.isActive())
-				.roleInGroup(saved.getRoleInGroup())
+				.roleInGroup(roleOf(groupId, user.getId()))
 				.joinedAt(saved.getJoinedAt())
 				.build();
 	}
@@ -112,57 +115,38 @@ public class MembershipService
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(userId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("You are not a member of this group"));
 
-		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN && activeOthers(membership).isEmpty())
 		{
-			final List<Membership> others = activeOthers(membership);
-
-			if (others.isEmpty())
-			{
-				throw new InvalidOperationException("You are the only active member of this group; delete the group instead");
-			}
-
-			keepGroupAdmin(groupId, others);
+			throw new InvalidOperationException("You are the only active member of this group; delete the group instead");
 		}
 
 		membershipStorage().deleteById(membership.getId());
 
 		log.info("User {} left group {}", userId, groupId);
+		ensureActiveAdmin(groupId);
 	}
 
 	/**
-	 * Deaktiviran korisnik predaje ulogu GROUP_ADMIN u svakoj grupi u kojoj ima aktivnih članova i tamo
-	 * postaje MEMBER. U grupi bez drugih aktivnih članova ostaje admin, jer nema kome da je preda.
+	 * Posle deaktivacije ili vraćanja korisnika proverava sve njegove grupe, jer se tada menja ko je u grupi aktivan.
 	 */
 	@Transactional
-	public void handOverGroupAdmin(final String userId)
+	public void ensureActiveAdminInGroupsOf(final String userId)
 	{
-		final List<Membership> adminMemberships = membershipStorage().findByUserId(userId).stream()
-				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
-				.toList();
-
-		for (final Membership membership : adminMemberships)
-		{
-			final List<Membership> others = activeOthers(membership);
-
-			if (!others.isEmpty())
-			{
-				membership.setRoleInGroup(GroupRole.MEMBER);
-				membershipStorage().save(membership);
-
-				keepGroupAdmin(membership.getGroupId(), others);
-			}
-		}
+		membershipStorage().findByUserId(userId)
+				.forEach(membership -> ensureActiveAdmin(membership.getGroupId()));
 	}
 
 	public List<MemberView> listMembers(final String groupId)
 	{
 		requireGroupExists(groupId);
 
-		final UserStorage users = userStorage();
-		return membershipStorage().findByGroupId(groupId).stream()
+		final List<Membership> memberships = membershipStorage().findByGroupId(groupId);
+		final Map<String, User> users = usersById(memberships);
+
+		return memberships.stream()
 				.map(membership ->
 				{
-					final Optional<User> user = users.findById(membership.getUserId());
+					final Optional<User> user = Optional.ofNullable(users.get(membership.getUserId()));
 
 					return MemberView.builder()
 							.userId(membership.getUserId())
@@ -172,7 +156,7 @@ public class MembershipService
 							.joinedAt(membership.getJoinedAt())
 							.build();
 				})
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Transactional
@@ -189,19 +173,10 @@ public class MembershipService
 			throw new InvalidOperationException("You cannot remove yourself from the group; use leave instead");
 		}
 
-		if (membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
-		{
-			final List<Membership> others = activeOthers(membership);
-
-			if (!others.isEmpty())
-			{
-				keepGroupAdmin(groupId, others);
-			}
-		}
-
 		membershipStorage().deleteById(membership.getId());
 
 		log.info("User {} removed from group {}", membership.getUserId(), groupId);
+		ensureActiveAdmin(groupId);
 	}
 
 	public void removeAllForGroup(final String groupId)
@@ -252,54 +227,58 @@ public class MembershipService
 
 	private List<Membership> activeOthers(final Membership membership)
 	{
-		return membershipStorage().findByGroupId(membership.getGroupId()).stream()
+		final List<Membership> others = membershipStorage().findByGroupId(membership.getGroupId()).stream()
 				.filter(other -> !other.getId().equals(membership.getId()))
-				.filter(this::isActive)
+				.toList();
+		final Set<String> activeUserIds = activeUserIds(others);
+
+		return others.stream()
+				.filter(other -> activeUserIds.contains(other.getUserId()))
 				.toList();
 	}
 
-	private boolean isActive(final Membership membership)
+	private Map<String, User> usersById(final List<Membership> memberships)
 	{
-		return userStorage().findById(membership.getUserId()).map(User::isActive).orElse(false);
+		final Set<String> userIds = memberships.stream().map(Membership::getUserId).collect(Collectors.toSet());
+
+		return userStorage().findAllById(userIds).stream()
+				.collect(Collectors.toMap(User::getId, Function.identity()));
+	}
+
+	private Set<String> activeUserIds(final List<Membership> memberships)
+	{
+		return usersById(memberships).values().stream()
+				.filter(User::isActive)
+				.map(User::getId)
+				.collect(Collectors.toSet());
 	}
 
 	/**
-	 * Grupa u kojoj nijedan GROUP_ADMIN nije aktivan (admin je deaktiviran ili izbačen, a tada nije imao kome da
-	 * preda ulogu) dobija za admina prvog novog člana, a deaktivirani admin postaje MEMBER, kao pri predaji uloge.
+	 * Grupa uvek ima aktivnog GROUP_ADMIN-a dok ima aktivnih članova. Kad ga nema (admin je otišao, izbačen ili
+	 * deaktiviran), admin postaje aktivan član koji je najduže u grupi, a neaktivni admini postaju MEMBER.
 	 */
-	private GroupRole roleForNewMember(final String groupId, final String userId)
+	private void ensureActiveAdmin(final String groupId)
 	{
-		final List<Membership> admins = membershipStorage().findByGroupId(groupId).stream()
-				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+		final List<Membership> memberships = membershipStorage().findByGroupId(groupId);
+		final Set<String> activeUserIds = activeUserIds(memberships);
+		final List<Membership> active = memberships.stream()
+				.filter(membership -> activeUserIds.contains(membership.getUserId()))
 				.toList();
 
-		if (admins.stream().anyMatch(this::isActive))
-		{
-			return GroupRole.MEMBER;
-		}
-
-		admins.forEach(admin ->
-		{
-			admin.setRoleInGroup(GroupRole.MEMBER);
-			membershipStorage().save(admin);
-		});
-
-		log.info("User {} is now group admin of group {}", userId, groupId);
-		return GroupRole.GROUP_ADMIN;
-	}
-
-	/**
-	 * Grupa uvek ima aktivnog GROUP_ADMIN-a dok ima aktivnih članova. Kad admin odlazi ili je deaktiviran,
-	 * a među ostalim aktivnim članovima nema admina, admin postaje onaj koji je najduže u grupi.
-	 */
-	private void keepGroupAdmin(final String groupId, final List<Membership> others)
-	{
-		if (others.stream().anyMatch(other -> other.getRoleInGroup() == GroupRole.GROUP_ADMIN))
+		if (active.isEmpty() || active.stream().anyMatch(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN))
 		{
 			return;
 		}
 
-		final Membership successor = others.stream()
+		memberships.stream()
+				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+				.forEach(admin ->
+				{
+					admin.setRoleInGroup(GroupRole.MEMBER);
+					membershipStorage().save(admin);
+				});
+
+		final Membership successor = active.stream()
 				.min(Comparator.comparing(Membership::getJoinedAt))
 				.orElseThrow();
 

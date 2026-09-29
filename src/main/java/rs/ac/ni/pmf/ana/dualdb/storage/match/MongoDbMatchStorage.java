@@ -17,7 +17,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.MatchOutcome;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -39,7 +38,7 @@ public class MongoDbMatchStorage extends MatchStorage
 	{
 		return _matchRepository.findAll().stream()
 				.map(_matchMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -66,7 +65,7 @@ public class MongoDbMatchStorage extends MatchStorage
 
 		return _mongoTemplate.find(query, MatchDocument.class).stream()
 				.map(_matchMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

@@ -11,9 +11,9 @@ import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbGroupRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.Group;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +35,7 @@ public class MariaDbGroupStorage extends GroupStorage
 	{
 		return _groupRepository.findAll().stream()
 				.map(_groupMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -43,6 +43,15 @@ public class MariaDbGroupStorage extends GroupStorage
 	public Optional<Group> findById(final String id)
 	{
 		return _groupRepository.findById(Long.parseLong(id)).map(_groupMapper::toModel);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Group> findAllById(final Collection<String> ids)
+	{
+		return _groupRepository.findAllById(ids.stream().map(Long::parseLong).toList()).stream()
+				.map(_groupMapper::toModel)
+				.toList();
 	}
 
 	@Override

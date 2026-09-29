@@ -15,7 +15,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.Membership;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class MariaDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findAll().stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -71,7 +70,7 @@ public class MariaDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findByGroup_Id(Long.parseLong(groupId)).stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -80,7 +79,7 @@ public class MariaDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findByUser_Id(Long.parseLong(userId)).stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

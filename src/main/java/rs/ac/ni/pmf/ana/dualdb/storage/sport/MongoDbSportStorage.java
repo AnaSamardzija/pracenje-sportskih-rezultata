@@ -8,9 +8,9 @@ import rs.ac.ni.pmf.ana.dualdb.data.mongodb.mapper.MongoSportMapper;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoSportRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class MongoDbSportStorage extends SportStorage
 	{
 		return _sportRepository.findAll().stream()
 				.map(_sportMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class MongoDbSportStorage extends SportStorage
 	{
 		return _sportRepository.findByActiveTrue().stream()
 				.map(_sportMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -51,6 +51,14 @@ public class MongoDbSportStorage extends SportStorage
 	public Optional<Sport> findById(final String id)
 	{
 		return _sportRepository.findById(id).map(_sportMapper::toModel);
+	}
+
+	@Override
+	public List<Sport> findAllById(final Collection<String> ids)
+	{
+		return _sportRepository.findAllById(ids).stream()
+				.map(_sportMapper::toModel)
+				.toList();
 	}
 
 	@Override

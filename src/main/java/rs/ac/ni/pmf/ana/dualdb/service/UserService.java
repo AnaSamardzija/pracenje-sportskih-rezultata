@@ -91,7 +91,9 @@ public class UserService
 			throw new AccessDeniedException("You are not allowed to change user roles");
 		}
 
-		if (user.getId().equals(currentUser.getId()) && !changes.getRoles().contains("SYSTEM_ADMIN"))
+		if (user.getId().equals(currentUser.getId())
+				&& user.getRoles().contains("SYSTEM_ADMIN")
+				&& !changes.getRoles().contains("SYSTEM_ADMIN"))
 		{
 			throw new InvalidOperationException("You cannot remove your own SYSTEM_ADMIN role");
 		}
@@ -129,9 +131,8 @@ public class UserService
 		user.setActive(false);
 		userStorage().save(user);
 
-		_membershipService.handOverGroupAdmin(user.getId());
-
 		log.info("User {} '{}' deactivated", user.getId(), user.getUsername());
+		_membershipService.ensureActiveAdminInGroupsOf(user.getId());
 	}
 
 	@Transactional
@@ -148,6 +149,8 @@ public class UserService
 		final User saved = userStorage().save(user);
 
 		log.info("User {} '{}' restored", saved.getId(), saved.getUsername());
+		_membershipService.ensureActiveAdminInGroupsOf(saved.getId());
+
 		return saved;
 	}
 

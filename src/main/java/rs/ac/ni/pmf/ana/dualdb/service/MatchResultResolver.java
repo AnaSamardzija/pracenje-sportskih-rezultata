@@ -79,8 +79,8 @@ public class MatchResultResolver
 		}
 
 		final SportRules rules = sport.getRules();
-		final Integer setsToWin = rules == null || rules.getBestOf() == null ? null : rules.getBestOf() / 2 + 1;
-		final Integer pointsToWinSet = rules == null ? null : rules.getPointsToWinSet();
+		final int setsToWin = rules.getBestOf() / 2 + 1;
+		final int pointsToWinSet = rules.getPointsToWinSet();
 
 		final List<Integer> first = match.getSides().get(0).getSetScores();
 		final List<Integer> second = match.getSides().get(1).getSetScores();
@@ -93,7 +93,7 @@ public class MatchResultResolver
 			final int firstScore = first.get(setIndex);
 			final int secondScore = second.get(setIndex);
 
-			if (setsToWin != null && (firstWon == setsToWin || secondWon == setsToWin))
+			if (firstWon == setsToWin || secondWon == setsToWin)
 			{
 				throw new InvalidOperationException("the match was already decided before set " + setNumber);
 			}
@@ -103,7 +103,7 @@ public class MatchResultResolver
 				throw new InvalidOperationException("set " + setNumber + " cannot end in a tie");
 			}
 
-			if (pointsToWinSet != null && Math.max(firstScore, secondScore) < pointsToWinSet)
+			if (Math.max(firstScore, secondScore) < pointsToWinSet)
 			{
 				throw new InvalidOperationException(
 						"the winner of set " + setNumber + " must reach at least " + pointsToWinSet + " points");
@@ -119,7 +119,7 @@ public class MatchResultResolver
 			}
 		}
 
-		if (setsToWin != null && firstWon != setsToWin && secondWon != setsToWin)
+		if (firstWon != setsToWin && secondWon != setsToWin)
 		{
 			throw new InvalidOperationException("the match is not finished: one side must win " + setsToWin + " sets");
 		}
@@ -195,7 +195,7 @@ public class MatchResultResolver
 
 	private void requireDrawAllowed(final Sport sport)
 	{
-		if (sport.getRules() == null || !sport.getRules().isAllowDraw())
+		if (!sport.getRules().isAllowDraw())
 		{
 			throw new InvalidOperationException("Sport " + sport.getName() + " does not allow a draw");
 		}

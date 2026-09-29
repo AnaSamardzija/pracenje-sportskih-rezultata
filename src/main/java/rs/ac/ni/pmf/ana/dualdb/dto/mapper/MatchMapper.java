@@ -15,7 +15,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.MatchSide;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class MatchMapper
@@ -35,7 +34,7 @@ public class MatchMapper
 						.build())
 				.sides(match.getSides().stream()
 						.map(side -> toSideResponse(side, details.getPlayerUsernames()))
-						.collect(Collectors.toList()))
+						.toList())
 				.build();
 	}
 
@@ -47,7 +46,7 @@ public class MatchMapper
 				.playedAt(request.getPlayedAt())
 				.sides(request.getSides().stream()
 						.map(this::toSide)
-						.collect(Collectors.toList()))
+						.toList())
 				.build();
 	}
 
@@ -68,7 +67,7 @@ public class MatchMapper
 						.id(playerId)
 						.username(usernames.get(playerId))
 						.build())
-				.collect(Collectors.toList());
+				.toList();
 
 		return MatchSideResponse.builder()
 				.players(players)

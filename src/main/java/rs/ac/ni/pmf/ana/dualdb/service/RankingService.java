@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,8 +38,8 @@ public class RankingService
 		requireGroupExists(groupId);
 		requireSportExists(sportId);
 
-		final List<PlayerStats> stats = withUsernames(
-				_calculator.aggregate(matchStorage().findAll(groupId, sportId, null), sportsById()));
+		final List<Match> matches = matchStorage().findAll(groupId, sportId, null);
+		final List<PlayerStats> stats = withUsernames(_calculator.aggregate(matches, sportsById(matches)));
 
 		stats.sort(Comparator.comparingInt(PlayerStats::getPoints).reversed()
 				.thenComparing(Comparator.comparingInt(PlayerStats::getWins).reversed())
@@ -54,7 +55,8 @@ public class RankingService
 
 		requireSportExists(sportId);
 
-		final PlayerStats stats = _calculator.aggregate(matchStorage().findAll(null, sportId, playerId), sportsById())
+		final List<Match> matches = matchStorage().findAll(null, sportId, playerId);
+		final PlayerStats stats = _calculator.aggregate(matches, sportsById(matches))
 				.stream()
 				.filter(entry -> playerId.equals(entry.getPlayerId()))
 				.findFirst()
@@ -68,7 +70,8 @@ public class RankingService
 
 	private List<PlayerStats> withUsernames(final List<PlayerStats> stats)
 	{
-		final Map<String, String> usernames = userStorage().findAll().stream()
+		final Set<String> playerIds = stats.stream().map(PlayerStats::getPlayerId).collect(Collectors.toSet());
+		final Map<String, String> usernames = userStorage().findAllById(playerIds).stream()
 				.collect(Collectors.toMap(User::getId, User::getUsername));
 
 		stats.forEach(entry -> entry.setUsername(usernames.get(entry.getPlayerId())));
@@ -99,9 +102,11 @@ public class RankingService
 		return entries;
 	}
 
-	private Map<String, Sport> sportsById()
+	private Map<String, Sport> sportsById(final List<Match> matches)
 	{
-		return sportStorage().findAll().stream()
+		final Set<String> sportIds = matches.stream().map(Match::getSportId).collect(Collectors.toSet());
+
+		return sportStorage().findAllById(sportIds).stream()
 				.collect(Collectors.toMap(Sport::getId, Function.identity()));
 	}
 

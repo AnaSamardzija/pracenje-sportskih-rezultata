@@ -28,7 +28,6 @@ import rs.ac.ni.pmf.ana.dualdb.dto.mapper.SportMapper;
 import rs.ac.ni.pmf.ana.dualdb.service.SportService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/sports")
@@ -99,7 +98,7 @@ public class SportController
 	{
 		return _sportService.findAll(includeInactive).stream()
 				.map(_sportMapper::toResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@GetMapping("/{id}")

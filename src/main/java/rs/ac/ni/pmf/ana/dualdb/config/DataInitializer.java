@@ -44,6 +44,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DataInitializer implements CommandLineRunner
 {
+	private static final Map<String, Set<Permission>> ROLE_PERMISSIONS = Map.of(
+			"SYSTEM_ADMIN", EnumSet.allOf(Permission.class),
+			"USER", EnumSet.of(Permission.USERS_PASSWORD_CHANGE_SELF)
+	);
+
 	private final MariaDbUserRepository _mariaDbUserRepository;
 	private final MongoUserRepository _mongoUserRepository;
 
@@ -55,11 +60,6 @@ public class DataInitializer implements CommandLineRunner
 	private final MongoTemplate _mongoTemplate;
 
 	private final PasswordEncoder _passwordEncoder;
-
-	private final Map<String, Set<Permission>> rolePermissions = Map.of(
-			"SYSTEM_ADMIN", EnumSet.allOf(Permission.class),
-			"USER", EnumSet.of(Permission.USERS_PASSWORD_CHANGE_SELF)
-	);
 
 	@Override
 	@Transactional
@@ -116,7 +116,7 @@ public class DataInitializer implements CommandLineRunner
 					.firstName("Ana")
 					.lastName("Samardžija")
 					.email("ana.samardzija@pmf.edu.rs")
-					.roles(_mongoRoleRepository.findAllByNameIn(rolePermissions.keySet()))
+					.roles(_mongoRoleRepository.findAllByNameIn(ROLE_PERMISSIONS.keySet()))
 					.createdAt(LocalDateTime.now())
 					.active(true)
 					.build();
@@ -154,7 +154,7 @@ public class DataInitializer implements CommandLineRunner
 			return;
 		}
 
-		rolePermissions.forEach((role, permissions) -> _mongoRoleRepository.save(RoleDocument.builder()
+		ROLE_PERMISSIONS.forEach((role, permissions) -> _mongoRoleRepository.save(RoleDocument.builder()
 				.name(role)
 				.permissions(permissions.stream()
 						.map(permission -> _mongoPermissionRepository.findByName(permission.getValue()))

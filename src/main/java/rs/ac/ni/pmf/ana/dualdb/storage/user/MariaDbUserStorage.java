@@ -11,6 +11,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbRoleRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class MariaDbUserStorage extends UserStorage
 	{
 		return _userRepository.findAll().stream()
 				.map(_userMapper::toUser)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -45,6 +46,15 @@ public class MariaDbUserStorage extends UserStorage
 	public Optional<User> findById(final String id)
 	{
 		return _userRepository.findById(Long.parseLong(id)).map(_userMapper::toUser);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<User> findAllById(final Collection<String> ids)
+	{
+		return _userRepository.findAllById(ids.stream().map(Long::parseLong).toList()).stream()
+				.map(_userMapper::toUser)
+				.toList();
 	}
 
 	@Override

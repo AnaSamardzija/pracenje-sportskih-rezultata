@@ -32,7 +32,7 @@ public class AuthService
 	public AuthResponse authenticate(final String username, final String password, final StorageType storageType)
 	{
 		final Authentication authentication = _authenticationManager
-				.authenticate(new LoginAuthenticationToken(username, password, storageType));
+				.authenticate(new LoginAuthenticationToken(username.strip(), password, storageType));
 
 		if (authentication.getPrincipal() instanceof final CustomUserDetails userDetails)
 		{
@@ -52,6 +52,8 @@ public class AuthService
 	{
 		final UserStorage storage = (UserStorage) _storageResolver.resolve(storageType, User.class)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid storage type: " + storageType));
+
+		user.setUsername(user.getUsername().strip());
 
 		if (storage.existsByUsername(user.getUsername()))
 		{

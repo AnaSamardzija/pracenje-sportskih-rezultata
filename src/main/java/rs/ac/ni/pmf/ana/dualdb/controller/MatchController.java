@@ -28,7 +28,6 @@ import rs.ac.ni.pmf.ana.dualdb.security.CustomUserDetails;
 import rs.ac.ni.pmf.ana.dualdb.service.MatchService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/matches")
@@ -89,7 +88,7 @@ public class MatchController
 	{
 		return _matchService.findAll(groupId, sportId, playerId).stream()
 				.map(_matchMapper::toResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@GetMapping("/{id}")

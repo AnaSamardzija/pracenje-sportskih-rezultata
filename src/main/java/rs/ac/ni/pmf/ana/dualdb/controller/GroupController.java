@@ -30,7 +30,6 @@ import rs.ac.ni.pmf.ana.dualdb.service.GroupService;
 import rs.ac.ni.pmf.ana.dualdb.service.MembershipService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/groups")
@@ -55,7 +54,7 @@ public class GroupController
 	{
 		return _groupService.findAll(mine, search, principal.getUser().getId()).stream()
 				.map(_groupMapper::toResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@GetMapping("/{id}")
@@ -141,14 +140,14 @@ public class GroupController
 	{
 		return _membershipService.listMembers(id).stream()
 				.map(_groupMapper::toMemberResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@PostMapping("/{id}/members")
 	@ResponseStatus(HttpStatus.CREATED)
 	@Operation(summary = "Dodavanje člana u grupu (GROUP_ADMIN ili permisija groups.members.add_any)",
 			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe, "
-					+ "a GROUP_ADMIN ako grupa nema aktivnog admina.")
+					+ "a GROUP_ADMIN ako grupa nema drugih aktivnih članova.")
 	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -173,7 +172,7 @@ public class GroupController
 	@PostMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Pridruživanje grupi (prijavljen korisnik)",
-			description = "Bez tela; korisnik postaje MEMBER grupe, a GROUP_ADMIN ako grupa nema aktivnog admina.")
+			description = "Bez tela; korisnik postaje MEMBER grupe, a GROUP_ADMIN ako grupa nema drugih aktivnih članova.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je postao član")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

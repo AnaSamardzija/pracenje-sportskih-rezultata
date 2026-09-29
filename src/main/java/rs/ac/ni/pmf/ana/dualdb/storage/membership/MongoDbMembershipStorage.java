@@ -10,7 +10,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.Membership;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class MongoDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findAll().stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -57,7 +56,7 @@ public class MongoDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findByGroupId(groupId).stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -65,7 +64,7 @@ public class MongoDbMembershipStorage extends MembershipStorage
 	{
 		return _membershipRepository.findByUserId(userId).stream()
 				.map(_membershipMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

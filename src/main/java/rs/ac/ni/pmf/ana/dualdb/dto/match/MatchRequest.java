@@ -36,6 +36,5 @@ public class MatchRequest
 
 	@NotNull(message = "sides are required")
 	@Size(min = 2, max = 2, message = "a match must have exactly 2 sides")
-	@Valid
-	List<MatchSideRequest> sides;
+	List<@NotNull(message = "side cannot be null") @Valid MatchSideRequest> sides;
 }

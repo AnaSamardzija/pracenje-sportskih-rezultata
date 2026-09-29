@@ -27,15 +27,10 @@ public class RankingCalculator
 
 		for (final Match match : matches)
 		{
-			final SportRules rules = rulesOf(match, sportsById);
+			final SportRules rules = sportsById.get(match.getSportId()).getRules();
 
 			for (final MatchSide side : match.getSides())
 			{
-				if (side.getOutcome() == null)
-				{
-					continue;
-				}
-
 				for (final String playerId : side.getPlayerIds())
 				{
 					final PlayerStats stats = statsByPlayer.computeIfAbsent(playerId,
@@ -71,11 +66,6 @@ public class RankingCalculator
 
 	private int pointsFor(final MatchOutcome outcome, final SportRules rules)
 	{
-		if (rules == null)
-		{
-			return 0;
-		}
-
 		return switch (outcome)
 		{
 			case WIN -> rules.getPointsForWin();
@@ -95,12 +85,5 @@ public class RankingCalculator
 		final double percentage = 100.0 * stats.getWins() / stats.getTotal();
 
 		stats.setWinPercentage(Math.round(percentage * 100) / 100.0);
-	}
-
-	private SportRules rulesOf(final Match match, final Map<String, Sport> sportsById)
-	{
-		final Sport sport = sportsById.get(match.getSportId());
-
-		return sport == null ? null : sport.getRules();
 	}
 }

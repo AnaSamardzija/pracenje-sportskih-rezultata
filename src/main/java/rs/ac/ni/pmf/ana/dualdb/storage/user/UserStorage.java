@@ -3,6 +3,8 @@ package rs.ac.ni.pmf.ana.dualdb.storage.user;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class UserStorage implements DataStorage<User>
@@ -12,6 +14,8 @@ public abstract class UserStorage implements DataStorage<User>
 	{
 		return User.class;
 	}
+
+	public abstract List<User> findAllById(Collection<String> ids);
 
 	public abstract Optional<User> findByUsername(String username);
 

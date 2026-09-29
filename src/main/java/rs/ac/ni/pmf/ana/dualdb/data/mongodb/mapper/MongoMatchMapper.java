@@ -7,7 +7,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.Match;
 import rs.ac.ni.pmf.ana.dualdb.model.MatchSide;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @Component
 public class MongoMatchMapper
@@ -22,7 +21,7 @@ public class MongoMatchMapper
 				.recordedBy(document.getRecordedBy())
 				.sides(document.getSides().stream()
 						.map(this::toSide)
-						.collect(Collectors.toList()))
+						.toList())
 				.build();
 	}
 
@@ -36,7 +35,7 @@ public class MongoMatchMapper
 				.recordedBy(match.getRecordedBy())
 				.sides(match.getSides().stream()
 						.map(this::toSideDocument)
-						.collect(Collectors.toList()))
+						.toList())
 				.build();
 	}
 
@@ -45,7 +44,7 @@ public class MongoMatchMapper
 		return MatchSide.builder()
 				.playerIds(document.getPlayerIds().stream()
 						.sorted()
-						.collect(Collectors.toList()))
+						.toList())
 				.score(document.getScore())
 				.setScores(new ArrayList<>(document.getSetScores()))
 				.outcome(document.getOutcome())
