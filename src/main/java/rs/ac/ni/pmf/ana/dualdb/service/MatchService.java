@@ -251,7 +251,7 @@ public class MatchService
 						.recordedByUsername(usernames.get(match.getRecordedBy()))
 						.playerUsernames(playerUsernames(match, usernames))
 						.build())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	private Map<String, String> playerUsernames(final Match match, final Map<String, String> usernames)

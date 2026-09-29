@@ -33,7 +33,6 @@ import rs.ac.ni.pmf.ana.dualdb.service.RankingService;
 import rs.ac.ni.pmf.ana.dualdb.service.UserService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -164,7 +163,7 @@ public class UserController
 	{
 		return _userService.findAllExcept(principal.getUser().getId()).stream()
 				.map(_userMapper::toDto)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@PutMapping("/{id}")
@@ -222,7 +221,8 @@ public class UserController
 	@PatchMapping("/{id}/restore")
 	@PreAuthorize("hasAuthority('users.restore')")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Vraćanje deaktiviranog korisnika (permisija users.restore)")
+	@Operation(summary = "Vraćanje deaktiviranog korisnika (permisija users.restore)",
+			description = "Grupa korisnika koja nema aktivnog admina dobija za admina aktivnog člana koji je najduže u grupi.")
 	@ApiResponse(responseCode = "200", description = "Korisnik je ponovo aktivan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

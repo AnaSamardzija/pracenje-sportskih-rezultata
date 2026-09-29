@@ -37,7 +37,7 @@ public class MariaDbUserStorage extends UserStorage
 	{
 		return _userRepository.findAll().stream()
 				.map(_userMapper::toUser)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

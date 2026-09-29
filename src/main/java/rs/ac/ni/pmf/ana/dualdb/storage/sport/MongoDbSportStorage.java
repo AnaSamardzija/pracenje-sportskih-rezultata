@@ -10,7 +10,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class MongoDbSportStorage extends SportStorage
 	{
 		return _sportRepository.findAll().stream()
 				.map(_sportMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -38,7 +37,7 @@ public class MongoDbSportStorage extends SportStorage
 	{
 		return _sportRepository.findByActiveTrue().stream()
 				.map(_sportMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

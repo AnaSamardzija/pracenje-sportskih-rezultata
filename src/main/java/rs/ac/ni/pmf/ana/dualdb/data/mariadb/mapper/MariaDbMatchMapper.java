@@ -10,7 +10,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.MatchSide;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class MariaDbMatchMapper
@@ -25,7 +24,7 @@ public class MariaDbMatchMapper
 				.recordedBy(entity.getRecordedBy() == null ? null : String.valueOf(entity.getRecordedBy().getId()))
 				.sides(entity.getSides().stream()
 						.map(this::toSide)
-						.collect(Collectors.toList()))
+						.toList())
 				.build();
 	}
 
@@ -46,7 +45,7 @@ public class MariaDbMatchMapper
 				.map(UserEntity::getId)
 				.sorted()
 				.map(String::valueOf)
-				.collect(Collectors.toList());
+				.toList();
 
 		return MatchSide.builder()
 				.playerIds(playerIds)

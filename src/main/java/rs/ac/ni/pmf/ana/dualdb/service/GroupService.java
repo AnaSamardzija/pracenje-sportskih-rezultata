@@ -18,7 +18,6 @@ import rs.ac.ni.pmf.ana.dualdb.storage.StorageResolver;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class GroupService
 			final String query = search.toLowerCase();
 			groups = groups.stream()
 					.filter(group -> group.getName() != null && group.getName().toLowerCase().contains(query))
-					.collect(Collectors.toList());
+					.toList();
 		}
 
 		final Map<String, GroupRole> myRoles = _membershipService.rolesByUser(currentUserId);
@@ -48,7 +47,7 @@ public class GroupService
 		{
 			groups = groups.stream()
 					.filter(group -> myRoles.containsKey(group.getId()))
-					.collect(Collectors.toList());
+					.toList();
 		}
 
 		final Map<String, Long> counts = _membershipService.countByGroup();
@@ -59,7 +58,7 @@ public class GroupService
 						.memberCount(counts.getOrDefault(group.getId(), 0L))
 						.myRole(myRoles.get(group.getId()))
 						.build())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public GroupDetails findById(final String id, final String currentUserId)

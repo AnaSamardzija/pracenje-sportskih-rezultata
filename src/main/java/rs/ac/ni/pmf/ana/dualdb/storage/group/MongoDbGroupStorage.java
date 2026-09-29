@@ -10,7 +10,6 @@ import rs.ac.ni.pmf.ana.dualdb.model.Group;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class MongoDbGroupStorage extends GroupStorage
 	{
 		return _groupRepository.findAll().stream()
 				.map(_groupMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

@@ -43,7 +43,7 @@ public class MariaDbMatchStorage extends MatchStorage
 	{
 		return _matchRepository.findAll().stream()
 				.map(_matchMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class MariaDbMatchStorage extends MatchStorage
 	{
 		return _matchRepository.search(toId(groupId), toId(sportId), toId(playerId)).stream()
 				.map(_matchMapper::toModel)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

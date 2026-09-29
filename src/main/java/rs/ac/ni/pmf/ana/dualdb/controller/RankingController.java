@@ -16,7 +16,6 @@ import rs.ac.ni.pmf.ana.dualdb.dto.ranking.RankingEntryResponse;
 import rs.ac.ni.pmf.ana.dualdb.service.RankingService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/rankings")
@@ -45,6 +44,6 @@ public class RankingController
 	{
 		return _rankingService.ranking(groupId, sportId).stream()
 				.map(_rankingMapper::toResponse)
-				.collect(Collectors.toList());
+				.toList();
 	}
 }
