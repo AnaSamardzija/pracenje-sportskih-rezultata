@@ -53,30 +53,30 @@ class SportServiceTest
 	@Test
 	void shouldReturnOnlyActiveSports()
 	{
-		final Sport tenis = TestData.SPORTS.tenis();
-		when(_sportStorage.findAllActive()).thenReturn(List.of(tenis));
+		final Sport tennis = TestData.SPORTS.tennis();
+		when(_sportStorage.findAllActive()).thenReturn(List.of(tennis));
 
-		assertThat(_sportService.findAll(false)).containsExactly(tenis);
+		assertThat(_sportService.findAll(false)).containsExactly(tennis);
 	}
 
 	@Test
 	void shouldReturnAllSportsWhenIncludeInactive()
 	{
-		final Sport tenis = TestData.SPORTS.tenis();
-		final Sport sah = TestData.SPORTS.sah();
-		sah.setActive(false);
-		when(_sportStorage.findAll()).thenReturn(List.of(tenis, sah));
+		final Sport tennis = TestData.SPORTS.tennis();
+		final Sport chess = TestData.SPORTS.chess();
+		chess.setActive(false);
+		when(_sportStorage.findAll()).thenReturn(List.of(tennis, chess));
 
-		assertThat(_sportService.findAll(true)).containsExactly(tenis, sah);
+		assertThat(_sportService.findAll(true)).containsExactly(tennis, chess);
 	}
 
 	@Test
 	void shouldReturnSportById()
 	{
-		final Sport tenis = TestData.SPORTS.tenis();
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(tenis));
+		final Sport tennis = TestData.SPORTS.tennis();
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(tennis));
 
-		assertThat(_sportService.findById(TestData.SPORTS.TENIS_ID, false)).isEqualTo(tenis);
+		assertThat(_sportService.findById(TestData.SPORTS.TENNIS_ID, false)).isEqualTo(tennis);
 	}
 
 	@Test
@@ -92,29 +92,29 @@ class SportServiceTest
 	@Test
 	void shouldThrowNotFoundWhenSportIsInactive()
 	{
-		final Sport sah = TestData.SPORTS.sah();
-		sah.setActive(false);
-		when(_sportStorage.findById(TestData.SPORTS.SAH_ID)).thenReturn(Optional.of(sah));
+		final Sport chess = TestData.SPORTS.chess();
+		chess.setActive(false);
+		when(_sportStorage.findById(TestData.SPORTS.CHESS_ID)).thenReturn(Optional.of(chess));
 
-		assertThatThrownBy(() -> _sportService.findById(TestData.SPORTS.SAH_ID, false))
+		assertThatThrownBy(() -> _sportService.findById(TestData.SPORTS.CHESS_ID, false))
 				.isInstanceOf(ResourceNotFoundException.class);
 	}
 
 	@Test
 	void shouldReturnInactiveSportWhenIncludeInactive()
 	{
-		final Sport sah = TestData.SPORTS.sah();
-		sah.setActive(false);
-		when(_sportStorage.findById(TestData.SPORTS.SAH_ID)).thenReturn(Optional.of(sah));
+		final Sport chess = TestData.SPORTS.chess();
+		chess.setActive(false);
+		when(_sportStorage.findById(TestData.SPORTS.CHESS_ID)).thenReturn(Optional.of(chess));
 
-		assertThat(_sportService.findById(TestData.SPORTS.SAH_ID, true)).isEqualTo(sah);
+		assertThat(_sportService.findById(TestData.SPORTS.CHESS_ID, true)).isEqualTo(chess);
 	}
 
 	@Test
 	void shouldCreateSportAsActive()
 	{
-		final Sport input = TestData.SPORTS.newTenis();
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.empty());
+		final Sport input = TestData.SPORTS.newTennis();
+		when(_sportStorage.findByName("Tennis")).thenReturn(Optional.empty());
 		when(_sportStorage.save(input)).thenReturn(input);
 
 		final Sport created = _sportService.create(input);
@@ -126,11 +126,11 @@ class SportServiceTest
 	@Test
 	void shouldThrowDuplicateWhenNameIsTaken()
 	{
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.of(TestData.SPORTS.tenis()));
+		when(_sportStorage.findByName("Tennis")).thenReturn(Optional.of(TestData.SPORTS.tennis()));
 
-		assertThatThrownBy(() -> _sportService.create(TestData.SPORTS.newTenis()))
+		assertThatThrownBy(() -> _sportService.create(TestData.SPORTS.newTennis()))
 				.isInstanceOf(DuplicateResourceException.class)
-				.hasMessage("Sport with name Tenis already exists");
+				.hasMessage("Sport with name Tennis already exists");
 
 		verify(_sportStorage, never()).save(any());
 	}
@@ -138,13 +138,13 @@ class SportServiceTest
 	@Test
 	void shouldThrowDuplicateWithRestoreHintWhenNameBelongsToInactiveSport()
 	{
-		final Sport inactiveTenis = TestData.SPORTS.tenis();
-		inactiveTenis.setActive(false);
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.of(inactiveTenis));
+		final Sport inactiveTennis = TestData.SPORTS.tennis();
+		inactiveTennis.setActive(false);
+		when(_sportStorage.findByName("Tennis")).thenReturn(Optional.of(inactiveTennis));
 
-		assertThatThrownBy(() -> _sportService.create(TestData.SPORTS.newTenis()))
+		assertThatThrownBy(() -> _sportService.create(TestData.SPORTS.newTennis()))
 				.isInstanceOf(DuplicateResourceException.class)
-				.hasMessage("Sport with name Tenis already exists but is inactive; restore it instead");
+				.hasMessage("Sport with name Tennis already exists but is inactive; restore it instead");
 
 		verify(_sportStorage, never()).save(any());
 	}
@@ -152,9 +152,9 @@ class SportServiceTest
 	@Test
 	void shouldThrowInvalidOperationWhenMaxPlayersIsLessThanMin()
 	{
-		final Sport input = TestData.SPORTS.newFudbal();
+		final Sport input = TestData.SPORTS.newFootball();
 		input.getRules().setMinPlayersPerSide(12);
-		when(_sportStorage.findByName("Fudbal")).thenReturn(Optional.empty());
+		when(_sportStorage.findByName("Football")).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> _sportService.create(input))
 				.isInstanceOf(InvalidOperationException.class)
@@ -166,9 +166,9 @@ class SportServiceTest
 	@Test
 	void shouldThrowInvalidOperationWhenIndividualSportAllowsMoreThanOnePlayer()
 	{
-		final Sport input = TestData.SPORTS.newTenis();
+		final Sport input = TestData.SPORTS.newTennis();
 		input.getRules().setMaxPlayersPerSide(2);
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.empty());
+		when(_sportStorage.findByName("Tennis")).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> _sportService.create(input))
 				.isInstanceOf(InvalidOperationException.class)
@@ -180,15 +180,15 @@ class SportServiceTest
 	@Test
 	void shouldUpdateSport()
 	{
-		final Sport existing = TestData.SPORTS.tenis();
-		final Sport input = TestData.SPORTS.newFudbal();
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(existing));
-		when(_sportStorage.findByName("Fudbal")).thenReturn(Optional.empty());
+		final Sport existing = TestData.SPORTS.tennis();
+		final Sport input = TestData.SPORTS.newFootball();
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(existing));
+		when(_sportStorage.findByName("Football")).thenReturn(Optional.empty());
 		when(_sportStorage.save(existing)).thenReturn(existing);
 
-		final Sport updated = _sportService.update(TestData.SPORTS.TENIS_ID, input);
+		final Sport updated = _sportService.update(TestData.SPORTS.TENNIS_ID, input);
 
-		assertThat(updated.getId()).isEqualTo(TestData.SPORTS.TENIS_ID);
+		assertThat(updated.getId()).isEqualTo(TestData.SPORTS.TENNIS_ID);
 		assertThat(updated.getName()).isEqualTo(input.getName());
 		assertThat(updated.getType()).isEqualTo(input.getType());
 		assertThat(updated.getScoringMode()).isEqualTo(input.getScoringMode());
@@ -200,12 +200,12 @@ class SportServiceTest
 	@Test
 	void shouldAllowSportToKeepItsName()
 	{
-		final Sport existing = TestData.SPORTS.tenis();
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(existing));
-		when(_sportStorage.findByName("Tenis")).thenReturn(Optional.of(existing));
+		final Sport existing = TestData.SPORTS.tennis();
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(existing));
+		when(_sportStorage.findByName("Tennis")).thenReturn(Optional.of(existing));
 		when(_sportStorage.save(existing)).thenReturn(existing);
 
-		_sportService.update(TestData.SPORTS.TENIS_ID, TestData.SPORTS.newTenis());
+		_sportService.update(TestData.SPORTS.TENNIS_ID, TestData.SPORTS.newTennis());
 
 		verify(_sportStorage).save(existing);
 	}
@@ -213,14 +213,14 @@ class SportServiceTest
 	@Test
 	void shouldThrowDuplicateWhenUpdatingToNameOfAnotherSport()
 	{
-		final Sport input = TestData.SPORTS.newTenis();
-		input.setName("Sah");
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(TestData.SPORTS.tenis()));
-		when(_sportStorage.findByName("Sah")).thenReturn(Optional.of(TestData.SPORTS.sah()));
+		final Sport input = TestData.SPORTS.newTennis();
+		input.setName("Chess");
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(TestData.SPORTS.tennis()));
+		when(_sportStorage.findByName("Chess")).thenReturn(Optional.of(TestData.SPORTS.chess()));
 
-		assertThatThrownBy(() -> _sportService.update(TestData.SPORTS.TENIS_ID, input))
+		assertThatThrownBy(() -> _sportService.update(TestData.SPORTS.TENNIS_ID, input))
 				.isInstanceOf(DuplicateResourceException.class)
-				.hasMessage("Sport with name Sah already exists");
+				.hasMessage("Sport with name Chess already exists");
 
 		verify(_sportStorage, never()).save(any());
 	}
@@ -230,7 +230,7 @@ class SportServiceTest
 	{
 		when(_sportStorage.findById("999")).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> _sportService.update("999", TestData.SPORTS.newTenis()))
+		assertThatThrownBy(() -> _sportService.update("999", TestData.SPORTS.newTennis()))
 				.isInstanceOf(ResourceNotFoundException.class);
 
 		verify(_sportStorage, never()).save(any());
@@ -239,13 +239,13 @@ class SportServiceTest
 	@Test
 	void shouldSoftDeleteSport()
 	{
-		final Sport tenis = TestData.SPORTS.tenis();
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(tenis));
+		final Sport tennis = TestData.SPORTS.tennis();
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(tennis));
 
-		_sportService.delete(TestData.SPORTS.TENIS_ID);
+		_sportService.delete(TestData.SPORTS.TENNIS_ID);
 
-		assertThat(tenis.isActive()).isFalse();
-		verify(_sportStorage).save(tenis);
+		assertThat(tennis.isActive()).isFalse();
+		verify(_sportStorage).save(tennis);
 		verify(_sportStorage, never()).deleteById(anyString());
 	}
 
@@ -263,23 +263,23 @@ class SportServiceTest
 	@Test
 	void shouldRestoreInactiveSport()
 	{
-		final Sport sah = TestData.SPORTS.sah();
-		sah.setActive(false);
-		when(_sportStorage.findById(TestData.SPORTS.SAH_ID)).thenReturn(Optional.of(sah));
-		when(_sportStorage.save(sah)).thenReturn(sah);
+		final Sport chess = TestData.SPORTS.chess();
+		chess.setActive(false);
+		when(_sportStorage.findById(TestData.SPORTS.CHESS_ID)).thenReturn(Optional.of(chess));
+		when(_sportStorage.save(chess)).thenReturn(chess);
 
-		final Sport restored = _sportService.restore(TestData.SPORTS.SAH_ID);
+		final Sport restored = _sportService.restore(TestData.SPORTS.CHESS_ID);
 
 		assertThat(restored.isActive()).isTrue();
-		verify(_sportStorage).save(sah);
+		verify(_sportStorage).save(chess);
 	}
 
 	@Test
 	void shouldThrowInvalidOperationWhenRestoringActiveSport()
 	{
-		when(_sportStorage.findById(TestData.SPORTS.TENIS_ID)).thenReturn(Optional.of(TestData.SPORTS.tenis()));
+		when(_sportStorage.findById(TestData.SPORTS.TENNIS_ID)).thenReturn(Optional.of(TestData.SPORTS.tennis()));
 
-		assertThatThrownBy(() -> _sportService.restore(TestData.SPORTS.TENIS_ID))
+		assertThatThrownBy(() -> _sportService.restore(TestData.SPORTS.TENNIS_ID))
 				.isInstanceOf(InvalidOperationException.class)
 				.hasMessage("Sport with id 1 is already active");
 
