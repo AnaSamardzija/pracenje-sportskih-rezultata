@@ -29,6 +29,9 @@ public class UserDto
 	@Builder.Default
 	@Schema(example = "[\"USER\"]")
 	Set<String> roles = Collections.emptySet();
+	@Builder.Default
+	@Schema(example = "[\"users.password.change_self\"]")
+	Set<String> permissions = Collections.emptySet();
 	@Schema(example = "true")
 	boolean active;
 }

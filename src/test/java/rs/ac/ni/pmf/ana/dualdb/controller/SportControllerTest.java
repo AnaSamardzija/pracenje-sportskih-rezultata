@@ -60,27 +60,27 @@ class SportControllerTest
 	void shouldReturnAllSports() throws Exception
 	{
 		when(_sportService.findAll(false)).thenReturn(List.of(
-				TestData.SPORTS.tenis(),
-				TestData.SPORTS.sah()
+				TestData.SPORTS.tennis(),
+				TestData.SPORTS.chess()
 		));
 
 		_mockMvc.perform(get("/api/v1/sports"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isArray())
-				.andExpect(jsonPath("$[0].name").value("Tenis"))
-				.andExpect(jsonPath("$[1].name").value("Sah"));
+				.andExpect(jsonPath("$[0].name").value("Tennis"))
+				.andExpect(jsonPath("$[1].name").value("Chess"));
 	}
 
 	@Test
 	@WithMockUser
 	void shouldReturnSportById() throws Exception
 	{
-		when(_sportService.findById(TestData.SPORTS.TENIS_ID, false)).thenReturn(TestData.SPORTS.tenis());
+		when(_sportService.findById(TestData.SPORTS.TENNIS_ID, false)).thenReturn(TestData.SPORTS.tennis());
 
-		_mockMvc.perform(get("/api/v1/sports/" + TestData.SPORTS.TENIS_ID))
+		_mockMvc.perform(get("/api/v1/sports/" + TestData.SPORTS.TENNIS_ID))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENIS_ID))
-				.andExpect(jsonPath("$.name").value("Tenis"))
+				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENNIS_ID))
+				.andExpect(jsonPath("$.name").value("Tennis"))
 				.andExpect(jsonPath("$.scoringMode").value("SETS"))
 				.andExpect(jsonPath("$.rules.bestOf").value(3))
 				.andExpect(jsonPath("$.active").value(true));
@@ -100,30 +100,30 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldCreateSport() throws Exception
 	{
-		when(_sportService.create(TestData.SPORTS.newTenis())).thenReturn(TestData.SPORTS.tenis());
+		when(_sportService.create(TestData.SPORTS.newTennis())).thenReturn(TestData.SPORTS.tennis());
 
 		_mockMvc.perform(post("/api/v1/sports")
 						         .contentType(MediaType.APPLICATION_JSON)
-						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tenisRequest())))
+						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tennisRequest())))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENIS_ID))
-				.andExpect(jsonPath("$.name").value("Tenis"))
+				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENNIS_ID))
+				.andExpect(jsonPath("$.name").value("Tennis"))
 				.andExpect(jsonPath("$.active").value(true));
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn400WhenRequestIsInvalid() throws Exception
 	{
-		final SportRequest tenis = TestData.SPORTS.tenisRequest();
+		final SportRequest tennis = TestData.SPORTS.tennisRequest();
 		final SportRequest request = SportRequest.builder()
 				.name("")
-				.type(tenis.getType())
-				.scoringMode(tenis.getScoringMode())
-				.rules(tenis.getRules())
+				.type(tennis.getType())
+				.scoringMode(tennis.getScoringMode())
+				.rules(tennis.getRules())
 				.build();
 
 		_mockMvc.perform(post("/api/v1/sports")
@@ -136,21 +136,21 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn409WhenSportNameIsTaken() throws Exception
 	{
 		when(_sportService.create(any(Sport.class)))
-				.thenThrow(new DuplicateResourceException("Sport with name Tenis already exists"));
+				.thenThrow(new DuplicateResourceException("Sport with name Tennis already exists"));
 
 		_mockMvc.perform(post("/api/v1/sports")
 						         .contentType(MediaType.APPLICATION_JSON)
-						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tenisRequest())))
+						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tennisRequest())))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.message").value("Sport with name Tenis already exists"));
+				.andExpect(jsonPath("$.message").value("Sport with name Tennis already exists"));
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn422WhenMaxPlayersIsLessThanMin() throws Exception
 	{
 		when(_sportService.create(any(Sport.class)))
@@ -158,45 +158,45 @@ class SportControllerTest
 
 		_mockMvc.perform(post("/api/v1/sports")
 						         .contentType(MediaType.APPLICATION_JSON)
-						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tenisRequest())))
+						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tennisRequest())))
 				.andExpect(status().isUnprocessableContent())
 				.andExpect(jsonPath("$.message").value("maxPlayersPerSide cannot be less than minPlayersPerSide"));
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.update")
 	void shouldUpdateSport() throws Exception
 	{
-		when(_sportService.update(TestData.SPORTS.TENIS_ID, TestData.SPORTS.newTenis()))
-				.thenReturn(TestData.SPORTS.tenis());
+		when(_sportService.update(TestData.SPORTS.TENNIS_ID, TestData.SPORTS.newTennis()))
+				.thenReturn(TestData.SPORTS.tennis());
 
-		_mockMvc.perform(put("/api/v1/sports/" + TestData.SPORTS.TENIS_ID)
+		_mockMvc.perform(put("/api/v1/sports/" + TestData.SPORTS.TENNIS_ID)
 						         .contentType(MediaType.APPLICATION_JSON)
-						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tenisRequest())))
+						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tennisRequest())))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENIS_ID))
-				.andExpect(jsonPath("$.name").value("Tenis"));
+				.andExpect(jsonPath("$.id").value(TestData.SPORTS.TENNIS_ID))
+				.andExpect(jsonPath("$.name").value("Tennis"));
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.delete")
 	void shouldDeleteSport() throws Exception
 	{
-		_mockMvc.perform(delete("/api/v1/sports/" + TestData.SPORTS.TENIS_ID))
+		_mockMvc.perform(delete("/api/v1/sports/" + TestData.SPORTS.TENNIS_ID))
 				.andExpect(status().isNoContent());
 
-		verify(_sportService).delete(TestData.SPORTS.TENIS_ID);
+		verify(_sportService).delete(TestData.SPORTS.TENNIS_ID);
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.restore")
 	void shouldRestoreSport() throws Exception
 	{
-		when(_sportService.restore(TestData.SPORTS.SAH_ID)).thenReturn(TestData.SPORTS.sah());
+		when(_sportService.restore(TestData.SPORTS.CHESS_ID)).thenReturn(TestData.SPORTS.chess());
 
-		_mockMvc.perform(patch("/api/v1/sports/" + TestData.SPORTS.SAH_ID + "/restore"))
+		_mockMvc.perform(patch("/api/v1/sports/" + TestData.SPORTS.CHESS_ID + "/restore"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(TestData.SPORTS.SAH_ID))
+				.andExpect(jsonPath("$.id").value(TestData.SPORTS.CHESS_ID))
 				.andExpect(jsonPath("$.active").value(true));
 	}
 
@@ -210,12 +210,12 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser
-	void shouldReturn403WhenUserIsNotSystemAdmin() throws Exception
+	@WithMockUser(roles = "SYSTEM_ADMIN")
+	void shouldReturn403WithoutSportsCreatePermission() throws Exception
 	{
 		_mockMvc.perform(post("/api/v1/sports")
 						         .contentType(MediaType.APPLICATION_JSON)
-						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tenisRequest())))
+						         .content(_jsonMapper.writeValueAsString(TestData.SPORTS.tennisRequest())))
 				.andExpect(status().isForbidden());
 
 		verify(_sportService, never()).create(any());

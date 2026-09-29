@@ -25,6 +25,8 @@ public interface MariaDbMatchRepository extends JpaRepository<MatchEntity, Long>
 
 	boolean existsByGroup_Id(Long groupId);
 
+	boolean existsBySport_Id(Long sportId);
+
 	@Procedure(procedureName = "sp_longest_win_streak")
 	Integer longestWinStreak(Long userId, Long sportId);
 }

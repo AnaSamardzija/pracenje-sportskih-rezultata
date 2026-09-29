@@ -3,7 +3,7 @@
     import {createGroup, getGroup, updateGroup} from '../../lib/api/groups.api';
     import {authStore} from '../../lib/auth/auth.store';
     import PageHeader from '../../lib/components/PageHeader.svelte';
-    import {isSystemAdmin} from '../../lib/types/user.types';
+    import {hasPermission} from '../../lib/types/user.types';
 
     // Ista forma za novu grupu (/groups/new) i izmenu (/groups/:id/edit)
     let {params}: {params?: {id?: string}} = $props();
@@ -19,14 +19,14 @@
     let saving = $state(false);
     let error = $state<string | null>(null);
 
-    const systemAdmin = $derived(isSystemAdmin($authStore.user));
+    const canUpdateAny = $derived(hasPermission($authStore.user, 'groups.update_any'));
 
     // Učitavanje prati id iz adrese: ruter ne pravi stranicu ponovo kad se promeni samo id (npr. /groups/3/edit → /groups/5/edit)
     $effect(() => {
         if (editId) loadGroup(editId);
     });
 
-    // Izmenu dozvoljava samo GROUP_ADMIN (ili SYSTEM_ADMIN); backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud.
+    // Izmenu dozvoljava samo GROUP_ADMIN (ili permisija groups.update_any); backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud.
     // Odgovor koji stigne za id koji više nije u adresi se odbacuje.
     async function loadGroup(id: string) {
         loadingData = true;
@@ -35,7 +35,7 @@
         try {
             const group = await getGroup(id);
             if (id !== editId) return;
-            if (group.myRole !== 'GROUP_ADMIN' && !systemAdmin) {
+            if (group.myRole !== 'GROUP_ADMIN' && !canUpdateAny) {
                 error = 'Only a group admin can edit this group';
                 loadFailed = true;
                 return;

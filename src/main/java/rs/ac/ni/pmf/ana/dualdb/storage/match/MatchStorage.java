@@ -17,5 +17,7 @@ public abstract class MatchStorage implements DataStorage<Match>
 
 	public abstract boolean existsByGroupId(String groupId);
 
+	public abstract boolean existsBySportId(String sportId);
+
 	public abstract int longestWinStreak(String playerId, String sportId);
 }

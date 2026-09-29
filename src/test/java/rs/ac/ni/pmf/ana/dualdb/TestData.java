@@ -11,13 +11,13 @@ public class TestData
 {
 	public static class SPORTS
 	{
-		public static final String TENIS_ID = "1";
-		public static final String SAH_ID = "2";
+		public static final String TENNIS_ID = "1";
+		public static final String CHESS_ID = "3";
 
-		public static Sport newTenis()
+		public static Sport newTennis()
 		{
 			return Sport.builder()
-					.name("Tenis")
+					.name("Tennis")
 					.type(SportType.INDIVIDUAL)
 					.scoringMode(ScoringMode.SETS)
 					.rules(SportRules.builder()
@@ -33,18 +33,18 @@ public class TestData
 					.build();
 		}
 
-		public static Sport tenis()
+		public static Sport tennis()
 		{
-			final Sport sport = newTenis();
-			sport.setId(TENIS_ID);
+			final Sport sport = newTennis();
+			sport.setId(TENNIS_ID);
 			sport.setActive(true);
 			return sport;
 		}
 
-		public static SportRequest tenisRequest()
+		public static SportRequest tennisRequest()
 		{
 			return SportRequest.builder()
-					.name("Tenis")
+					.name("Tennis")
 					.type(SportType.INDIVIDUAL)
 					.scoringMode(ScoringMode.SETS)
 					.rules(SportRulesDto.builder()
@@ -60,10 +60,10 @@ public class TestData
 					.build();
 		}
 
-		public static Sport newFudbal()
+		public static Sport newFootball()
 		{
 			return Sport.builder()
-					.name("Fudbal")
+					.name("Football")
 					.type(SportType.TEAM)
 					.scoringMode(ScoringMode.POINTS)
 					.rules(SportRules.builder()
@@ -77,11 +77,11 @@ public class TestData
 					.build();
 		}
 
-		public static Sport sah()
+		public static Sport chess()
 		{
 			return Sport.builder()
-					.id(SAH_ID)
-					.name("Sah")
+					.id(CHESS_ID)
+					.name("Chess")
 					.type(SportType.INDIVIDUAL)
 					.scoringMode(ScoringMode.OUTCOME)
 					.rules(SportRules.builder()

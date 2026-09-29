@@ -14,7 +14,7 @@
         SCORING_MODE_LABELS,
         type SportResponse
     } from '../../lib/types/sport.types';
-    import {isSystemAdmin} from '../../lib/types/user.types';
+    import {hasPermission} from '../../lib/types/user.types';
     import {toDateTimeInput} from '../../lib/utils/date';
     import {queryParams} from '../../lib/utils/query';
 
@@ -58,7 +58,8 @@
     let maxPlayedAt = $state(toDateTimeInput(new Date()));
 
     const myId = $derived($authStore.user?.id);
-    const systemAdmin = $derived(isSystemAdmin($authStore.user));
+    const canCreateAny = $derived(hasPermission($authStore.user, 'matches.create_any'));
+    const canUpdateAny = $derived(hasPermission($authStore.user, 'matches.update_any'));
     const sport = $derived(sports.find(s => s.id === sportId) ?? null);
     const maxPlayers = $derived(sport?.rules.maxPlayersPerSide ?? null);
     const bestOf = $derived(sport?.rules.bestOf ?? null);
@@ -117,8 +118,8 @@
         try {
             if (id) {
                 const [match, allSports] = await Promise.all([getMatch(id), getAllSports()]);
-                // Menjati meč sme admin grupe (ili SYSTEM_ADMIN); backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud
-                const allowed = systemAdmin || (await getGroup(match.group.id)).myRole === 'GROUP_ADMIN';
+                // Menjati meč sme admin grupe (ili permisija matches.update_any); backend bi ionako vratio 403, ali ovako korisnik ne popunjava formu uzalud
+                const allowed = canUpdateAny || (await getGroup(match.group.id)).myRole === 'GROUP_ADMIN';
                 if (request !== lastInit) return;
                 if (!allowed) {
                     error = 'Only a group admin can edit a match';
@@ -128,8 +129,8 @@
                 sports = allSports;
                 fillFrom(match);
             } else {
-                // Član bira među svojim grupama, a SYSTEM_ADMIN može da unese meč u bilo koju grupu
-                const [myGroups, allSports] = await Promise.all([getAllGroups({mine: !systemAdmin}), getAllSports()]);
+                // Član bira među svojim grupama, a korisnik sa matches.create_any može da unese meč u bilo koju grupu
+                const [myGroups, allSports] = await Promise.all([getAllGroups({mine: !canCreateAny}), getAllSports()]);
                 if (request !== lastInit) return;
                 groups = myGroups;
                 sports = allSports;
@@ -181,7 +182,7 @@
     }
 
     // Nova grupa znači nove igrače; prijavljeni korisnik je unapred na prvoj strani, jer najčešće unosi svoj meč
-    // (SYSTEM_ADMIN samo ako je član te grupe)
+    // (korisnik sa matches.create_any samo ako je član te grupe)
     function selectGroup(id: string) {
         groupId = id;
         const member = groups.some(g => g.id === id && g.myRole);

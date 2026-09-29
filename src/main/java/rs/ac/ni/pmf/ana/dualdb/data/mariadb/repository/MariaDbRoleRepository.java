@@ -10,7 +10,5 @@ public interface MariaDbRoleRepository extends JpaRepository<RoleEntity, Long>
 {
 	Optional<RoleEntity> findByName(String name);
 
-	boolean existsByName(String role);
-
-	Set<RoleEntity> findAllByNameIn(Set<String> admin);
+	Set<RoleEntity> findAllByNameIn(Set<String> names);
 }

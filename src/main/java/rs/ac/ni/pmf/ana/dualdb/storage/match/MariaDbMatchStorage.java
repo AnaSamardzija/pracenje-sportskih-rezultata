@@ -64,6 +64,13 @@ public class MariaDbMatchStorage extends MatchStorage
 
 	@Override
 	@Transactional(readOnly = true)
+	public boolean existsBySportId(final String sportId)
+	{
+		return _matchRepository.existsBySport_Id(Long.parseLong(sportId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public int longestWinStreak(final String playerId, final String sportId)
 	{
 		return _matchRepository.longestWinStreak(Long.parseLong(playerId), toId(sportId));

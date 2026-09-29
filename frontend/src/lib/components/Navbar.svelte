@@ -4,7 +4,7 @@
     import {authStore} from '../auth/auth.store';
     import {logout} from '../auth/auth.service';
     import {STORAGE_LABELS} from '../types/auth.types';
-    import {fullNameOf, isSystemAdmin, userInitials} from '../types/user.types';
+    import {fullNameOf, hasPermission, userInitials} from '../types/user.types';
 
     // Glavne stranice; regex drži link aktivnim i na podstranicama (npr. /groups/5)
     const links = [
@@ -76,7 +76,7 @@
                         <li>
                             <a class="dropdown-item" href="#/profile"><i class="bi bi-gear me-2"></i>Account settings</a>
                         </li>
-                        {#if isSystemAdmin(user)}
+                        {#if hasPermission(user, 'users.read_all')}
                             <li>
                                 <a class="dropdown-item" href="#/admin/users"><i class="bi bi-shield-lock me-2"></i>Manage users</a>
                             </li>

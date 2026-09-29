@@ -13,10 +13,15 @@
         SPORT_TYPE_LABELS,
         type SportResponse
     } from '../../lib/types/sport.types';
-    import {isSystemAdmin} from '../../lib/types/user.types';
+    import {hasPermission} from '../../lib/types/user.types';
 
-    // Katalog vide svi; dodavanje, izmenu, brisanje i vraćanje obrisanih samo SYSTEM_ADMIN
-    const isAdmin = $derived(isSystemAdmin($authStore.user));
+    // Katalog vide svi; obrisane sportove i svaku radnju nad katalogom samo korisnik sa odgovarajućom permisijom
+    const canReadInactive = $derived(hasPermission($authStore.user, 'sports.read_inactive'));
+    const canCreate = $derived(hasPermission($authStore.user, 'sports.create'));
+    const canUpdate = $derived(hasPermission($authStore.user, 'sports.update'));
+    const canDelete = $derived(hasPermission($authStore.user, 'sports.delete'));
+    const canRestore = $derived(hasPermission($authStore.user, 'sports.restore'));
+    const hasActions = $derived(canUpdate || canDelete || canRestore);
 
     let sports = $state<SportResponse[]>([]);
     let loading = $state(true);
@@ -78,7 +83,7 @@
 
 <PageHeader title="Sports" icon="bi-bullseye" subtitle="Sports you can record matches in, with their scoring rules.">
     {#snippet actions()}
-        {#if isAdmin}
+        {#if canReadInactive}
             <div class="form-check form-switch mb-0">
                 <input id="showDeleted"
                        class="form-check-input"
@@ -88,6 +93,8 @@
                        onchange={toggleDeleted}/>
                 <label class="form-check-label" for="showDeleted">Show deleted</label>
             </div>
+        {/if}
+        {#if canCreate}
             <a class="btn btn-light" href="#/sports/new">
                 <i class="bi bi-plus-lg me-1"></i>New sport
             </a>
@@ -125,7 +132,7 @@
                                 <th class="d-none d-md-table-cell text-center">Sets</th>
                                 <th class="d-none d-md-table-cell text-center">Draws</th>
                                 <th class="text-center text-nowrap" title="Ranking points for a win / draw / loss">W / D / L</th>
-                                {#if isAdmin}
+                                {#if hasActions}
                                     <th><span class="visually-hidden">Actions</span></th>
                                 {/if}
                             </tr>
@@ -168,16 +175,20 @@
                                     <td class="text-center text-nowrap">
                                         {sport.rules.pointsForWin} / {sport.rules.allowDraw ? sport.rules.pointsForDraw : '—'} / {sport.rules.pointsForLoss}
                                     </td>
-                                    {#if isAdmin}
+                                    {#if hasActions}
                                         <td class="text-end text-nowrap">
                                             {#if sport.active}
-                                                <a class="btn btn-sm btn-outline-primary" href="#/sports/{sport.id}/edit" title="Edit" aria-label="Edit {sport.name}">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete {sport.name}" onclick={() => confirmDelete(sport)}>
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            {:else}
+                                                {#if canUpdate}
+                                                    <a class="btn btn-sm btn-outline-primary" href="#/sports/{sport.id}/edit" title="Edit" aria-label="Edit {sport.name}">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                {/if}
+                                                {#if canDelete}
+                                                    <button class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete {sport.name}" onclick={() => confirmDelete(sport)}>
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                {/if}
+                                            {:else if canRestore}
                                                 <button class="btn btn-sm btn-outline-primary" onclick={() => handleRestore(sport.id)}>
                                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
                                                 </button>

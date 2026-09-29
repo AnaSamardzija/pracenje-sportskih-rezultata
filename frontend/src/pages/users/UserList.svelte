@@ -2,9 +2,10 @@
     import {onMount, untrack} from 'svelte';
     import {replace} from 'svelte-spa-router';
     import {deactivateUser, getAllUsers, restoreUser} from '../../lib/api/users.api';
+    import {authStore} from '../../lib/auth/auth.store';
     import ConfirmModal from '../../lib/components/ConfirmModal.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
-    import {fullNameOf, ROLE_LABELS, type Role, userInitials, type UserDto} from '../../lib/types/user.types';
+    import {fullNameOf, hasPermission, ROLE_LABELS, type Role, userInitials, type UserDto} from '../../lib/types/user.types';
     import {queryParams, withQuery} from '../../lib/utils/query';
 
     type Status = 'all' | 'active' | 'deactivated';
@@ -17,6 +18,11 @@
         {value: 'active', label: 'Active'},
         {value: 'deactivated', label: 'Deactivated'}
     ];
+
+    // Spisak traži users.read_all (ruta), a svaka radnja nad nalogom svoju permisiju
+    const canModify = $derived(hasPermission($authStore.user, 'users.modify'));
+    const canDeactivate = $derived(hasPermission($authStore.user, 'users.deactivate'));
+    const canRestore = $derived(hasPermission($authStore.user, 'users.restore'));
 
     let users = $state<UserDto[]>([]);
     let loading = $state(true);
@@ -214,17 +220,21 @@
                                     </td>
                                     <td class="text-end text-nowrap">
                                         {#if user.active}
-                                            <a class="btn btn-sm btn-outline-primary" href="#/admin/users/{user.id}/edit" title="Edit" aria-label="Edit {user.username}">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button class="btn btn-sm btn-outline-danger"
-                                                    title="Deactivate"
-                                                    aria-label="Deactivate {user.username}"
-                                                    disabled={busyId === user.id}
-                                                    onclick={() => confirmDeactivate(user)}>
-                                                <i class="bi bi-person-slash"></i>
-                                            </button>
-                                        {:else}
+                                            {#if canModify}
+                                                <a class="btn btn-sm btn-outline-primary" href="#/admin/users/{user.id}/edit" title="Edit" aria-label="Edit {user.username}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {/if}
+                                            {#if canDeactivate}
+                                                <button class="btn btn-sm btn-outline-danger"
+                                                        title="Deactivate"
+                                                        aria-label="Deactivate {user.username}"
+                                                        disabled={busyId === user.id}
+                                                        onclick={() => confirmDeactivate(user)}>
+                                                    <i class="bi bi-person-slash"></i>
+                                                </button>
+                                            {/if}
+                                        {:else if canRestore}
                                             <button class="btn btn-sm btn-outline-primary" disabled={busyId === user.id} onclick={() => handleRestore(user.id)}>
                                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
                                             </button>

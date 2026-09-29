@@ -76,6 +76,12 @@ public class MongoDbMatchStorage extends MatchStorage
 	}
 
 	@Override
+	public boolean existsBySportId(final String sportId)
+	{
+		return _matchRepository.existsBySportId(sportId);
+	}
+
+	@Override
 	public int longestWinStreak(final String playerId, final String sportId)
 	{
 		final Query query = new Query(Criteria.where("sides.playerIds").is(playerId));

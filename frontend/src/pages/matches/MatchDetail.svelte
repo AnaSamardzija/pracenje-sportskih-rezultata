@@ -6,21 +6,24 @@
     import ConfirmModal from '../../lib/components/ConfirmModal.svelte';
     import PageHeader from '../../lib/components/PageHeader.svelte';
     import {OUTCOME_BADGES, resultLabel, sideNames, type MatchResponse, type MatchSideResponse} from '../../lib/types/match.types';
-    import {isSystemAdmin} from '../../lib/types/user.types';
+    import {hasPermission} from '../../lib/types/user.types';
     import {formatDateTime} from '../../lib/utils/date';
 
     let {params}: {params?: {id?: string}} = $props();
     const matchId = $derived(params?.id ?? '');
 
     let match = $state<MatchResponse | null>(null);
-    let canManage = $state(false);
+    let groupAdmin = $state(false);
     let loading = $state(true);
     let error = $state<string | null>(null);
     let showDelete = $state(false);
     let deleting = $state(false);
 
     const myId = $derived($authStore.user?.id);
-    const systemAdmin = $derived(isSystemAdmin($authStore.user));
+    const canUpdateAny = $derived(hasPermission($authStore.user, 'matches.update_any'));
+    const canDeleteAny = $derived(hasPermission($authStore.user, 'matches.delete_any'));
+    const canEdit = $derived(groupAdmin || canUpdateAny);
+    const canDelete = $derived(groupAdmin || canDeleteAny);
     const title = $derived(match ? `${sideNames(match.sides[0])} vs ${sideNames(match.sides[1])}` : 'Match');
     const subtitle = $derived(match ? `${match.sport.name} · ${match.group.name} · ${formatDateTime(match.playedAt)}` : undefined);
 
@@ -31,21 +34,22 @@
     $effect(() => {
         const id = matchId;
         match = null;
-        canManage = false;
+        groupAdmin = false;
         loading = true;
         error = null;
         load(id);
     });
 
-    // Menjati i brisati meč može GROUP_ADMIN grupe ili SYSTEM_ADMIN; ulogu u grupi pitamo samo kad korisnik nije SYSTEM_ADMIN.
+    // Menjati i brisati meč može GROUP_ADMIN grupe ili korisnik sa matches.update_any / matches.delete_any;
+    // ulogu u grupi pitamo samo kad korisnik nema obe permisije.
     // Odgovor koji stigne za id koji više nije u adresi se odbacuje.
     async function load(id: string) {
         try {
             const loaded = await getMatch(id);
-            const manage = systemAdmin || await isGroupAdmin(loaded.group.id);
+            const admin = canUpdateAny && canDeleteAny ? false : await isGroupAdmin(loaded.group.id);
             if (id !== matchId) return;
             match = loaded;
-            canManage = manage;
+            groupAdmin = admin;
         } catch (e) {
             if (id !== matchId) return;
             error = e instanceof Error ? e.message : 'Failed to load match';
@@ -95,8 +99,10 @@
 
 <PageHeader {title} icon="bi-calendar-event" {subtitle}>
     {#snippet actions()}
-        {#if match && canManage}
+        {#if match && canEdit}
             <a class="btn btn-light" href="#/matches/{match.id}/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+        {/if}
+        {#if match && canDelete}
             <button class="btn btn-outline-light" disabled={deleting} onclick={() => showDelete = true}>
                 <i class="bi bi-trash me-1"></i>Delete
             </button>

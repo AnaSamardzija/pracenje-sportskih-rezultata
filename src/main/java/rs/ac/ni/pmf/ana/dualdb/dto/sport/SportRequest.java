@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,8 @@ import rs.ac.ni.pmf.ana.dualdb.model.SportType;
 public class SportRequest
 {
 	@NotBlank(message = "name is required")
-	@Schema(example = "Tenis")
+	@Size(max = 100, message = "name must be at most 100 characters")
+	@Schema(example = "Badminton")
 	String name;
 
 	@NotNull(message = "type is required (INDIVIDUAL or TEAM)")

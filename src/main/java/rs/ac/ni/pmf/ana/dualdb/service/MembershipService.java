@@ -13,6 +13,7 @@ import rs.ac.ni.pmf.ana.dualdb.model.Group;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupRole;
 import rs.ac.ni.pmf.ana.dualdb.model.MemberView;
 import rs.ac.ni.pmf.ana.dualdb.model.Membership;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
@@ -46,6 +47,7 @@ public class MembershipService
 		membershipStorage().save(membership);
 	}
 
+	@Transactional
 	public void join(final String groupId, final String userId)
 	{
 		requireGroupExists(groupId);
@@ -58,7 +60,7 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(userId)
 				.groupId(groupId)
-				.roleInGroup(GroupRole.MEMBER)
+				.roleInGroup(roleForNewMember(groupId, userId))
 				.build();
 
 		membershipStorage().save(membership);
@@ -66,10 +68,11 @@ public class MembershipService
 		log.info("User {} joined group {}", userId, groupId);
 	}
 
+	@Transactional
 	public MemberView addMember(final String groupId, final String username, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUser);
+		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_ADD_ANY);
 
 		final User user = userStorage().findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
@@ -87,7 +90,7 @@ public class MembershipService
 		final Membership membership = Membership.builder()
 				.userId(user.getId())
 				.groupId(groupId)
-				.roleInGroup(GroupRole.MEMBER)
+				.roleInGroup(roleForNewMember(groupId, user.getId()))
 				.build();
 
 		final Membership saved = membershipStorage().save(membership);
@@ -176,7 +179,7 @@ public class MembershipService
 	public void kick(final String groupId, final String targetUserId, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUser);
+		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_KICK_ANY);
 
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
@@ -238,9 +241,10 @@ public class MembershipService
 				.collect(Collectors.toMap(Membership::getGroupId, Membership::getRoleInGroup));
 	}
 
-	public void requireGroupAdmin(final String groupId, final User currentUser)
+	public void requireGroupAdmin(final String groupId, final User currentUser, final Permission anyGroupPermission)
 	{
-		if (!currentUser.isSystemAdmin() && roleOf(groupId, currentUser.getId()) != GroupRole.GROUP_ADMIN)
+		if (!currentUser.hasPermission(anyGroupPermission)
+				&& roleOf(groupId, currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
 			throw new AccessDeniedException("Only a group admin can perform this action");
 		}
@@ -250,8 +254,38 @@ public class MembershipService
 	{
 		return membershipStorage().findByGroupId(membership.getGroupId()).stream()
 				.filter(other -> !other.getId().equals(membership.getId()))
-				.filter(other -> userStorage().findById(other.getUserId()).map(User::isActive).orElse(false))
+				.filter(this::isActive)
 				.toList();
+	}
+
+	private boolean isActive(final Membership membership)
+	{
+		return userStorage().findById(membership.getUserId()).map(User::isActive).orElse(false);
+	}
+
+	/**
+	 * Grupa u kojoj nijedan GROUP_ADMIN nije aktivan (admin je deaktiviran ili izbačen, a tada nije imao kome da
+	 * preda ulogu) dobija za admina prvog novog člana, a deaktivirani admin postaje MEMBER, kao pri predaji uloge.
+	 */
+	private GroupRole roleForNewMember(final String groupId, final String userId)
+	{
+		final List<Membership> admins = membershipStorage().findByGroupId(groupId).stream()
+				.filter(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN)
+				.toList();
+
+		if (admins.stream().anyMatch(this::isActive))
+		{
+			return GroupRole.MEMBER;
+		}
+
+		admins.forEach(admin ->
+		{
+			admin.setRoleInGroup(GroupRole.MEMBER);
+			membershipStorage().save(admin);
+		});
+
+		log.info("User {} is now group admin of group {}", userId, groupId);
+		return GroupRole.GROUP_ADMIN;
 	}
 
 	/**

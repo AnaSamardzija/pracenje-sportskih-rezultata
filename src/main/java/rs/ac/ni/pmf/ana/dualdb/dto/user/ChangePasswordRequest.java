@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Value;
-
 @Value
 @Builder
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
@@ -20,7 +19,7 @@ public class ChangePasswordRequest
 	String oldPassword;
 
 	@NotBlank(message = "newPassword is required")
-	@Size(min = 4, message = "newPassword must be at least 4 characters")
-	@Schema(example = "novaSifra1")
+	@Size(min = 4, max = 24, message = "newPassword must be between 4 and 24 characters")
+	@Schema(example = "pera.456")
 	String newPassword;
 }

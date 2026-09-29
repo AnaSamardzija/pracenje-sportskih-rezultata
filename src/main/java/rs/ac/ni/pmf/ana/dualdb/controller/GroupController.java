@@ -89,14 +89,14 @@ public class GroupController
 	}
 
 	@PutMapping("/{id}")
-	@Operation(summary = "Izmena grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
-			description = "SYSTEM_ADMIN sme da menja i grupu čiji nije član.")
+	@Operation(summary = "Izmena grupe (GROUP_ADMIN ili permisija groups.update_any)",
+			description = "Sa permisijom groups.update_any (ima je SYSTEM_ADMIN) menja se i grupa čiji korisnik nije član.")
 	@ApiResponse(responseCode = "200", description = "Grupa je izmenjena")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe i nema permisiju groups.update_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -109,14 +109,14 @@ public class GroupController
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Brisanje grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
+	@Operation(summary = "Brisanje grupe (GROUP_ADMIN ili permisija groups.delete_any)",
 			description = "Brišu se i sva članstva. Grupa koja ima unete mečeve ne može da se obriše.")
 	@ApiResponse(responseCode = "204", description = "Grupa je obrisana")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe i nema permisiju groups.delete_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -146,14 +146,15 @@ public class GroupController
 
 	@PostMapping("/{id}/members")
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Dodavanje člana u grupu (GROUP_ADMIN ili SYSTEM_ADMIN)",
-			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe.")
+	@Operation(summary = "Dodavanje člana u grupu (GROUP_ADMIN ili permisija groups.members.add_any)",
+			description = "Korisnik se traži po username-u, bez obzira na velika i mala slova, i postaje MEMBER grupe, "
+					+ "a GROUP_ADMIN ako grupa nema aktivnog admina.")
 	@ApiResponse(responseCode = "201", description = "Korisnik je dodat u grupu")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe i nema permisiju groups.members.add_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ili korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -172,7 +173,7 @@ public class GroupController
 	@PostMapping("/{id}/members/me")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Pridruživanje grupi (prijavljen korisnik)",
-			description = "Bez tela; korisnik postaje MEMBER grupe.")
+			description = "Bez tela; korisnik postaje MEMBER grupe, a GROUP_ADMIN ako grupa nema aktivnog admina.")
 	@ApiResponse(responseCode = "204", description = "Korisnik je postao član")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -208,15 +209,15 @@ public class GroupController
 
 	@DeleteMapping("/{id}/members/{userId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Izbacivanje člana iz grupe (GROUP_ADMIN ili SYSTEM_ADMIN)",
-			description = "Admin ne može da izbaci sebe, za to služi napuštanje grupe. Kad SYSTEM_ADMIN izbaci jedinog admina grupe, "
+	@Operation(summary = "Izbacivanje člana iz grupe (GROUP_ADMIN ili permisija groups.members.kick_any)",
+			description = "Admin ne može da izbaci sebe, za to služi napuštanje grupe. Kad korisnik sa permisijom groups.members.kick_any izbaci jedinog admina grupe, "
 					+ "admin postaje aktivan član koji je najduže u grupi.")
 	@ApiResponse(responseCode = "204", description = "Član je izbačen")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN te grupe i nema permisiju groups.members.kick_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Grupa ne postoji ili korisnik nije njen član",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

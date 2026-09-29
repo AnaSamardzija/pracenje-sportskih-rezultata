@@ -42,7 +42,8 @@ export async function changePassword(data: ChangePasswordRequest): Promise<void>
     if (!res.ok) throw new Error(await errorMessage(res, 'Failed to change password'));
 }
 
-// Upravljanje korisnicima (admin panel): sve rute ispod backend dozvoljava samo SYSTEM_ADMIN-u.
+// Upravljanje korisnicima (admin panel): svaka ruta ispod traži svoju permisiju (users.read_all, users.modify,
+// users.roles.assign za promenu uloga, users.deactivate, users.restore).
 // Spisak vraća i deaktivirane korisnike, ali ne i admina koji pita (on svoj nalog menja preko /me).
 export async function getAllUsers(): Promise<UserDto[]> {
     const res = await apiFetch(BASE);

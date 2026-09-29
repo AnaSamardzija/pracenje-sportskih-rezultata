@@ -5,7 +5,7 @@
     import {setUser} from '../lib/auth/auth.service';
     import PageHeader from '../lib/components/PageHeader.svelte';
     import {STORAGE_LABELS} from '../lib/types/auth.types';
-    import {fullNameOf, userInitials, type UserDto} from '../lib/types/user.types';
+    import {fullNameOf, hasPermission, userInitials, type UserDto} from '../lib/types/user.types';
 
     let user = $state<UserDto | null>(null);
     let loading = $state(true);
@@ -28,6 +28,7 @@
     let passwordSuccess = $state<string | null>(null);
 
     const fullName = $derived(user ? fullNameOf(user) : '');
+    const canChangePassword = $derived(hasPermission(user, 'users.password.change_self'));
 
     // Dugme Save je aktivno samo kad se nešto promenilo u odnosu na sačuvan profil
     const profileChanged = $derived(
@@ -208,63 +209,67 @@
                         <i class="bi bi-key me-2 text-primary"></i>Change password
                     </div>
                     <div class="card-body">
-                        {#if passwordError}
-                            <div class="alert alert-danger d-flex align-items-center py-2 small">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>{passwordError}
-                            </div>
-                        {/if}
-                        {#if passwordSuccess}
-                            <div class="alert alert-success d-flex align-items-center py-2 small">
-                                <i class="bi bi-check-circle-fill me-2"></i>{passwordSuccess}
-                            </div>
-                        {/if}
-
-                        <form onsubmit={handlePasswordSubmit}>
-                            <!-- Skriveno korisničko ime pomaže menadžeru lozinki da zna za koji nalog je lozinka -->
-                            <input type="text" class="d-none" autocomplete="username" value={user.username} readonly/>
-
-                            <div class="mb-3">
-                                <label class="form-label" for="oldPassword">Current password</label>
-                                <input id="oldPassword"
-                                       type="password"
-                                       class="form-control"
-                                       autocomplete="current-password"
-                                       bind:value={oldPassword}
-                                       required/>
-                            </div>
-
-                            <!-- minlength prati @Size(min = 4) iz ChangePasswordRequest -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="newPassword">New password</label>
-                                    <input id="newPassword"
+                        {#if !canChangePassword}
+                            <p class="text-muted small mb-0">Your account does not have permission to change its password.</p>
+                        {:else}
+                            {#if passwordError}
+                                <div class="alert alert-danger d-flex align-items-center py-2 small">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{passwordError}
+                                </div>
+                            {/if}
+                            {#if passwordSuccess}
+                                <div class="alert alert-success d-flex align-items-center py-2 small">
+                                    <i class="bi bi-check-circle-fill me-2"></i>{passwordSuccess}
+                                </div>
+                            {/if}
+    
+                            <form onsubmit={handlePasswordSubmit}>
+                                <!-- Skriveno korisničko ime pomaže menadžeru lozinki da zna za koji nalog je lozinka -->
+                                <input type="text" class="d-none" autocomplete="username" value={user.username} readonly/>
+    
+                                <div class="mb-3">
+                                    <label class="form-label" for="oldPassword">Current password</label>
+                                    <input id="oldPassword"
                                            type="password"
                                            class="form-control"
-                                           autocomplete="new-password"
-                                           minlength="4"
-                                           bind:value={newPassword}
-                                           required/>
-                                    <div class="form-text">At least 4 characters.</div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="confirmPassword">Confirm new password</label>
-                                    <input id="confirmPassword"
-                                           type="password"
-                                           class="form-control"
-                                           autocomplete="new-password"
-                                           bind:value={confirmPassword}
+                                           autocomplete="current-password"
+                                           bind:value={oldPassword}
                                            required/>
                                 </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary" disabled={changing}>
-                                {#if changing}
-                                    <span class="spinner-border spinner-border-sm me-2"></span>Changing...
-                                {:else}
-                                    <i class="bi bi-shield-lock me-2"></i>Change password
-                                {/if}
-                            </button>
-                        </form>
+    
+                                <!-- minlength prati @Size(min = 4) iz ChangePasswordRequest -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="newPassword">New password</label>
+                                        <input id="newPassword"
+                                               type="password"
+                                               class="form-control"
+                                               autocomplete="new-password"
+                                               minlength="4"
+                                               bind:value={newPassword}
+                                               required/>
+                                        <div class="form-text">At least 4 characters.</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="confirmPassword">Confirm new password</label>
+                                        <input id="confirmPassword"
+                                               type="password"
+                                               class="form-control"
+                                               autocomplete="new-password"
+                                               bind:value={confirmPassword}
+                                               required/>
+                                    </div>
+                                </div>
+    
+                                <button type="submit" class="btn btn-primary" disabled={changing}>
+                                    {#if changing}
+                                        <span class="spinner-border spinner-border-sm me-2"></span>Changing...
+                                    {:else}
+                                        <i class="bi bi-shield-lock me-2"></i>Change password
+                                    {/if}
+                                </button>
+                            </form>
+                        {/if}
                     </div>
                 </div>
             </div>

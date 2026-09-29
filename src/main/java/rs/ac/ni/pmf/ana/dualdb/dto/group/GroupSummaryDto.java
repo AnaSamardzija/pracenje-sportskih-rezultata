@@ -18,6 +18,6 @@ public class GroupSummaryDto
 {
 	@Schema(example = "1")
 	String id;
-	@Schema(example = "Tenis kvarta")
+	@Schema(example = "Saturday Tennis")
 	String name;
 }

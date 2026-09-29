@@ -79,16 +79,53 @@ public class MatchResultResolver
 		}
 
 		final SportRules rules = sport.getRules();
+		final Integer setsToWin = rules == null || rules.getBestOf() == null ? null : rules.getBestOf() / 2 + 1;
+		final Integer pointsToWinSet = rules == null ? null : rules.getPointsToWinSet();
 
-		if (rules != null && rules.getBestOf() != null && setCount > rules.getBestOf())
+		final List<Integer> first = match.getSides().get(0).getSetScores();
+		final List<Integer> second = match.getSides().get(1).getSetScores();
+		int firstWon = 0;
+		int secondWon = 0;
+
+		for (int setIndex = 0; setIndex < setCount; setIndex++)
 		{
-			throw new InvalidOperationException("a match cannot have more than " + rules.getBestOf() + " sets");
+			final int setNumber = setIndex + 1;
+			final int firstScore = first.get(setIndex);
+			final int secondScore = second.get(setIndex);
+
+			if (setsToWin != null && (firstWon == setsToWin || secondWon == setsToWin))
+			{
+				throw new InvalidOperationException("the match was already decided before set " + setNumber);
+			}
+
+			if (firstScore == secondScore)
+			{
+				throw new InvalidOperationException("set " + setNumber + " cannot end in a tie");
+			}
+
+			if (pointsToWinSet != null && Math.max(firstScore, secondScore) < pointsToWinSet)
+			{
+				throw new InvalidOperationException(
+						"the winner of set " + setNumber + " must reach at least " + pointsToWinSet + " points");
+			}
+
+			if (firstScore > secondScore)
+			{
+				firstWon++;
+			}
+			else
+			{
+				secondWon++;
+			}
 		}
 
-		for (final MatchSide side : match.getSides())
+		if (setsToWin != null && firstWon != setsToWin && secondWon != setsToWin)
 		{
-			side.setScore(setsWonBy(side, match.getSides(), setCount));
+			throw new InvalidOperationException("the match is not finished: one side must win " + setsToWin + " sets");
 		}
+
+		match.getSides().get(0).setScore(firstWon);
+		match.getSides().get(1).setScore(secondWon);
 
 		decideByScore(sport, match);
 	}
@@ -154,31 +191,6 @@ public class MatchResultResolver
 			side.setWinner(winner);
 			side.setOutcome(draw ? MatchOutcome.DRAW : winner ? MatchOutcome.WIN : MatchOutcome.LOSS);
 		}
-	}
-
-	private int setsWonBy(final MatchSide side, final List<MatchSide> sides, final int setCount)
-	{
-		int won = 0;
-
-		for (int setIndex = 0; setIndex < setCount; setIndex++)
-		{
-			final int index = setIndex;
-			final int best = sides.stream()
-					.mapToInt(other -> other.getSetScores().get(index))
-					.max()
-					.orElse(0);
-
-			final boolean shared = sides.stream()
-					.filter(other -> other.getSetScores().get(index) == best)
-					.count() > 1;
-
-			if (!shared && side.getSetScores().get(setIndex) == best)
-			{
-				won++;
-			}
-		}
-
-		return won;
 	}
 
 	private void requireDrawAllowed(final Sport sport)

@@ -48,7 +48,7 @@ export async function getMembers(id: string): Promise<MemberResponse[]> {
     return res.json();
 }
 
-// Samo GROUP_ADMIN; nepostojeći korisnik 404, deaktiviran 422, već član 409
+// Samo GROUP_ADMIN (ili permisija groups.members.add_any); nepostojeći korisnik 404, deaktiviran 422, već član 409
 export async function addMember(id: string, data: AddMemberRequest): Promise<MemberResponse> {
     const res = await apiFetch(`${BASE}/${id}/members`, {
         method: 'POST',

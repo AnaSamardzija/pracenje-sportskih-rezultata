@@ -49,7 +49,7 @@ public class MatchController
 
 	private static final String POINTS_EXAMPLE = """
 			{
-			  "sportId": "2",
+			  "sportId": "4",
 			  "groupId": "1",
 			  "playedAt": "2026-09-20T12:00:00",
 			  "sides": [
@@ -109,25 +109,25 @@ public class MatchController
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Unos meča (član grupe ili SYSTEM_ADMIN)",
-			description = "Meč unosi bilo koji član grupe, ne mora da igra, a SYSTEM_ADMIN i bez članstva. Svi igrači moraju biti članovi grupe. "
+	@Operation(summary = "Unos meča (član grupe ili permisija matches.create_any)",
+			description = "Meč unosi bilo koji član grupe, ne mora da igra, a korisnik sa permisijom matches.create_any (ima je SYSTEM_ADMIN) i bez članstva. Svi igrači moraju biti članovi grupe. "
 					+ "Oblik rezultata zavisi od sporta: SETS šalje setScores, POINTS score, a OUTCOME outcome. "
 					+ "Pobednika, a za SETS i POINTS i outcome, određuje sistem. "
 					+ "ID-jevi u primerima su MariaDB ID-jevi; za MongoDB se zamenjuju hex ID-jevima.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = SETS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
+			@ExampleObject(name = "Tennis (SETS)", value = SETS_EXAMPLE),
+			@ExampleObject(name = "Football (POINTS)", value = POINTS_EXAMPLE),
+			@ExampleObject(name = "Chess (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "201", description = "Meč je unet")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nisu tačno 2 strane ili je playedAt u budućnosti) ili nenumerički id sporta ili grupe (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe i nema permisiju matches.create_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Rezultat ne odgovara pravilima sporta, isti igrač je naveden dva puta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse create(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @RequestBody @Valid final MatchRequest request)
@@ -136,23 +136,23 @@ public class MatchController
 	}
 
 	@PutMapping("/{id}")
-	@Operation(summary = "Izmena meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
+	@Operation(summary = "Izmena meča (GROUP_ADMIN ili permisija matches.update_any)",
 			description = "Telo i provere rezultata su isti kao kod unosa. Meč ne može da se premesti u drugu grupu; sport "
 					+ "može da se promeni, ali oblik rezultata mora da odgovara novom sportu. Učesnik meča koji nije GROUP_ADMIN ne može da ga menja.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-			@ExampleObject(name = "Tenis (SETS)", value = SETS_EXAMPLE),
-			@ExampleObject(name = "Fudbal (POINTS)", value = POINTS_EXAMPLE),
-			@ExampleObject(name = "Sah (OUTCOME)", value = OUTCOME_EXAMPLE)}))
+			@ExampleObject(name = "Tennis (SETS)", value = SETS_EXAMPLE),
+			@ExampleObject(name = "Football (POINTS)", value = POINTS_EXAMPLE),
+			@ExampleObject(name = "Chess (OUTCOME)", value = OUTCOME_EXAMPLE)}))
 	@ApiResponse(responseCode = "200", description = "Meč je izmenjen")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe i nema permisiju matches.update_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
+	@ApiResponse(responseCode = "422", description = "Druga grupa, rezultat ne odgovara pravilima sporta, isti igrač je naveden dva puta, igrač nije član grupe ili je deaktiviran, ili je sport obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public MatchResponse update(@AuthenticationPrincipal final CustomUserDetails principal,
 	                            @PathVariable final String id,
@@ -164,14 +164,14 @@ public class MatchController
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Brisanje meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
+	@Operation(summary = "Brisanje meča (GROUP_ADMIN ili permisija matches.delete_any)",
 			description = "Učesnik meča koji nije GROUP_ADMIN ne može da ga obriše.")
 	@ApiResponse(responseCode = "204", description = "Meč je obrisan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe i nema permisiju matches.delete_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

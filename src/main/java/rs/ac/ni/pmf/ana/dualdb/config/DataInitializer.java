@@ -14,20 +14,25 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import rs.ac.ni.pmf.ana.dualdb.data.mariadb.entity.PermissionEntity;
-import rs.ac.ni.pmf.ana.dualdb.data.mariadb.entity.RoleEntity;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.entity.UserEntity;
-import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbPermissionRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbRoleRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbUserRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.PermissionDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.RoleDocument;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.SportDocument;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.SportRulesDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.document.UserDocument;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoPermissionRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoRoleRepository;
+import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoSportRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoUserRepository;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
+import rs.ac.ni.pmf.ana.dualdb.model.ScoringMode;
+import rs.ac.ni.pmf.ana.dualdb.model.SportType;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,94 +48,34 @@ public class DataInitializer implements CommandLineRunner
 	private final MongoUserRepository _mongoUserRepository;
 
 	private final MariaDbRoleRepository _mariaDbRoleRepository;
-	private final MariaDbPermissionRepository _mariaDbPermissionRepository;
 
 	private final MongoRoleRepository _mongoRoleRepository;
 	private final MongoPermissionRepository _mongoPermissionRepository;
+	private final MongoSportRepository _mongoSportRepository;
 	private final MongoTemplate _mongoTemplate;
 
 	private final PasswordEncoder _passwordEncoder;
 
-	private final Set<String> adminPermissions = Set.of(
-			"user.create",
-			"user.read",
-			"user.update",
-			"user.delete"
-	);
-
-	private final Set<String> userPermissions = Set.of(
-			"content.read"
-	);
-
-	private final Map<String, Set<String>> rolePermissions = Map.of(
-			"SYSTEM_ADMIN", adminPermissions,
-			"USER", userPermissions
+	private final Map<String, Set<Permission>> rolePermissions = Map.of(
+			"SYSTEM_ADMIN", EnumSet.allOf(Permission.class),
+			"USER", EnumSet.of(Permission.USERS_PASSWORD_CHANGE_SELF)
 	);
 
 	@Override
 	@Transactional
 	public void run(final String @NonNull ... args)
 	{
-		// TODO: Initialize data for the application
 		initializeJpa();
 		initializeMongoDb();
 	}
 
 	public void initializeJpa()
 	{
-		log.info("Checking and creating permissions, if needed.");
-		createPermissions();
-
-		log.info("Checking and creating roles, if needed.");
-		createRoles();
-
 		log.info("Checking if the admin user exists.");
 		if (!_mariaDbUserRepository.existsByUsername("admin"))
 		{
 			log.info("Creating admin user.");
 			_mariaDbUserRepository.save(createJpaAdmin());
-		}
-	}
-
-	private void createPermissions()
-	{
-		rolePermissions.values().stream()
-				.flatMap(Set::stream)
-				.forEach(this::createPermission);
-	}
-
-	private void createPermission(final String permission)
-	{
-		if (!_mariaDbPermissionRepository.existsByName(permission))
-		{
-			log.info("Creating permission: {}", permission);
-
-			final PermissionEntity permissionEntity = PermissionEntity.builder().name(permission).build();
-			_mariaDbPermissionRepository.save(permissionEntity);
-		}
-	}
-
-	private void createRoles()
-	{
-		rolePermissions.forEach(this::createRole);
-	}
-
-	private void createRole(final String role, final Set<String> permissions)
-	{
-		if (!_mariaDbRoleRepository.existsByName(role))
-		{
-			log.info("Creating role: {}", role);
-			final Set<PermissionEntity> rolePermissions = permissions.stream()
-					.map(_mariaDbPermissionRepository::findByName)
-					.filter(Optional::isPresent)
-					.map(Optional::get)
-					.collect(Collectors.toSet());
-			final RoleEntity roleEntity = RoleEntity.builder()
-					.name(role)
-					.permissions(rolePermissions)
-					.build();
-
-			_mariaDbRoleRepository.save(roleEntity);
 		}
 	}
 
@@ -177,48 +122,95 @@ public class DataInitializer implements CommandLineRunner
 					.build();
 			_mongoUserRepository.save(userDocument);
 		}
+
+		log.info("Checking and creating the sport catalog in MongoDB, if needed.");
+		createMongoSports();
 	}
 
+	/**
+	 * Pandan migracije V15: permisije i uloge se upisuju samo u praznu kolekciju, kao i sportovi.
+	 */
 	private void createMongoPermissions()
 	{
-		rolePermissions.values().stream()
-				.flatMap(Set::stream)
-				.forEach(this::createMongoPermission);
-	}
-
-	private void createMongoPermission(final String permission)
-	{
-		if (!_mongoPermissionRepository.existsByName(permission))
+		if (_mongoPermissionRepository.count() > 0)
 		{
-			log.info("Creating permission in MongoDB: {}", permission);
-
-			final PermissionDocument permissionDocument = PermissionDocument.builder().name(permission).build();
-			_mongoPermissionRepository.save(permissionDocument);
+			return;
 		}
+
+		_mongoPermissionRepository.saveAll(Arrays.stream(Permission.values())
+				.map(permission -> PermissionDocument.builder()
+						.name(permission.getValue())
+						.description(permission.getDescription())
+						.build())
+				.toList());
+
+		log.info("Permissions created in MongoDB");
 	}
 
 	private void createMongoRoles()
 	{
-		rolePermissions.forEach(this::createMongoRole);
+		if (_mongoRoleRepository.count() > 0)
+		{
+			return;
+		}
+
+		rolePermissions.forEach((role, permissions) -> _mongoRoleRepository.save(RoleDocument.builder()
+				.name(role)
+				.permissions(permissions.stream()
+						.map(permission -> _mongoPermissionRepository.findByName(permission.getValue()))
+						.flatMap(Optional::stream)
+						.collect(Collectors.toSet()))
+				.build()));
+
+		log.info("Roles created in MongoDB");
 	}
 
-	private void createMongoRole(final String role, final Set<String> permissions)
+	/**
+	 * Pandan migracije V14: sportovi se upisuju samo u praznu kolekciju, jer se Flyway migracija izvrši
+	 * samo jednom. Provera po imenu bi posle restarta ponovo napravila sport koji je admin preimenovao.
+	 */
+	private void createMongoSports()
 	{
-		if (!_mongoRoleRepository.existsByName(role))
+		if (_mongoSportRepository.count() > 0)
 		{
-			log.info("Creating role in MongoDB: {}", role);
-			final Set<PermissionDocument> rolePermissions = permissions.stream()
-					.map(_mongoPermissionRepository::findByName)
-					.filter(Optional::isPresent)
-					.map(Optional::get)
-					.collect(Collectors.toSet());
-			final RoleDocument roleDocument = RoleDocument.builder()
-					.name(role)
-					.permissions(rolePermissions)
-					.build();
-
-			_mongoRoleRepository.save(roleDocument);
+			return;
 		}
+
+		_mongoSportRepository.saveAll(List.of(
+				sport("Tennis", SportType.INDIVIDUAL, ScoringMode.SETS, false, 1, 1, 3, 6, 3, 1, 0),
+				sport("Table Tennis", SportType.INDIVIDUAL, ScoringMode.SETS, false, 1, 1, 5, 11, 3, 1, 0),
+				sport("Chess", SportType.INDIVIDUAL, ScoringMode.OUTCOME, true, 1, 1, null, null, 2, 1, 0),
+				sport("Football", SportType.TEAM, ScoringMode.POINTS, true, 1, 11, null, null, 3, 1, 0),
+				sport("Basketball", SportType.TEAM, ScoringMode.POINTS, false, 1, 5, null, null, 3, 1, 0),
+				sport("Volleyball", SportType.TEAM, ScoringMode.SETS, false, 2, 6, 5, 25, 3, 1, 0)
+		));
+
+		log.info("Sport catalog created in MongoDB");
+	}
+
+	private SportDocument sport(final String name, final SportType type, final ScoringMode scoringMode,
+			final boolean allowDraw, final int minPlayersPerSide, final Integer maxPlayersPerSide,
+			final Integer bestOf, final Integer pointsToWinSet,
+			final int pointsForWin, final int pointsForDraw, final int pointsForLoss)
+	{
+		final SportRulesDocument rules = SportRulesDocument.builder()
+				.allowDraw(allowDraw)
+				.minPlayersPerSide(minPlayersPerSide)
+				.maxPlayersPerSide(maxPlayersPerSide)
+				.bestOf(bestOf)
+				.pointsToWinSet(pointsToWinSet)
+				.pointsForWin(pointsForWin)
+				.pointsForDraw(pointsForDraw)
+				.pointsForLoss(pointsForLoss)
+				.build();
+
+		return SportDocument.builder()
+				.name(name)
+				.type(type)
+				.scoringMode(scoringMode)
+				.rules(rules)
+				.active(true)
+				.build();
 	}
 
 	/**
