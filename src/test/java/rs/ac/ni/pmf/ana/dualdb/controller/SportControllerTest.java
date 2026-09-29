@@ -100,7 +100,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldCreateSport() throws Exception
 	{
 		when(_sportService.create(TestData.SPORTS.newTennis())).thenReturn(TestData.SPORTS.tennis());
@@ -115,7 +115,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn400WhenRequestIsInvalid() throws Exception
 	{
 		final SportRequest tennis = TestData.SPORTS.tennisRequest();
@@ -136,7 +136,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn409WhenSportNameIsTaken() throws Exception
 	{
 		when(_sportService.create(any(Sport.class)))
@@ -150,7 +150,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.create")
 	void shouldReturn422WhenMaxPlayersIsLessThanMin() throws Exception
 	{
 		when(_sportService.create(any(Sport.class)))
@@ -164,7 +164,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.update")
 	void shouldUpdateSport() throws Exception
 	{
 		when(_sportService.update(TestData.SPORTS.TENNIS_ID, TestData.SPORTS.newTennis()))
@@ -179,7 +179,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.delete")
 	void shouldDeleteSport() throws Exception
 	{
 		_mockMvc.perform(delete("/api/v1/sports/" + TestData.SPORTS.TENNIS_ID))
@@ -189,7 +189,7 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser(roles = "SYSTEM_ADMIN")
+	@WithMockUser(authorities = "sports.restore")
 	void shouldRestoreSport() throws Exception
 	{
 		when(_sportService.restore(TestData.SPORTS.CHESS_ID)).thenReturn(TestData.SPORTS.chess());
@@ -210,8 +210,8 @@ class SportControllerTest
 	}
 
 	@Test
-	@WithMockUser
-	void shouldReturn403WhenUserIsNotSystemAdmin() throws Exception
+	@WithMockUser(roles = "SYSTEM_ADMIN")
+	void shouldReturn403WithoutSportsCreatePermission() throws Exception
 	{
 		_mockMvc.perform(post("/api/v1/sports")
 						         .contentType(MediaType.APPLICATION_JSON)

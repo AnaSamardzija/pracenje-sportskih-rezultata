@@ -77,12 +77,15 @@ public class UserController
 	@PutMapping("/me/password")
 	@Tag(name = "Nalog i korisnici")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Promena moje lozinke (prijavljen korisnik)",
+	@PreAuthorize("hasAuthority('users.password.change_self')")
+	@Operation(summary = "Promena moje lozinke (permisija users.password.change_self)",
 			description = "Traži staru lozinku; posle promene prijava radi samo sa novom.")
 	@ApiResponse(responseCode = "204", description = "Lozinka je promenjena")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
+			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.password.change_self (imaju je USER i SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "422", description = "Stara lozinka nije tačna",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -111,15 +114,15 @@ public class UserController
 	}
 
 	@GetMapping("/{id}")
-	@PreAuthorize("hasRole('SYSTEM_ADMIN') or #id == principal.user.id")
+	@PreAuthorize("hasAuthority('users.read_all') or #id == principal.user.id")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Korisnik po id-u (SYSTEM_ADMIN ili sam korisnik)")
+	@Operation(summary = "Korisnik po id-u (permisija users.read_all ili sam korisnik)")
 	@ApiResponse(responseCode = "200", description = "Korisnik")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN, a traži tuđi nalog",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.read_all (ima je SYSTEM_ADMIN), a traži tuđi nalog",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -147,15 +150,15 @@ public class UserController
 	}
 
 	@GetMapping
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("hasAuthority('users.read_all')")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Spisak svih ostalih korisnika (samo SYSTEM_ADMIN)",
-			description = "Vraća sve korisnike osim samog admina koji pita (sebe vidi preko /users/me), "
+	@Operation(summary = "Spisak svih ostalih korisnika (permisija users.read_all)",
+			description = "Vraća sve korisnike osim onoga ko pita (sebe vidi preko /users/me), "
 					+ "uključujući i deaktivirane (active=false).")
 	@ApiResponse(responseCode = "200", description = "Spisak korisnika")
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.read_all (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public List<UserDto> getAllUsers(@AuthenticationPrincipal final CustomUserDetails principal)
 	{
@@ -165,17 +168,18 @@ public class UserController
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("hasAuthority('users.modify')")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Izmena korisnika (samo SYSTEM_ADMIN)",
+	@Operation(summary = "Izmena korisnika (permisija users.modify)",
 			description = "Menjaju se ime, prezime, email i uloge; izostavljeno ime ili prezime postaje null. "
-					+ "Korisničko ime se ne menja. Admin sebi ne može da skine ulogu SYSTEM_ADMIN.")
+					+ "Korisničko ime se ne menja. Promena uloga traži i permisiju users.roles.assign. "
+					+ "Admin sebi ne može da skine ulogu SYSTEM_ADMIN.")
 	@ApiResponse(responseCode = "200", description = "Korisnik je izmenjen")
 	@ApiResponse(responseCode = "400", description = "Neispravno telo zahteva (npr. nepoznata uloga) ili nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.modify, ili menja uloge bez permisije users.roles.assign (obe ima SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -187,14 +191,14 @@ public class UserController
 	                          @PathVariable final String id,
 	                          @RequestBody @Valid final UpdateUserRequest request)
 	{
-		return _userMapper.toDto(_userService.update(id, _userMapper.toModel(request), principal.getUser().getId()));
+		return _userMapper.toDto(_userService.update(id, _userMapper.toModel(request), principal.getUser()));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("hasAuthority('users.deactivate')")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Deaktivacija korisnika (samo SYSTEM_ADMIN)",
+	@Operation(summary = "Deaktivacija korisnika (permisija users.deactivate)",
 			description = "Korisnik se ne briše iz baze, već postaje neaktivan: ne može da se prijavi, a token koji "
 					+ "već ima prestaje da važi. Ostaje u mečevima, rang-listama i grupama, a u grupama gde je bio GROUP_ADMIN "
 					+ "admin postaje aktivan član koji je najduže u grupi, ako takav postoji. Vraća se preko PATCH /restore.")
@@ -203,7 +207,7 @@ public class UserController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.deactivate (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -216,15 +220,15 @@ public class UserController
 	}
 
 	@PatchMapping("/{id}/restore")
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("hasAuthority('users.restore')")
 	@Tag(name = "Nalog i korisnici")
-	@Operation(summary = "Vraćanje deaktiviranog korisnika (samo SYSTEM_ADMIN)")
+	@Operation(summary = "Vraćanje deaktiviranog korisnika (permisija users.restore)")
 	@ApiResponse(responseCode = "200", description = "Korisnik je ponovo aktivan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju users.restore (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Korisnik ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

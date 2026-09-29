@@ -10,6 +10,7 @@ import rs.ac.ni.pmf.ana.dualdb.exception.ResourceNotFoundException;
 import rs.ac.ni.pmf.ana.dualdb.model.Group;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupDetails;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupRole;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
@@ -81,7 +82,7 @@ public class GroupService
 	public GroupDetails update(final String id, final Group group, final User currentUser)
 	{
 		final Group existing = loadGroup(id);
-		_membershipService.requireGroupAdmin(id, currentUser);
+		_membershipService.requireGroupAdmin(id, currentUser, Permission.GROUPS_UPDATE_ANY);
 
 		existing.setName(group.getName());
 		existing.setDescription(group.getDescription());
@@ -95,7 +96,7 @@ public class GroupService
 	public void delete(final String id, final User currentUser)
 	{
 		final Group existing = loadGroup(id);
-		_membershipService.requireGroupAdmin(id, currentUser);
+		_membershipService.requireGroupAdmin(id, currentUser, Permission.GROUPS_DELETE_ANY);
 
 		if (_matchService.hasMatches(id))
 		{

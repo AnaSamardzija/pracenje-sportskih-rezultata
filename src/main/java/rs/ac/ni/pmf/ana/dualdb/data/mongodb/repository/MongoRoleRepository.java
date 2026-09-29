@@ -13,8 +13,5 @@ public interface MongoRoleRepository extends MongoRepository<RoleDocument, Strin
 	Optional<RoleDocument> findByName(String name);
 
 	@Collation("{ 'locale': 'en', 'strength': 1 }")
-	boolean existsByName(String role);
-
-	@Collation("{ 'locale': 'en', 'strength': 1 }")
 	Set<RoleDocument> findAllByNameIn(Set<String> names);
 }

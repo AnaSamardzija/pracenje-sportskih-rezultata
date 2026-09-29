@@ -10,7 +10,4 @@ public interface MongoPermissionRepository extends MongoRepository<PermissionDoc
 {
 	@Collation("{ 'locale': 'en', 'strength': 1 }")
 	Optional<PermissionDocument> findByName(String name);
-
-	@Collation("{ 'locale': 'en', 'strength': 1 }")
-	boolean existsByName(String permission);
 }

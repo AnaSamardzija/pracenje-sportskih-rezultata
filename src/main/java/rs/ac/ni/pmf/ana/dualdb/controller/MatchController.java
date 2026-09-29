@@ -109,8 +109,8 @@ public class MatchController
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Unos meča (član grupe ili SYSTEM_ADMIN)",
-			description = "Meč unosi bilo koji član grupe, ne mora da igra, a SYSTEM_ADMIN i bez članstva. Svi igrači moraju biti članovi grupe. "
+	@Operation(summary = "Unos meča (član grupe ili permisija matches.create_any)",
+			description = "Meč unosi bilo koji član grupe, ne mora da igra, a korisnik sa permisijom matches.create_any (ima je SYSTEM_ADMIN) i bez članstva. Svi igrači moraju biti članovi grupe. "
 					+ "Oblik rezultata zavisi od sporta: SETS šalje setScores, POINTS score, a OUTCOME outcome. "
 					+ "Pobednika, a za SETS i POINTS i outcome, određuje sistem. "
 					+ "ID-jevi u primerima su MariaDB ID-jevi; za MongoDB se zamenjuju hex ID-jevima.")
@@ -123,7 +123,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije član grupe i nema permisiju matches.create_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ili grupa ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -136,7 +136,7 @@ public class MatchController
 	}
 
 	@PutMapping("/{id}")
-	@Operation(summary = "Izmena meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
+	@Operation(summary = "Izmena meča (GROUP_ADMIN ili permisija matches.update_any)",
 			description = "Telo i provere rezultata su isti kao kod unosa. Meč ne može da se premesti u drugu grupu; sport "
 					+ "može da se promeni, ali oblik rezultata mora da odgovara novom sportu. Učesnik meča koji nije GROUP_ADMIN ne može da ga menja.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
@@ -148,7 +148,7 @@ public class MatchController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe i nema permisiju matches.update_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ili sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -164,14 +164,14 @@ public class MatchController
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "Brisanje meča (GROUP_ADMIN ili SYSTEM_ADMIN)",
+	@Operation(summary = "Brisanje meča (GROUP_ADMIN ili permisija matches.delete_any)",
 			description = "Učesnik meča koji nije GROUP_ADMIN ne može da ga obriše.")
 	@ApiResponse(responseCode = "204", description = "Meč je obrisan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe ni SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nije GROUP_ADMIN grupe i nema permisiju matches.delete_any",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Meč ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

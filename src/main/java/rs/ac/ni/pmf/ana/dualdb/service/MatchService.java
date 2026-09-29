@@ -13,6 +13,7 @@ import rs.ac.ni.pmf.ana.dualdb.model.GroupRole;
 import rs.ac.ni.pmf.ana.dualdb.model.Match;
 import rs.ac.ni.pmf.ana.dualdb.model.MatchDetails;
 import rs.ac.ni.pmf.ana.dualdb.model.MatchSide;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
 import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 import rs.ac.ni.pmf.ana.dualdb.model.SportRules;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
@@ -78,7 +79,7 @@ public class MatchService
 
 		final Set<String> memberIds = _membershipService.memberIds(match.getGroupId());
 
-		if (!currentUser.isSystemAdmin() && !memberIds.contains(currentUser.getId()))
+		if (!currentUser.hasPermission(Permission.MATCHES_CREATE_ANY) && !memberIds.contains(currentUser.getId()))
 		{
 			throw new AccessDeniedException("Only a member of the group can record a match");
 		}
@@ -97,7 +98,7 @@ public class MatchService
 	public MatchDetails update(final String id, final Match match, final User currentUser)
 	{
 		final Match existing = loadMatch(id);
-		requireGroupAdmin(existing, currentUser);
+		requireGroupAdmin(existing, currentUser, Permission.MATCHES_UPDATE_ANY);
 
 		if (!existing.getGroupId().equals(match.getGroupId()))
 		{
@@ -122,16 +123,16 @@ public class MatchService
 	public void delete(final String id, final User currentUser)
 	{
 		final Match existing = loadMatch(id);
-		requireGroupAdmin(existing, currentUser);
+		requireGroupAdmin(existing, currentUser, Permission.MATCHES_DELETE_ANY);
 
 		matchStorage().deleteById(id);
 
 		log.info("Match {} deleted", id);
 	}
 
-	private void requireGroupAdmin(final Match match, final User currentUser)
+	private void requireGroupAdmin(final Match match, final User currentUser, final Permission anyGroupPermission)
 	{
-		if (!currentUser.isSystemAdmin()
+		if (!currentUser.hasPermission(anyGroupPermission)
 				&& _membershipService.roleOf(match.getGroupId(), currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
 			throw new AccessDeniedException("Only a group admin can edit or delete a match");

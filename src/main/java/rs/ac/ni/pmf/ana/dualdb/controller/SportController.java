@@ -87,13 +87,13 @@ public class SportController
 	private final SportMapper _sportMapper;
 
 	@GetMapping
-	@PreAuthorize("!#includeInactive or hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("!#includeInactive or hasAuthority('sports.read_inactive')")
 	@Operation(summary = "Spisak aktivnih sportova (prijavljen korisnik)",
-			description = "Sa ?includeInactive=true vraća i obrisane (neaktivne) sportove; to sme samo SYSTEM_ADMIN.")
+			description = "Sa ?includeInactive=true vraća i obrisane (neaktivne) sportove; za to je potrebna permisija sports.read_inactive (ima je SYSTEM_ADMIN).")
 	@ApiResponse(responseCode = "200", description = "Spisak sportova")
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "includeInactive=true, a korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "includeInactive=true, a korisnik nema permisiju sports.read_inactive",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public List<SportResponse> getAll(@RequestParam(required = false, defaultValue = "false") final boolean includeInactive)
 	{
@@ -103,15 +103,15 @@ public class SportController
 	}
 
 	@GetMapping("/{id}")
-	@PreAuthorize("!#includeInactive or hasRole('SYSTEM_ADMIN')")
+	@PreAuthorize("!#includeInactive or hasAuthority('sports.read_inactive')")
 	@Operation(summary = "Sport po id-u (prijavljen korisnik)",
-			description = "Obrisan (neaktivan) sport vidi samo SYSTEM_ADMIN, sa ?includeInactive=true.")
+			description = "Obrisan (neaktivan) sport se vidi samo sa ?includeInactive=true, uz permisiju sports.read_inactive (ima je SYSTEM_ADMIN).")
 	@ApiResponse(responseCode = "200", description = "Sport")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "includeInactive=true, a korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "includeInactive=true, a korisnik nema permisiju sports.read_inactive",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ne postoji ili je obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -123,8 +123,8 @@ public class SportController
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
-	@Operation(summary = "Kreiranje sporta (samo SYSTEM_ADMIN)",
+	@PreAuthorize("hasAuthority('sports.create')")
+	@Operation(summary = "Kreiranje sporta (permisija sports.create)",
 			description = "Ime sporta je jedinstveno bez obzira na velika i mala slova, i među obrisanim sportovima.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
 			@ExampleObject(name = "Badminton (SETS)", value = BADMINTON_EXAMPLE),
@@ -135,7 +135,7 @@ public class SportController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju sports.create (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "409", description = "Sport sa tim imenom već postoji (aktivan ili obrisan)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -147,8 +147,8 @@ public class SportController
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
-	@Operation(summary = "Izmena sporta (samo SYSTEM_ADMIN)",
+	@PreAuthorize("hasAuthority('sports.update')")
+	@Operation(summary = "Izmena sporta (permisija sports.update)",
 			description = "Telo i validacija su isti kao kod kreiranja; sport može da zadrži svoje ime.")
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
 			@ExampleObject(name = "Badminton (SETS)", value = BADMINTON_EXAMPLE),
@@ -159,7 +159,7 @@ public class SportController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju sports.update (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ne postoji ili je obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -174,8 +174,8 @@ public class SportController
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
-	@Operation(summary = "Brisanje sporta (samo SYSTEM_ADMIN)",
+	@PreAuthorize("hasAuthority('sports.delete')")
+	@Operation(summary = "Brisanje sporta (permisija sports.delete)",
 			description = "Sport se ne briše iz baze, već postaje neaktivan i nestaje iz spiska. Njegovi mečevi ostaju "
 					+ "i računaju se u rang-listama, ali novi ne mogu da se unose. Vraća se preko PATCH /restore.")
 	@ApiResponse(responseCode = "204", description = "Sport je obrisan (neaktivan)")
@@ -183,7 +183,7 @@ public class SportController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju sports.delete (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ne postoji ili je već obrisan",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
@@ -193,14 +193,14 @@ public class SportController
 	}
 
 	@PatchMapping("/{id}/restore")
-	@PreAuthorize("hasRole('SYSTEM_ADMIN')")
-	@Operation(summary = "Vraćanje obrisanog sporta (samo SYSTEM_ADMIN)")
+	@PreAuthorize("hasAuthority('sports.restore')")
+	@Operation(summary = "Vraćanje obrisanog sporta (permisija sports.restore)")
 	@ApiResponse(responseCode = "200", description = "Sport je ponovo aktivan")
 	@ApiResponse(responseCode = "400", description = "Nenumerički id (samo MariaDB)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "401", description = "Token nije poslat, neispravan je ili je istekao",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "403", description = "Korisnik nije SYSTEM_ADMIN",
+	@ApiResponse(responseCode = "403", description = "Korisnik nema permisiju sports.restore (ima je SYSTEM_ADMIN)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "404", description = "Sport ne postoji",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))

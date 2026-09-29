@@ -2,6 +2,7 @@ package rs.ac.ni.pmf.ana.dualdb.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.StorageType;
 import rs.ac.ni.pmf.ana.dualdb.exception.DuplicateResourceException;
 import rs.ac.ni.pmf.ana.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.ana.dualdb.exception.ResourceNotFoundException;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.StorageResolver;
@@ -79,12 +81,17 @@ public class UserService
 	}
 
 	@Transactional
-	public User update(final String id, final User changes, final String currentUserId)
+	public User update(final String id, final User changes, final User currentUser)
 	{
 		final UserStorage storage = userStorage();
 		final User user = findById(id);
 
-		if (user.getId().equals(currentUserId) && !changes.getRoles().contains("SYSTEM_ADMIN"))
+		if (!changes.getRoles().equals(user.getRoles()) && !currentUser.hasPermission(Permission.USERS_ROLES_ASSIGN))
+		{
+			throw new AccessDeniedException("You are not allowed to change user roles");
+		}
+
+		if (user.getId().equals(currentUser.getId()) && !changes.getRoles().contains("SYSTEM_ADMIN"))
 		{
 			throw new InvalidOperationException("You cannot remove your own SYSTEM_ADMIN role");
 		}

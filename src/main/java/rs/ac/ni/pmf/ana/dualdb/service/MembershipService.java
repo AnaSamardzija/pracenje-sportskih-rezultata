@@ -13,6 +13,7 @@ import rs.ac.ni.pmf.ana.dualdb.model.Group;
 import rs.ac.ni.pmf.ana.dualdb.model.GroupRole;
 import rs.ac.ni.pmf.ana.dualdb.model.MemberView;
 import rs.ac.ni.pmf.ana.dualdb.model.Membership;
+import rs.ac.ni.pmf.ana.dualdb.model.Permission;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
@@ -69,7 +70,7 @@ public class MembershipService
 	public MemberView addMember(final String groupId, final String username, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUser);
+		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_ADD_ANY);
 
 		final User user = userStorage().findByUsername(username)
 				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
@@ -176,7 +177,7 @@ public class MembershipService
 	public void kick(final String groupId, final String targetUserId, final User currentUser)
 	{
 		requireGroupExists(groupId);
-		requireGroupAdmin(groupId, currentUser);
+		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_KICK_ANY);
 
 		final Membership membership = membershipStorage().findByUserIdAndGroupId(targetUserId, groupId)
 				.orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
@@ -238,9 +239,10 @@ public class MembershipService
 				.collect(Collectors.toMap(Membership::getGroupId, Membership::getRoleInGroup));
 	}
 
-	public void requireGroupAdmin(final String groupId, final User currentUser)
+	public void requireGroupAdmin(final String groupId, final User currentUser, final Permission anyGroupPermission)
 	{
-		if (!currentUser.isSystemAdmin() && roleOf(groupId, currentUser.getId()) != GroupRole.GROUP_ADMIN)
+		if (!currentUser.hasPermission(anyGroupPermission)
+				&& roleOf(groupId, currentUser.getId()) != GroupRole.GROUP_ADMIN)
 		{
 			throw new AccessDeniedException("Only a group admin can perform this action");
 		}
