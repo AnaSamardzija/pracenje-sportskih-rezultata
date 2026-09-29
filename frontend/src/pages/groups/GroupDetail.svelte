@@ -22,7 +22,7 @@
     import type {MatchResponse} from '../../lib/types/match.types';
     import type {SportResponse} from '../../lib/types/sport.types';
     import type {RankingEntryResponse} from '../../lib/types/stats.types';
-    import {isSystemAdmin} from '../../lib/types/user.types';
+    import {hasPermission} from '../../lib/types/user.types';
     import {formatDate} from '../../lib/utils/date';
     import {queryParams, withQuery} from '../../lib/utils/query';
 
@@ -69,9 +69,13 @@
 
     const myId = $derived($authStore.user?.id);
     const isAdmin = $derived(group?.myRole === 'GROUP_ADMIN');
-    const systemAdmin = $derived(isSystemAdmin($authStore.user));
-    // Grupom (izmena, brisanje, članovi) upravlja njen admin, a SYSTEM_ADMIN svakom grupom
-    const canManage = $derived(isAdmin || systemAdmin);
+    // Grupom (izmena, brisanje, članovi) upravlja njen admin, a svakom grupom korisnik sa *_any permisijom za tu radnju
+    const canEdit = $derived(isAdmin || hasPermission($authStore.user, 'groups.update_any'));
+    const canDelete = $derived(isAdmin || hasPermission($authStore.user, 'groups.delete_any'));
+    const canAddMember = $derived(isAdmin || hasPermission($authStore.user, 'groups.members.add_any'));
+    const canKick = $derived(isAdmin || hasPermission($authStore.user, 'groups.members.kick_any'));
+    // Meč unosi član grupe, a korisnik sa matches.create_any i bez članstva
+    const canRecordMatch = $derived(!!group?.myRole || hasPermission($authStore.user, 'matches.create_any'));
 
     // Sport iz adrese koji nije među aktivnim (obrisan) i dalje filtrira rang-listu, pa ga i padajuća lista mora pokazati
     const deletedRankingSport = $derived(rankingSportId !== '' && sports.length > 0 && !sports.some(s => s.id === rankingSportId));
@@ -207,12 +211,13 @@
             subtitle={group?.description ?? (group ? 'No description.' : undefined)}>
     {#snippet actions()}
         {#if group}
-            <!-- Meč unosi član grupe, a SYSTEM_ADMIN i bez članstva -->
-            {#if group.myRole || systemAdmin}
+            {#if canRecordMatch}
                 <a class="btn btn-light" href="#/matches/new?groupId={group.id}"><i class="bi bi-plus-lg me-1"></i>Record match</a>
             {/if}
-            {#if canManage}
+            {#if canEdit}
                 <a class="btn btn-light" href="#/groups/{group.id}/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+            {/if}
+            {#if canDelete}
                 <button class="btn btn-outline-light" disabled={busy} onclick={() => showDelete = true}>
                     <i class="bi bi-trash me-1"></i>Delete
                 </button>
@@ -317,7 +322,7 @@
                                     <th>Player</th>
                                     <th>Role</th>
                                     <th class="d-none d-sm-table-cell">Joined</th>
-                                    {#if canManage}
+                                    {#if canKick}
                                         <th><span class="visually-hidden">Actions</span></th>
                                     {/if}
                                 </tr>
@@ -345,7 +350,7 @@
                                             {/if}
                                         </td>
                                         <td class="d-none d-sm-table-cell text-muted small">{formatDate(member.joinedAt)}</td>
-                                        {#if canManage}
+                                        {#if canKick}
                                             <td class="text-end">
                                                 {#if member.userId !== myId}
                                                     <button class="btn btn-sm btn-outline-danger"
@@ -387,7 +392,7 @@
                     </ul>
                 </div>
 
-                {#if canManage}
+                {#if canAddMember}
                     <div class="card">
                         <div class="card-header">
                             <i class="bi bi-person-plus me-2 text-primary"></i>Add member

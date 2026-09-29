@@ -1,6 +1,6 @@
 import {get} from 'svelte/store';
 import {authStore} from './auth.store';
-import {isSystemAdmin} from '../types/user.types';
+import {hasPermission, type Permission} from '../types/user.types';
 
 export function requireAuth(): boolean {
     if (!get(authStore).accessToken) {
@@ -20,11 +20,15 @@ export function requireGuest(): boolean {
     return true;
 }
 
-// Forme sporta i admin panel: ide posle requireAuth, pa je korisnik ovde već prijavljen
-export function requireSystemAdmin(): boolean {
-    if (!isSystemAdmin(get(authStore).user)) {
-        window.location.href = '#/';
-        return false;
-    }
-    return true;
+// Forme sporta i admin panel: uslov za ruter koji traži sve navedene permisije; ide posle requireAuth,
+// pa je korisnik ovde već prijavljen
+export function requirePermissions(...permissions: Permission[]): () => boolean {
+    return () => {
+        const user = get(authStore).user;
+        if (!permissions.every(permission => hasPermission(user, permission))) {
+            window.location.href = '#/';
+            return false;
+        }
+        return true;
+    };
 }

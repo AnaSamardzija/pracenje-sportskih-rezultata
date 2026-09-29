@@ -3,7 +3,7 @@
     import {getUser, updateUser} from '../../lib/api/users.api';
     import {authStore} from '../../lib/auth/auth.store';
     import PageHeader from '../../lib/components/PageHeader.svelte';
-    import {fullNameOf, ROLE_HINTS, ROLE_LABELS, ROLES, type Role, userInitials, type UserDto} from '../../lib/types/user.types';
+    import {fullNameOf, hasPermission, ROLE_HINTS, ROLE_LABELS, ROLES, type Role, userInitials, type UserDto} from '../../lib/types/user.types';
 
     // Izmena tuđeg naloga (/admin/users/:id/edit); username se ne menja, pa se samo prikazuje
     let {params}: {params?: {id?: string}} = $props();
@@ -22,6 +22,9 @@
     let loadingData = $state(false);
     let saving = $state(false);
     let error = $state<string | null>(null);
+
+    // Uloge menja samo korisnik sa users.roles.assign; ostalima su polja zaključana, pa se uloge šalju nepromenjene
+    const canAssignRoles = $derived(hasPermission($authStore.user, 'users.roles.assign'));
 
     // Backend traži bar jednu ulogu; bez nje se forma ne šalje
     const noRole = $derived(roles.length === 0);
@@ -165,13 +168,16 @@
                                 <div class="card-body">
                                     {#each ROLES as role (role)}
                                         <div class="form-check mb-2">
-                                            <input id="role-{role}" class="form-check-input" type="checkbox" value={role} bind:group={roles}/>
+                                            <input id="role-{role}" class="form-check-input" type="checkbox" value={role} bind:group={roles} disabled={!canAssignRoles}/>
                                             <label class="form-check-label" for="role-{role}">
                                                 <span class="fw-semibold">{ROLE_LABELS[role]}</span>
                                                 <span class="d-block text-muted small">{ROLE_HINTS[role]}</span>
                                             </label>
                                         </div>
                                     {/each}
+                                    {#if !canAssignRoles}
+                                        <div class="form-text">Changing roles requires the users.roles.assign permission.</div>
+                                    {/if}
                                     {#if noRole}
                                         <div class="text-danger small mt-2">Select at least one role.</div>
                                     {/if}

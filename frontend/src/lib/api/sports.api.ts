@@ -3,7 +3,7 @@ import type {SportRequest, SportResponse} from '../types/sport.types';
 
 const BASE = '/api/v1/sports';
 
-// includeInactive (i obrisani sportovi) backend dozvoljava samo SYSTEM_ADMIN-u
+// includeInactive (i obrisani sportovi) backend dozvoljava samo uz permisiju sports.read_inactive
 export async function getAllSports(includeInactive = false): Promise<SportResponse[]> {
     const res = await apiFetch(includeInactive ? `${BASE}?includeInactive=true` : BASE);
     if (!res.ok) throw new Error(await errorMessage(res, 'Failed to load sports'));

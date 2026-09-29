@@ -24,7 +24,7 @@ export interface AuthResponse {
 }
 
 // storageType se čuva pored tokena da bi UI znao na koju bazu je korisnik prijavljen (token se ne dekodira),
-// a user (odgovor /users/me posle prijave) da bi znao uloge, npr. da li da prikaže admin dugmad
+// a user (odgovor /users/me posle prijave) da bi znao permisije, npr. da li da prikaže admin dugmad
 export type AuthState = {
     accessToken: string | null;
     storageType: StorageType | null;

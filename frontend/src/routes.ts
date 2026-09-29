@@ -17,11 +17,13 @@ import PlayerProfile from './pages/players/PlayerProfile.svelte';
 import UserList from './pages/users/UserList.svelte';
 import UserForm from './pages/users/UserForm.svelte';
 import NotFound from './pages/NotFound.svelte';
-import {requireAuth, requireGuest, requireSystemAdmin} from './lib/auth/auth.guard';
+import {requireAuth, requireGuest, requirePermissions} from './lib/auth/auth.guard';
+import type {Permission} from './lib/types/user.types';
 
 const guarded = (component: Component) => wrap({component, conditions: [requireAuth]});
 const guestOnly = (component: Component) => wrap({component, conditions: [requireGuest]});
-const adminOnly = (component: Component) => wrap({component, conditions: [requireAuth, requireSystemAdmin]});
+const withPermissions = (component: Component, ...permissions: Permission[]) =>
+    wrap({component, conditions: [requireAuth, requirePermissions(...permissions)]});
 
 export const routes = {
     '/login': guestOnly(Login),
@@ -30,8 +32,8 @@ export const routes = {
     '/profile': guarded(Profile),
 
     '/sports': guarded(SportList),
-    '/sports/new': adminOnly(SportForm),
-    '/sports/:id/edit': adminOnly(SportForm),
+    '/sports/new': withPermissions(SportForm, 'sports.create'),
+    '/sports/:id/edit': withPermissions(SportForm, 'sports.update'),
 
     '/groups': guarded(GroupList),
     '/groups/new': guarded(GroupForm),
@@ -49,9 +51,9 @@ export const routes = {
     // Profil igrača, i sopstveni (My profile u meniju) i tuđi; /profile su podešavanja naloga
     '/players/:id': guarded(PlayerProfile),
 
-    // Admin panel: upravljanje nalozima, samo SYSTEM_ADMIN
-    '/admin/users': adminOnly(UserList),
-    '/admin/users/:id/edit': adminOnly(UserForm),
+    // Admin panel: upravljanje nalozima; forma izmene i učitava tuđi nalog, pa traži i users.read_all
+    '/admin/users': withPermissions(UserList, 'users.read_all'),
+    '/admin/users/:id/edit': withPermissions(UserForm, 'users.read_all', 'users.modify'),
 
     // Mora biti poslednja: sve ostale putanje
     '*': guarded(NotFound),
