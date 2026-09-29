@@ -139,7 +139,8 @@ public class SportController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "409", description = "Sport sa tim imenom već postoji (aktivan ili obrisan)",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "maxPlayersPerSide je manji od minPlayersPerSide ili INDIVIDUAL sport nema tačno 1 igrača po strani",
+	@ApiResponse(responseCode = "422", description = "maxPlayersPerSide je manji od minPlayersPerSide, INDIVIDUAL sport nema tačno 1 igrača po strani, "
+			+ "SETS sport nema neparan bestOf i pointsToWinSet ili dozvoljava nerešeno, ili sport koji nije SETS ima bestOf ili pointsToWinSet",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public SportResponse create(@RequestBody @Valid final SportRequest request)
 	{
@@ -165,7 +166,8 @@ public class SportController
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	@ApiResponse(responseCode = "409", description = "Ime pripada drugom sportu",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
-	@ApiResponse(responseCode = "422", description = "maxPlayersPerSide je manji od minPlayersPerSide ili INDIVIDUAL sport nema tačno 1 igrača po strani",
+	@ApiResponse(responseCode = "422", description = "maxPlayersPerSide je manji od minPlayersPerSide, INDIVIDUAL sport nema tačno 1 igrača po strani, "
+			+ "SETS sport nema neparan bestOf i pointsToWinSet ili dozvoljava nerešeno, ili sport koji nije SETS ima bestOf ili pointsToWinSet",
 			content = @Content(schema = @Schema(implementation = ErrorDto.class)))
 	public SportResponse update(@PathVariable final String id, @RequestBody @Valid final SportRequest request)
 	{

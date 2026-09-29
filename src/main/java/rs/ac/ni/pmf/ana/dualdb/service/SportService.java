@@ -7,6 +7,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.StorageType;
 import rs.ac.ni.pmf.ana.dualdb.exception.DuplicateResourceException;
 import rs.ac.ni.pmf.ana.dualdb.exception.InvalidOperationException;
 import rs.ac.ni.pmf.ana.dualdb.exception.ResourceNotFoundException;
+import rs.ac.ni.pmf.ana.dualdb.model.ScoringMode;
 import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 import rs.ac.ni.pmf.ana.dualdb.model.SportRules;
 import rs.ac.ni.pmf.ana.dualdb.model.SportType;
@@ -40,6 +41,7 @@ public class SportService
 	{
 		requireUniqueName(sport.getName(), null);
 		requireValidPlayerRange(sport);
+		requireValidScoringRules(sport);
 
 		sport.setActive(true);
 		final Sport saved = storage().save(sport);
@@ -54,6 +56,7 @@ public class SportService
 
 		requireUniqueName(sport.getName(), id);
 		requireValidPlayerRange(sport);
+		requireValidScoringRules(sport);
 
 		existing.setName(sport.getName());
 		existing.setType(sport.getType());
@@ -119,6 +122,40 @@ public class SportService
 		if (rules.getMaxPlayersPerSide() != null && rules.getMaxPlayersPerSide() < rules.getMinPlayersPerSide())
 		{
 			throw new InvalidOperationException("maxPlayersPerSide cannot be less than minPlayersPerSide");
+		}
+	}
+
+	/**
+	 * SETS sport se igra na neparan broj setova (bestOf), pa uvek ima pobednika i ne može nerešeno. Ostali
+	 * načini bodovanja nemaju setove, pa ni bestOf ni pointsToWinSet.
+	 */
+	private void requireValidScoringRules(final Sport sport)
+	{
+		final SportRules rules = sport.getRules();
+
+		if (sport.getScoringMode() != ScoringMode.SETS)
+		{
+			if (rules.getBestOf() != null || rules.getPointsToWinSet() != null)
+			{
+				throw new InvalidOperationException("bestOf and pointsToWinSet are used only for SETS scoring");
+			}
+
+			return;
+		}
+
+		if (rules.getBestOf() == null || rules.getBestOf() % 2 == 0)
+		{
+			throw new InvalidOperationException("A SETS sport requires an odd bestOf");
+		}
+
+		if (rules.getPointsToWinSet() == null)
+		{
+			throw new InvalidOperationException("A SETS sport requires pointsToWinSet");
+		}
+
+		if (rules.isAllowDraw())
+		{
+			throw new InvalidOperationException("A SETS sport cannot allow a draw");
 		}
 	}
 
