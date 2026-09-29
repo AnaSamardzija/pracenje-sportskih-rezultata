@@ -97,8 +97,9 @@ klikom na dugme **Run** (▶) na glavnoj klasi `DualDatabaseAccessApplication`.
 
 Aplikacija se podiže na **http://localhost:8080**.
 
-Pri prvom pokretanju, klasa `DataInitializer` automatski kreira osnovne uloge i
-permisije i podrazumevanog **admin** korisnika **u obe baze**:
+Pri prvom pokretanju obe baze dobijaju osnovne uloge i permisije: u MariaDB ih upisuje
+Flyway migracija `V15__define_permissions.sql`, a u MongoDB `DataInitializer`. Klasa
+`DataInitializer` pravi i podrazumevanog **admin** korisnika **u obe baze**:
 
 | Polje    | Vrednost     |
 |----------|--------------|
