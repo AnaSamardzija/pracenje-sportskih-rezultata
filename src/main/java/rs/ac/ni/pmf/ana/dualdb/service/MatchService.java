@@ -163,13 +163,13 @@ public class MatchService
 				throw new InvalidOperationException("Every side must have at least one player");
 			}
 
-			if (rules != null && playerIds.size() < rules.getMinPlayersPerSide())
+			if (playerIds.size() < rules.getMinPlayersPerSide())
 			{
 				throw new InvalidOperationException(
 						"Sport " + sport.getName() + " requires at least " + rules.getMinPlayersPerSide() + " players per side");
 			}
 
-			if (rules != null && rules.getMaxPlayersPerSide() != null && playerIds.size() > rules.getMaxPlayersPerSide())
+			if (rules.getMaxPlayersPerSide() != null && playerIds.size() > rules.getMaxPlayersPerSide())
 			{
 				throw new InvalidOperationException(
 						"Sport " + sport.getName() + " allows at most " + rules.getMaxPlayersPerSide() + " players per side");
