@@ -20,6 +20,7 @@ import rs.ac.ni.pmf.ana.dualdb.model.User;
 import rs.ac.ni.pmf.ana.dualdb.storage.CurrentStorageTypeProvider;
 import rs.ac.ni.pmf.ana.dualdb.storage.DataStorage;
 import rs.ac.ni.pmf.ana.dualdb.storage.StorageResolver;
+import rs.ac.ni.pmf.ana.dualdb.storage.group.GroupStorage;
 import rs.ac.ni.pmf.ana.dualdb.storage.match.MatchStorage;
 import rs.ac.ni.pmf.ana.dualdb.storage.sport.SportStorage;
 import rs.ac.ni.pmf.ana.dualdb.storage.user.UserStorage;
@@ -27,9 +28,11 @@ import rs.ac.ni.pmf.ana.dualdb.storage.user.UserStorage;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -153,6 +156,7 @@ public class MatchService
 
 		final SportRules rules = sport.getRules();
 		final Set<String> seenPlayers = new HashSet<>();
+		final Set<String> activeMemberIds = activeMemberIds(match, memberIds);
 
 		for (final MatchSide side : match.getSides())
 		{
@@ -187,12 +191,25 @@ public class MatchService
 					throw new InvalidOperationException("Player with id " + playerId + " is not a member of this group");
 				}
 
-				if (!userStorage().findById(playerId).map(User::isActive).orElse(false))
+				if (!activeMemberIds.contains(playerId))
 				{
 					throw new InvalidOperationException("Player with id " + playerId + " is deactivated");
 				}
 			}
 		}
+	}
+
+	private Set<String> activeMemberIds(final Match match, final Set<String> memberIds)
+	{
+		final Set<String> playerIds = match.getSides().stream()
+				.flatMap(side -> side.getPlayerIds().stream())
+				.filter(memberIds::contains)
+				.collect(Collectors.toSet());
+
+		return userStorage().findAllById(playerIds).stream()
+				.filter(User::isActive)
+				.map(User::getId)
+				.collect(Collectors.toSet());
 	}
 
 	private Match loadMatch(final String id)
@@ -234,13 +251,22 @@ public class MatchService
 
 	private List<MatchDetails> toDetails(final List<Match> matches)
 	{
-		final Map<String, String> sportNames = sportStorage().findAll().stream()
+		final Set<String> sportIds = matches.stream().map(Match::getSportId).collect(Collectors.toSet());
+		final Set<String> groupIds = matches.stream().map(Match::getGroupId).collect(Collectors.toSet());
+		final Set<String> userIds = matches.stream()
+				.flatMap(match -> Stream.concat(
+						Stream.of(match.getRecordedBy()),
+						match.getSides().stream().flatMap(side -> side.getPlayerIds().stream())))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+
+		final Map<String, String> sportNames = sportStorage().findAllById(sportIds).stream()
 				.collect(Collectors.toMap(Sport::getId, Sport::getName));
 
-		final Map<String, String> groupNames = groupStorage().findAll().stream()
+		final Map<String, String> groupNames = groupStorage().findAllById(groupIds).stream()
 				.collect(Collectors.toMap(Group::getId, Group::getName));
 
-		final Map<String, String> usernames = userStorage().findAll().stream()
+		final Map<String, String> usernames = userStorage().findAllById(userIds).stream()
 				.collect(Collectors.toMap(User::getId, User::getUsername));
 
 		return matches.stream()
@@ -278,9 +304,9 @@ public class MatchService
 		return (UserStorage) resolve(User.class);
 	}
 
-	private DataStorage<Group> groupStorage()
+	private GroupStorage groupStorage()
 	{
-		return resolve(Group.class);
+		return (GroupStorage) resolve(Group.class);
 	}
 
 	private <T> DataStorage<T> resolve(final Class<T> dataType)

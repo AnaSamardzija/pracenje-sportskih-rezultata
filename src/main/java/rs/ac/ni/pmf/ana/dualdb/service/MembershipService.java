@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,7 +76,7 @@ public class MembershipService
 		requireGroupExists(groupId);
 		requireGroupAdmin(groupId, currentUser, Permission.GROUPS_MEMBERS_ADD_ANY);
 
-		final User user = userStorage().findByUsername(username)
+		final User user = userStorage().findByUsername(username.strip())
 				.orElseThrow(() -> new ResourceNotFoundException("User '" + username + "' not found"));
 
 		if (!user.isActive())
@@ -139,11 +140,13 @@ public class MembershipService
 	{
 		requireGroupExists(groupId);
 
-		final UserStorage users = userStorage();
-		return membershipStorage().findByGroupId(groupId).stream()
+		final List<Membership> memberships = membershipStorage().findByGroupId(groupId);
+		final Map<String, User> users = usersById(memberships);
+
+		return memberships.stream()
 				.map(membership ->
 				{
-					final Optional<User> user = users.findById(membership.getUserId());
+					final Optional<User> user = Optional.ofNullable(users.get(membership.getUserId()));
 
 					return MemberView.builder()
 							.userId(membership.getUserId())
@@ -224,15 +227,30 @@ public class MembershipService
 
 	private List<Membership> activeOthers(final Membership membership)
 	{
-		return membershipStorage().findByGroupId(membership.getGroupId()).stream()
+		final List<Membership> others = membershipStorage().findByGroupId(membership.getGroupId()).stream()
 				.filter(other -> !other.getId().equals(membership.getId()))
-				.filter(this::isActive)
+				.toList();
+		final Set<String> activeUserIds = activeUserIds(others);
+
+		return others.stream()
+				.filter(other -> activeUserIds.contains(other.getUserId()))
 				.toList();
 	}
 
-	private boolean isActive(final Membership membership)
+	private Map<String, User> usersById(final List<Membership> memberships)
 	{
-		return userStorage().findById(membership.getUserId()).map(User::isActive).orElse(false);
+		final Set<String> userIds = memberships.stream().map(Membership::getUserId).collect(Collectors.toSet());
+
+		return userStorage().findAllById(userIds).stream()
+				.collect(Collectors.toMap(User::getId, Function.identity()));
+	}
+
+	private Set<String> activeUserIds(final List<Membership> memberships)
+	{
+		return usersById(memberships).values().stream()
+				.filter(User::isActive)
+				.map(User::getId)
+				.collect(Collectors.toSet());
 	}
 
 	/**
@@ -242,8 +260,9 @@ public class MembershipService
 	private void ensureActiveAdmin(final String groupId)
 	{
 		final List<Membership> memberships = membershipStorage().findByGroupId(groupId);
+		final Set<String> activeUserIds = activeUserIds(memberships);
 		final List<Membership> active = memberships.stream()
-				.filter(this::isActive)
+				.filter(membership -> activeUserIds.contains(membership.getUserId()))
 				.toList();
 
 		if (active.isEmpty() || active.stream().anyMatch(membership -> membership.getRoleInGroup() == GroupRole.GROUP_ADMIN))

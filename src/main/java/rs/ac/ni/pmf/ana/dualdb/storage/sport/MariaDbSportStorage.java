@@ -9,6 +9,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.mariadb.mapper.MariaDbSportMapper;
 import rs.ac.ni.pmf.ana.dualdb.data.mariadb.repository.MariaDbSportRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.Sport;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +56,15 @@ public class MariaDbSportStorage extends SportStorage
 	public Optional<Sport> findById(final String id)
 	{
 		return _sportRepository.findById(Long.parseLong(id)).map(_sportMapper::toModel);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Sport> findAllById(final Collection<String> ids)
+	{
+		return _sportRepository.findAllById(ids.stream().map(Long::parseLong).toList()).stream()
+				.map(_sportMapper::toModel)
+				.toList();
 	}
 
 	@Override

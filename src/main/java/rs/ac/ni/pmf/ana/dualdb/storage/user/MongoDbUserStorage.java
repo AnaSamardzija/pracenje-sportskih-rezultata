@@ -10,6 +10,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoRoleRepository;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoUserRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.User;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +41,12 @@ public class MongoDbUserStorage extends UserStorage
 	public Optional<User> findById(final String id)
 	{
 		return _userRepository.findById(id).map(_userMapper::toUser);
+	}
+
+	@Override
+	public List<User> findAllById(final Collection<String> ids)
+	{
+		return _userRepository.findAllById(ids).stream().map(_userMapper::toUser).toList();
 	}
 
 	@Override

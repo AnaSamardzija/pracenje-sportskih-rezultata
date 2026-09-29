@@ -8,6 +8,7 @@ import rs.ac.ni.pmf.ana.dualdb.data.mongodb.mapper.MongoGroupMapper;
 import rs.ac.ni.pmf.ana.dualdb.data.mongodb.repository.MongoGroupRepository;
 import rs.ac.ni.pmf.ana.dualdb.model.Group;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,14 @@ public class MongoDbGroupStorage extends GroupStorage
 	public Optional<Group> findById(final String id)
 	{
 		return _groupRepository.findById(id).map(_groupMapper::toModel);
+	}
+
+	@Override
+	public List<Group> findAllById(final Collection<String> ids)
+	{
+		return _groupRepository.findAllById(ids).stream()
+				.map(_groupMapper::toModel)
+				.toList();
 	}
 
 	@Override
